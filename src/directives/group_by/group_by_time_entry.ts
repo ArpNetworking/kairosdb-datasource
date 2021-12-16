@@ -1,15 +1,15 @@
 export class GroupByTimeEntry {
-    public interval: string = undefined;
-    public unit: string = undefined;
-    public count: number = undefined;
+  interval: string = undefined;
+  unit: string = undefined;
+  count: number = undefined;
 
-    constructor(interval: string, unit: string, count: number) {
-        this.interval = interval;
-        this.unit = unit;
-        this.count = count;
-    }
+  constructor(interval: string, unit: string, count: number) {
+    this.interval = interval;
+    this.unit = unit;
+    this.count = count;
+  }
 
-    public asString(): string {
-      return "time(" + this.interval + ", " + this.unit + ", " + this.count + ")";
-    }
+  asString(): string {
+    return 'time(' + this.interval + ', ' + this.unit + ', ' + this.count + ')';
+  }
 }

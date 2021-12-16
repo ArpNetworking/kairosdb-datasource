@@ -1,91 +1,93 @@
-import angular from "angular";
-import * as dateMath from "app/core/utils/datemath";
-import _ from "lodash";
-import moment from "moment";
+import _ from 'lodash';
+import { getLocaleData, dateTime, isDateTime } from '@grafana/data';
 
-import {KairosDBTarget} from "../beans/request/target";
-import * as rangeUtil from "../utils/rangeutil";
+import { KairosDBTarget } from '../beans/request/target';
+import * as rangeUtil from '../utils/rangeutil';
 
 export class TimePickerCtrl {
-  public static tooltipFormat = "MMM D, YYYY HH:mm:ss";
-  public static defaults = {
-    time_options: ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"],
-    refresh_intervals: ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+  static tooltipFormat = 'MMM D, YYYY HH:mm:ss';
+  static defaults = {
+    time_options: ['5m', '15m', '1h', '6h', '12h', '24h', '2d', '7d', '30d'],
+    refresh_intervals: ['5s', '10s', '30s', '1m', '5m', '15m', '30m', '1h', '2h', '1d'],
   };
 
-  public dashboard: any;
-  public query: KairosDBTarget;
-  public panel: any;
-  public absolute: any;
-  public timeRaw: any;
-  public editTimeRaw: any;
-  public tooltip: string;
-  public rangeString: string;
-  public timeOptions: any;
-  public refresh: any;
-  public isUtc: boolean;
-  public firstDayOfWeek: number;
-  public isOpen: boolean;
-  public isAbsolute: boolean;
+  dashboard: any;
+  query: KairosDBTarget;
+  panel: any;
+  absolute: any;
+  timeRaw: any;
+  editTimeRaw: any;
+  tooltip: string;
+  rangeString: string;
+  timeOptions: any;
+  refresh: any;
+  isUtc: boolean;
+  firstDayOfWeek: number;
+  isOpen: boolean;
+  isAbsolute: boolean;
 
   /** @ngInject */
   constructor(private $scope, private $rootScope, private timeSrv) {
     this.$scope.ctrl = this;
 
-    $scope.$parent.$watch("timeOverridden", (newValue, oldValue) => {
+    $scope.$parent.$watch('timeOverridden', (newValue, oldValue) => {
       if (newValue !== undefined) {
-          if (newValue) {
-              this.enableOverride();
-          } else {
-              this.disableOverride();
-          }
+        if (newValue) {
+          this.enableOverride();
+        } else {
+          this.disableOverride();
+        }
       }
     });
 
-    $rootScope.onAppEvent("closeTimepicker", this.openDropdown.bind(this), $scope);
+    $rootScope.onAppEvent('closeTimepicker', this.openDropdown.bind(this), $scope);
 
-    this.dashboard.on("refresh", this.onRefresh.bind(this), $scope);
+    this.dashboard.on('refresh', this.onRefresh.bind(this), $scope);
 
     // init options
     this.panel = this.dashboard.timepicker;
     _.defaults(this.panel, TimePickerCtrl.defaults);
-    this.firstDayOfWeek = moment.localeData().firstDayOfWeek();
+    this.firstDayOfWeek = getLocaleData().firstDayOfWeek();
 
     // init time stuff
     this.onRefresh();
   }
 
-  public onRefresh() {
-    let timeRaw = angular.copy(this.query.timeRange);
+  onRefresh() {
+    let timeRaw = this.query.timeRange;
 
     if (!timeRaw) {
       timeRaw = this.timeSrv.timeRange().raw;
     }
 
-    if (this.dashboard.getTimezone() !== "utc") {
-      if (moment.isMoment(timeRaw.from)) {
-        timeRaw.from.local();
+    if (this.dashboard.getTimezone() !== 'utc') {
+      if (isDateTime(timeRaw?.from)) {
+        timeRaw?.from.local();
       }
-      if (moment.isMoment(timeRaw.to)) {
-        timeRaw.to.local();
+      if (isDateTime(timeRaw?.to)) {
+        timeRaw?.to.local();
       }
       this.isUtc = false;
     } else {
       this.isUtc = true;
     }
 
-    const fromMoment = dateMath.parse(timeRaw.from);
-    const toMoment = dateMath.parse(timeRaw.to);
+    const fromMoment = dateTime(timeRaw?.from);
+    const toMoment = dateTime(timeRaw?.to);
 
-    this.rangeString = rangeUtil.describeTimeRange(timeRaw);
+    if (timeRaw === undefined) {
+      this.rangeString = '?';
+    } else {
+      this.rangeString = rangeUtil.describeTimeRange(timeRaw);
+    }
     this.absolute = { fromJs: fromMoment.toDate(), toJs: toMoment.toDate() };
-    this.tooltip = this.dashboard.formatDate(fromMoment) + " <br>to<br>";
+    this.tooltip = this.dashboard.formatDate(fromMoment) + ' <br>to<br>';
     this.tooltip += this.dashboard.formatDate(toMoment);
     this.timeRaw = timeRaw;
-    this.isAbsolute = moment.isMoment(this.timeRaw.to);
+    this.isAbsolute = isDateTime(this.timeRaw.to);
   }
 
-  public openDropdown() {
+  openDropdown() {
     if (this.isOpen) {
       this.closeDropdown();
       return;
@@ -101,52 +103,52 @@ export class TimePickerCtrl {
       }),
     };
 
-    this.refresh.options.unshift({ text: "off" });
+    this.refresh.options.unshift({ text: 'off' });
     this.isOpen = true;
-    this.$rootScope.appEvent("timepickerOpen");
+    this.$rootScope.appEvent('timepickerOpen');
   }
 
-  public closeDropdown() {
+  closeDropdown() {
     this.isOpen = false;
     this.onRefresh();
-    this.$rootScope.appEvent("timepickerClosed");
+    this.$rootScope.appEvent('timepickerClosed');
   }
 
-  public applyCustom() {
-    this.query.timeRange = {from: this.editTimeRaw.from, to: this.editTimeRaw.to};
+  applyCustom() {
+    this.query.timeRange = { from: this.editTimeRaw.from, to: this.editTimeRaw.to };
     this.closeDropdown();
   }
 
-  public absoluteFromChanged() {
+  absoluteFromChanged() {
     this.editTimeRaw.from = this.getAbsoluteMomentForTimezone(this.absolute.fromJs);
   }
 
-  public absoluteToChanged() {
+  absoluteToChanged() {
     this.editTimeRaw.to = this.getAbsoluteMomentForTimezone(this.absolute.toJs);
   }
 
-  public getAbsoluteMomentForTimezone(jsDate) {
-    return this.dashboard.getTimezone() === "utc" ? moment(jsDate).utc() : moment(jsDate);
+  getAbsoluteMomentForTimezone(jsDate) {
+    return this.dashboard.getTimezone() === 'utc' ? dateTime(jsDate).utc() : dateTime(jsDate);
   }
 
-  public setRelativeFilter(timespan) {
+  setRelativeFilter(timespan) {
     const range = { from: timespan.from, to: timespan.to };
 
-    if (this.panel.nowDelay && range.to === "now") {
-      range.to = "now-" + this.panel.nowDelay;
+    if (this.panel.nowDelay && range.to === 'now') {
+      range.to = 'now-' + this.panel.nowDelay;
     }
 
     this.query.timeRange = range;
     this.closeDropdown();
   }
 
-  public enableOverride() {
+  enableOverride() {
     const timeRaw = this.timeSrv.timeRange().raw;
-    this.query.timeRange = {from: timeRaw.from, to: timeRaw.to};
+    this.query.timeRange = { from: timeRaw.from, to: timeRaw.to };
     this.onRefresh();
   }
 
-  public disableOverride() {
+  disableOverride() {
     this.query.timeRange = undefined;
     this.onRefresh();
   }
@@ -154,14 +156,14 @@ export class TimePickerCtrl {
 
 export function TimePickerDirective() {
   return {
-    restrict: "E",
-    templateUrl: "public/plugins/grafana-kairosdb-datasource/partials/timepicker.html",
+    restrict: 'E',
+    templateUrl: 'public/plugins/grafana-kairosdb-datasource/partials/timepicker.html',
     controller: TimePickerCtrl,
     bindToController: true,
-    controllerAs: "ctrl",
+    controllerAs: 'ctrl',
     scope: {
-      dashboard: "=",
-      query: "=",
+      dashboard: '=',
+      query: '=',
     },
   };
 }

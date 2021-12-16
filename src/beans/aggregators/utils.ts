@@ -1,27 +1,44 @@
-import _ from "lodash";
+import _ from 'lodash';
 
 export enum TimeUnit {
-    MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS, WEEKS, MONTHS, YEARS
+  MILLISECONDS,
+  SECONDS,
+  MINUTES,
+  HOURS,
+  DAYS,
+  WEEKS,
+  MONTHS,
+  YEARS,
 }
 
 export type UnitValue = [TimeUnit, number];
 
 export enum Trim {
-    first, last, both
+  first,
+  last,
+  both,
 }
 
 export enum Alignment {
-    NONE, START_TIME, SAMPLING, PERIOD
+  NONE,
+  START_TIME,
+  SAMPLING,
+  PERIOD,
 }
 
 export enum Filter {
-    GT, GTE, EQUAL, LTE, LT
+  GT,
+  GTE,
+  EQUAL,
+  LTE,
+  LT,
 }
 
 export enum Indeterminate {
-    keep, discard
+  keep,
+  discard,
 }
 
 export function EnumValues(enumType: object): string[] {
-    return _.pickBy(_.values(enumType), (value) => !_.isNumber(value));
+  return _.keys(_.pickBy(_.values(enumType), (value) => !_.isNumber(value)));
 }

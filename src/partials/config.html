@@ -6,10 +6,13 @@
     <div class="gf-form-inline">
         <div class="gf-form max-width-30">
             <span class="gf-form-label width-10">Auto Value Intervals</span>
-            <input type="text" class="gf-form-input" ng-model='ctrl.current.jsonData.snapToIntervals' placeholder=""></input>
+            <input type="text" class="gf-form-input" ng-model='ctrl.current.jsonData.snapToIntervals'
+                   placeholder=""></input>
             <info-popover mode="right-absolute">
-                <p>A comma delimited list of intervals used for auto value sampling in grafana time notation (e.g. 1m,1h)</p>
-                <p>This will cause 'Auto' sampled aggregators to select the closest interval bigger than grafana's provided interval for the time range selected</p>
+                <p>A comma delimited list of intervals used for auto value sampling in grafana time notation (e.g.
+                    1m,1h)</p>
+                <p>This will cause 'Auto' sampled aggregators to select the closest interval bigger than grafana's
+                    provided interval for the time range selected</p>
             </info-popover>
         </div>
     </div>
@@ -18,8 +21,10 @@
             <span class="gf-form-label width-15">Require Scalar Aggregators</span>
             <input type="checkbox" class="gf-form-input" ng-model='ctrl.current.jsonData.enforceScalarSetting'></input>
             <info-popover mode="right-absolute">
-                <p>This setting allows for enforcement that queries include at least one scalar aggregator per query.</p>
-                <p>This option should be enabled when most data is histograms that need to be converted into scalars in order to be graphed in common visualizers, e.g. timeseries line graphs</p>
+                <p>This setting allows for enforcement that queries include at least one scalar aggregator per
+                    query.</p>
+                <p>This option should be enabled when most data is histograms that need to be converted into scalars in
+                    order to be graphed in common visualizers, e.g. timeseries line graphs</p>
             </info-popover>
         </div>
     </div>

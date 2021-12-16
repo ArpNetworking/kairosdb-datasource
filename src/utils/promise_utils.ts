@@ -1,12 +1,13 @@
 export class PromiseUtils {
-    private $q: any;
-    constructor($q) {
-        this.$q = $q;
-    }
+  private $q: any;
 
-    public resolvedPromise(value?: any) {
-        const defer = this.$q.defer();
-        defer.resolve(value);
-        return defer.promise;
-    }
+  constructor($q) {
+    this.$q = $q;
+  }
+
+  resolvedPromise(value?: any) {
+    const defer = this.$q.defer();
+    defer.resolve(value);
+    return defer.promise;
+  }
 }

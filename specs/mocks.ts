@@ -25,8 +25,8 @@ const formatterFromTemplateSrv = (
     variable?: Variables
 ) => {
     /*
-    Based heavily off the real deal.
-    https://github.com/grafana/grafana/blob/master/public/app/features/templating/template_srv.ts#L128
+     * Based heavily off the real deal.
+     * https://github.com/grafana/grafana/blob/master/public/app/features/templating/template_srv.ts#L128
      */
 
     // for some scopedVars there is no variable
@@ -52,8 +52,8 @@ const formatterFromTemplateSrv = (
         }
         default: {
             /*
-            If value is ["abc", "def"]
-            return "{abc,def}"
+             * If value is ["abc", "def"]
+             * return "{abc,def}"
              */
             if (Array.isArray(value) && value.length > 1) {
                 return `{${value.join(",")}}`;

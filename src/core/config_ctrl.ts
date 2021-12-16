@@ -1,4 +1,4 @@
 export class KairosDBConfigCtrl {
-  public static templateUrl: string = "partials/config.html";
-  public current: any;
+  static templateUrl = 'partials/config.html';
+  current: any;
 }

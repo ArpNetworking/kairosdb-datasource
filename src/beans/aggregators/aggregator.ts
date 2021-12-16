@@ -1,12 +1,10 @@
-import {AutoValueSwitch} from "../../directives/auto_value_switch";
-import {AggregatorParameter} from "./parameters/aggregator_parameter";
+import { AggregatorParameter } from './parameters/aggregator_parameter';
 
 export class Aggregator {
-    public name: string;
-    public parameters: AggregatorParameter[] = [];
-    public autoValueSwitch: AutoValueSwitch = undefined;
+  name: string;
+  parameters: AggregatorParameter[] = [];
 
-    constructor(name: string) {
-        this.name = name;
-    }
+  constructor(name: string) {
+    this.name = name;
+  }
 }

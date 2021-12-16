@@ -1,15 +1,16 @@
 abstract class AggregatorParameter {
-    public name: string;
-    public text: string;
-    public value: string;
-    public type: AggregatorParameterType;
+  name: string;
+  text: string;
+  value: string;
+  type: AggregatorParameterType;
 
-    constructor(name: string, text: string = name, value: string = null) {
-        this.name = name;
-        this.text = text;
-        this.value = value;
-    }
+  constructor(name: string, text: string = name, value: string) {
+    this.name = name;
+    this.text = text;
+    this.value = value;
+    this.type = 'sampling';
+  }
 }
 
-export type AggregatorParameterType = "alignment" | "any" | "enum" | "limited" | "sampling" | "sampling_unit";
+export type AggregatorParameterType = 'alignment' | 'any' | 'enum' | 'limited' | 'sampling' | 'sampling_unit';
 export { AggregatorParameter };

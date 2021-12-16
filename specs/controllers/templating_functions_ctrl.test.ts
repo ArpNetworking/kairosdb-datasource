@@ -1,9 +1,9 @@
-import forEach from "mocha-each";
-import {TemplatingFunction} from "../../src/beans/function";
-import {TemplatingFunctionsCtrl} from "../../src/controllers/templating_functions_ctrl";
-import {TemplatingFunctionResolver} from "../../src/utils/templating_function_resolver";
-import {TemplatingUtils} from "../../src/utils/templating_utils";
-import {buildTemplatingSrvMock} from "../mocks";
+import forEach from 'mocha';
+import { TemplatingFunction } from '../../src/beans/function';
+import { TemplatingFunctionsCtrl } from '../../src/controllers/templating_functions_ctrl';
+import { TemplatingFunctionResolver } from '../../src/utils/templating_function_resolver';
+import { TemplatingUtils } from '../../src/utils/templating_utils';
+import { buildTemplatingSrvMock } from '../mocks';
 
 describe("TemplatingFunctionsController", () => {
     const variables = {

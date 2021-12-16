@@ -1,21 +1,22 @@
-import _ from "lodash";
-import {TemplatingFunction} from "../beans/function";
-import {TemplatingFunctionResolver} from "../utils/templating_function_resolver";
+import _ from 'lodash';
+import { TemplatingFunction } from '../beans/function';
+import { TemplatingFunctionResolver } from '../utils/templating_function_resolver';
 
 export class TemplatingFunctionsCtrl {
-    private functions: TemplatingFunction[] = [];
-    private templatingFunctionResolver: TemplatingFunctionResolver;
+  private functions: TemplatingFunction[] = [];
+  private templatingFunctionResolver: TemplatingFunctionResolver;
 
-    constructor(templatingFunctionResolver: TemplatingFunctionResolver) {
-        this.templatingFunctionResolver = templatingFunctionResolver;
-    }
+  constructor(templatingFunctionResolver: TemplatingFunctionResolver) {
+    this.templatingFunctionResolver = templatingFunctionResolver;
+  }
 
-    public register(func: TemplatingFunction) {
-        this.functions.push(func);
-    }
+  register(func: TemplatingFunction) {
+    this.functions.push(func);
+  }
 
-    public resolve(functionBody: string) {
-        const matchedFunction = _.find(this.functions, (func) => new RegExp(func.regexp).test(functionBody));
-        return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody);
-    }
+  resolve(functionBody: string): () => Promise<string[]> {
+    const matchedFunction = _.find(this.functions, (func) => new RegExp(func.regexp).test(functionBody));
+    // @ts-ignore
+    return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody);
+  }
 }
