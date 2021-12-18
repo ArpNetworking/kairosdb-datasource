@@ -1,7 +1,9 @@
 import _ from 'lodash';
 
 export class GroupByValueCtrl {
+  // @ts-ignore
   entries: string[];
+  // @ts-ignore
   inputVisible: boolean;
 
   add(value) {

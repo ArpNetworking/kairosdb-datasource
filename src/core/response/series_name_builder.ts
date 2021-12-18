@@ -4,6 +4,7 @@ export class SeriesNameBuilder {
   private static SEPARATOR = '_';
 
   build(metricName, alias, groupBys = []) {
+    // @ts-ignore
     const tagGroupBys = _.find(groupBys, (groupBy) => groupBy.name === 'tag'),
       tagGroupBysValues = this.getTagGroupBys(tagGroupBys),
       valueGroupBysValues = this.getValueGroupBys(groupBys),

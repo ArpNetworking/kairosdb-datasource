@@ -7,6 +7,7 @@ export interface SegmentLike {
 
 export class TagsSelectCtrl {
   // All possible values
+  // @ts-ignore
   tagValues: string[];
   // The currently selected values
   selectedValues: string[];
@@ -17,6 +18,7 @@ export class TagsSelectCtrl {
   /** @ngInject **/
   constructor(private uiSegmentSrv) {
     // The injected 'selectValues' contains a nullish value if there was a trailing [+] saved.
+    // @ts-ignore
     this.selectedValues = (this.selectedValues || []).filter(notNil);
     this.segments = this.selectedValues.map(uiSegmentSrv.newSegment);
     this.showPlusButtonIfNeeded();
@@ -35,12 +37,14 @@ export class TagsSelectCtrl {
   private showPlusButtonIfNeeded() {
     const lastSeg = _.last(this.segments);
 
+    // @ts-ignore
     if (!this.isPlusButton(lastSeg)) {
       this.segments.push(this.uiSegmentSrv.newPlusButton());
     }
   }
 
   private updateSelectedValues(): void {
+    // @ts-ignore
     this.selectedValues = this.segments
       .filter((segment) => !this.isPlusButton(segment))
       .map((tagSegment) => tagSegment.value);

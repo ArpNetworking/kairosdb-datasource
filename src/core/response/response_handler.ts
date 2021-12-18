@@ -11,6 +11,7 @@ export class KairosDBResponseHandler {
   convertToDatapoints(data, aliases: string[]) {
     const datapoints = _.zip(aliases, data.queries)
       .map((pair) => {
+        // @ts-ignore
         return { alias: pair[0], results: pair[1].results };
       })
       .map((entry) =>

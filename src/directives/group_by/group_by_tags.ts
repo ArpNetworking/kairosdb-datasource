@@ -1,12 +1,16 @@
 import _ from 'lodash';
 
 export class GroupByTagsCtrl {
+  // @ts-ignore
   tags: string[];
   selectedTags: { [key: string]: boolean } = {};
+  // @ts-ignore
   inputVisible: boolean;
+  // @ts-ignore
   allowedValues: string[];
 
   constructor() {
+    // @ts-ignore
     this.tags.forEach((tag) => (this.selectedTags[tag] = true));
   }
 

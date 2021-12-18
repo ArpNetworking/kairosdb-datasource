@@ -1,6 +1,9 @@
 export class GroupByTimeEntry {
+  // @ts-ignore
   interval: string = undefined;
+  // @ts-ignore
   unit: string = undefined;
+  // @ts-ignore
   count: number = undefined;
 
   constructor(interval: string, unit: string, count: number) {

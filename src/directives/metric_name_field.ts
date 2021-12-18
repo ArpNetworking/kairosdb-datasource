@@ -13,6 +13,7 @@ export class MetricNameFieldCtrl {
   segment: any;
   aliasInputVisible = false;
   aliasAddedVisible = false;
+  // @ts-ignore
   private $q: any;
   private $scope: any;
   private promiseUtils: PromiseUtils;
@@ -23,7 +24,9 @@ export class MetricNameFieldCtrl {
     this.$q = $q;
     this.uiSegmentSrv = uiSegmentSrv;
     this.promiseUtils = new PromiseUtils($q);
+    // @ts-ignore
     this.segment = this.value ? uiSegmentSrv.newSegment(this.value) : uiSegmentSrv.newSelectMetric();
+    // @ts-ignore
     this.aliasAddedVisible = !_.isNil(this.alias);
   }
 

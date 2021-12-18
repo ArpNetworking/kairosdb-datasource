@@ -102,9 +102,11 @@ export class KairosDBQueryBuilder {
   }
 
   private convertParameters(aggregatorDefinition: Aggregator, defaultInterval: string) {
+    // @ts-ignore
     const parameterObjectBuilder = new ParameterObjectBuilder(
       this.templatingUtils,
       defaultInterval,
+      // @ts-ignore
       aggregatorDefinition.autoValueSwitch,
       this.snapToIntervals
     );
@@ -120,6 +122,7 @@ export class KairosDBQueryBuilder {
     });
   }
 
+  // @ts-ignore
   private buildRequestId(actionName, panelId): string {
     return actionName + '_' + panelId;
   }

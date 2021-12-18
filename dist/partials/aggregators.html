@@ -1,23 +1,22 @@
 <div class="gf-form-group">
-    <div class="gf-form-inline">
-        <div class="gf-form">
-            <label class="gf-form-label query-keyword width-8">
-                Aggregators
-            </label>
-        </div>
-        <aggregator-editor></aggregator-editor>
-        <div class="gf-form gf-form--grow">
-            <div class="gf-form-label gf-form-label--grow"></div>
-        </div>
+  <div class="gf-form-inline">
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword width-8"> Aggregators </label>
     </div>
+    <aggregator-editor></aggregator-editor>
+    <div class="gf-form gf-form--grow">
+      <div class="gf-form-label gf-form-label--grow"></div>
+    </div>
+  </div>
 
-    <aggregator
-            is-first="$first"
-            is-last="$last"
-            ng-repeat="aggregator in ctrl.entries"
-            value="aggregator"
-            on-remove="ctrl.remove(aggregator)"
-            on-up="ctrl.up(aggregator)"
-            on-down="ctrl.down(aggregator)">
-    </aggregator>
+  <aggregator
+    is-first="$first"
+    is-last="$last"
+    ng-repeat="aggregator in ctrl.entries"
+    value="aggregator"
+    on-remove="ctrl.remove(aggregator)"
+    on-up="ctrl.up(aggregator)"
+    on-down="ctrl.down(aggregator)"
+  >
+  </aggregator>
 </div>

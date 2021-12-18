@@ -8,6 +8,7 @@ export class GroupByTimeCtrl {
   allowedUnitValues: string[] = EnumValues(TimeUnit);
 
   constructor() {
+    // @ts-ignore
     this.entries = this.entries || [];
   }
 

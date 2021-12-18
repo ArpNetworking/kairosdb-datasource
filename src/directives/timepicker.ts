@@ -12,18 +12,24 @@ export class TimePickerCtrl {
   };
 
   dashboard: any;
+  // @ts-ignore
   query: KairosDBTarget;
   panel: any;
   absolute: any;
   timeRaw: any;
   editTimeRaw: any;
+  // @ts-ignore
   tooltip: string;
+  // @ts-ignore
   rangeString: string;
   timeOptions: any;
   refresh: any;
+  // @ts-ignore
   isUtc: boolean;
   firstDayOfWeek: number;
+  // @ts-ignore
   isOpen: boolean;
+  // @ts-ignore
   isAbsolute: boolean;
 
   /** @ngInject */
@@ -115,6 +121,7 @@ export class TimePickerCtrl {
   }
 
   applyCustom() {
+    // @ts-ignore
     this.query.timeRange = { from: this.editTimeRaw.from, to: this.editTimeRaw.to };
     this.closeDropdown();
   }
@@ -138,12 +145,14 @@ export class TimePickerCtrl {
       range.to = 'now-' + this.panel.nowDelay;
     }
 
+    // @ts-ignore
     this.query.timeRange = range;
     this.closeDropdown();
   }
 
   enableOverride() {
     const timeRaw = this.timeSrv.timeRange().raw;
+    // @ts-ignore
     this.query.timeRange = { from: timeRaw.from, to: timeRaw.to };
     this.onRefresh();
   }

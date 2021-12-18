@@ -3,7 +3,9 @@ import { Aggregator } from '../beans/aggregators/aggregator';
 import './aggregator_editor';
 
 export class AggregatorsCtrl {
+  // @ts-ignore
   entries: Aggregator[];
+  // @ts-ignore
   availableAggregators: Aggregator[];
 
   add(entry): void {

@@ -4,6 +4,7 @@ import { PromiseUtils } from '../utils/promise_utils';
 const TAG_VALUE_SUGGESTIONS_LIMIT = 20;
 
 export class TagInputCtrl {
+  // @ts-ignore
   tagValues: string[];
   private $scope: any;
   private promiseUtils: PromiseUtils;
