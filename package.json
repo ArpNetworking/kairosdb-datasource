@@ -14,8 +14,8 @@
     "@grafana/ui": "next",
     "@types/grafana": "github:CorpGlory/types-grafana.git",
     "@types/lodash": "latest",
-    "tslib": "^2.3.1",
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "tslib": "^2.3.1"
   },
   "resolutions": {
     "@babel/preset-env": "7.9.0"
