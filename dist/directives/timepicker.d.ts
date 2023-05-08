@@ -1,3 +1,4 @@
+import moment from "moment";
 import { KairosDBTarget } from "../beans/request/target";
 export declare class TimePickerCtrl {
     private $scope;
@@ -29,7 +30,7 @@ export declare class TimePickerCtrl {
     applyCustom(): void;
     absoluteFromChanged(): void;
     absoluteToChanged(): void;
-    getAbsoluteMomentForTimezone(jsDate: any): any;
+    getAbsoluteMomentForTimezone(jsDate: any): moment.Moment;
     setRelativeFilter(timespan: any): void;
     enableOverride(): void;
     disableOverride(): void;

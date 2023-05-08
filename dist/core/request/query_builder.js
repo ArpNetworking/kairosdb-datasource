@@ -1,5 +1,13 @@
 System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/request/metric_query", "../../beans/request/target", "../../utils/templating_utils", "./group_bys_builder", "./parameter_object_builder", "./sampling_converter", "./sampling_parameter_converter"], function (exports_1, context_1) {
     "use strict";
+    var __assign = (this && this.__assign) || Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
     var lodash_1, datapoints_query_1, metric_query_1, target_1, templating_utils_1, group_bys_builder_1, parameter_object_builder_1, sampling_converter_1, sampling_parameter_converter_1, KairosDBQueryBuilder;
     var __moduleName = context_1 && context_1.id;
     return {
@@ -57,10 +65,11 @@ System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/
                         url: "/metricnames"
                     });
                 };
-                KairosDBQueryBuilder.prototype.buildMetricTagsQuery = function (metricName, filters) {
+                KairosDBQueryBuilder.prototype.buildMetricTagsQuery = function (metricName, filters, options) {
                     if (filters === void 0) { filters = {}; }
+                    if (options === void 0) { options = {}; }
                     return this.buildRequest({
-                        data: this.buildTagsRequestBody(metricName, filters),
+                        data: this.buildTagsRequestBody(metricName, filters, options),
                         method: "POST",
                         url: "/datapoints/query/tags"
                     });
@@ -108,13 +117,12 @@ System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/
                 KairosDBQueryBuilder.prototype.buildUrl = function (urlStub) {
                     return this.url + this.apiPath + urlStub;
                 };
-                KairosDBQueryBuilder.prototype.buildTagsRequestBody = function (metricName, filters) {
+                KairosDBQueryBuilder.prototype.buildTagsRequestBody = function (metricName, filters, options) {
                     if (filters === void 0) { filters = {}; }
-                    return {
-                        cache_time: 0,
-                        metrics: [{ name: metricName, tags: filters }],
-                        start_absolute: 0
-                    };
+                    if (options === void 0) { options = {}; }
+                    var from = __assign({}, options.from);
+                    var to = __assign({}, options.to);
+                    return __assign({ cache_time: 0, metrics: [{ name: metricName, tags: filters }] }, to, from);
                 };
                 return KairosDBQueryBuilder;
             }());

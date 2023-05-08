@@ -118,4 +118,22 @@ describe("QueryBuilder", () => {
         // then
         request.data.metrics[0].tags.should.be.equal(tagsFilters);
     });
+
+    it("should use correct time range for tags", () => {
+        // given
+        const from = moment(1511861103);
+        const expectedFrom = 1511861103;
+        const to = moment(1511893173);
+        const expectedTo = 1511893173;
+        const options = {
+            panelId: "panelId",
+            range: {from, to}
+        };
+        // when
+        const datapointsQuery = queryBuilder.buildMetricTagsQuery("metric_name", {},
+            {from: {start_absolute: from.valueOf()}, to: { end_absolute: to.valueOf() } });
+        // then
+        datapointsQuery.data.start_absolute.should.equal(expectedFrom);
+        datapointsQuery.data.end_absolute.should.equal(expectedTo);
+    });
 });

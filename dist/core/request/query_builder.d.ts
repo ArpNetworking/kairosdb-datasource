@@ -11,7 +11,7 @@ export declare class KairosDBQueryBuilder {
     constructor(withCredentials: boolean, url: string, apiPath: string, templateSrv: any, scopedVars: any, snapToIntervals?: UnitValue[]);
     buildHealthStatusQuery(): any;
     buildMetricNameQuery(): any;
-    buildMetricTagsQuery(metricName: string, filters?: {}): any;
+    buildMetricTagsQuery(metricName: string, filters?: {}, options?: {}): any;
     buildDatapointsQuery(targets: any, options: any): any;
     private buildMetricQuery;
     private unpackTags;

@@ -3,7 +3,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks("grunt-execute");
     grunt.loadNpmTasks("grunt-contrib-clean");
-    grunt.loadNpmTasks("grunt-package-modules");
+    grunt.loadNpmTasks("@string-bean/grunt-package-modules");
     grunt.loadNpmTasks("grunt-tslint");
     grunt.loadNpmTasks("grunt-karma");
 

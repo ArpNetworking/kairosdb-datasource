@@ -46,9 +46,9 @@ export class KairosDBQueryBuilder {
         });
     }
 
-    public buildMetricTagsQuery(metricName: string, filters = {}) {
+    public buildMetricTagsQuery(metricName: string, filters = {}, options = {}) {
         return this.buildRequest({
-            data: this.buildTagsRequestBody(metricName, filters),
+            data: this.buildTagsRequestBody(metricName, filters, options),
             method: "POST",
             url: "/datapoints/query/tags"
         });
@@ -115,11 +115,16 @@ export class KairosDBQueryBuilder {
         return this.url + this.apiPath + urlStub;
     }
 
-    private buildTagsRequestBody(metricName, filters = {}) {
-        return {
+    private buildTagsRequestBody(metricName, filters = {}, options = {}) {
+        const from = { ...options.from };
+        const to = { ...options.to };
+        const body = {
             cache_time: 0,
             metrics: [{name: metricName, tags: filters}],
-            start_absolute: 0
+            ...to,
+            ...from,
         };
+        console.log("body: ", body);
+        return body;
     }
 }
