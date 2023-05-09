@@ -122,16 +122,15 @@ describe("QueryBuilder", () => {
     it("should use correct time range for tags", () => {
         // given
         const from = moment(1511861103);
-        const expectedFrom = 1511861103;
+        const expectedFrom = 1511861000;
         const to = moment(1511893173);
-        const expectedTo = 1511893173;
+        const expectedTo = 1511893000;
         const options = {
             panelId: "panelId",
             range: {from, to}
         };
         // when
-        const datapointsQuery = queryBuilder.buildMetricTagsQuery("metric_name", {},
-            {from: {start_absolute: from.valueOf()}, to: { end_absolute: to.valueOf() } });
+        const datapointsQuery = queryBuilder.buildMetricTagsQuery("metric_name", {}, {from, to});
         // then
         datapointsQuery.data.start_absolute.should.equal(expectedFrom);
         datapointsQuery.data.end_absolute.should.equal(expectedTo);

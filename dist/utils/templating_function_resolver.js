@@ -13,13 +13,13 @@ System.register(["lodash"], function (exports_1, context_1) {
                 function TemplatingFunctionResolver(templatingUtils) {
                     this.templatingUtils = templatingUtils;
                 }
-                TemplatingFunctionResolver.prototype.unpackFunction = function (matchedFunction, functionBody) {
+                TemplatingFunctionResolver.prototype.unpackFunction = function (matchedFunction, functionBody, options) {
                     var _this = this;
                     var matched = functionBody.match(matchedFunction.regexp);
                     var args = matched[1].split(TemplatingFunctionResolver.FUNCTION_ARGUMENTS_SEPARATOR).map(function (arg) { return arg.trim(); });
                     var simpleArgs = args.filter(function (argument) { return !_this.isFilterArgument(argument); });
                     var filters = lodash_1.default.difference(args, simpleArgs).map(function (filterArgument) { return _this.mapToFilter(filterArgument); });
-                    return function () { return matchedFunction.body.apply(matchedFunction, simpleArgs.concat([filters.reduce(function (filter1, filter2) { return lodash_1.default.merge(filter1, filter2); }, {})])); };
+                    return function () { return matchedFunction.body.apply(matchedFunction, simpleArgs.concat([filters.reduce(function (filter1, filter2) { return lodash_1.default.merge(filter1, filter2); }, {}), options.range])); };
                 };
                 TemplatingFunctionResolver.prototype.mapToFilter = function (filter) {
                     var filterParams = filter.split(TemplatingFunctionResolver.FILTER_ARGUMENT_SEPARATOR);

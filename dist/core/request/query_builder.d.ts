@@ -1,4 +1,5 @@
 import { UnitValue } from "../../beans/aggregators/utils";
+import { TimeRange } from "../../beans/request/target";
 export declare class KairosDBQueryBuilder {
     private withCredentials;
     private url;
@@ -11,7 +12,7 @@ export declare class KairosDBQueryBuilder {
     constructor(withCredentials: boolean, url: string, apiPath: string, templateSrv: any, scopedVars: any, snapToIntervals?: UnitValue[]);
     buildHealthStatusQuery(): any;
     buildMetricNameQuery(): any;
-    buildMetricTagsQuery(metricName: string, filters?: {}, options?: {}): any;
+    buildMetricTagsQuery(metricName: string, filters?: {}, timeRange?: TimeRange): any;
     buildDatapointsQuery(targets: any, options: any): any;
     private buildMetricQuery;
     private unpackTags;

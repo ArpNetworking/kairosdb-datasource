@@ -11,6 +11,7 @@ System.register(["lodash", "../utils/promise_utils"], function (exports_1, conte
             restrict: "E",
             scope: {
                 alias: "=",
+                autocompleteMaxMetrics: "=",
                 metricNames: "=",
                 value: "="
             },
@@ -49,7 +50,7 @@ System.register(["lodash", "../utils/promise_utils"], function (exports_1, conte
                     var query = this.$scope.getMetricInputValue();
                     return this.promiseUtils.resolvedPromise(this.metricNames
                         .filter(function (metricName) { return lodash_1.default.includes(metricName, query); })
-                        .slice(0, METRIC_NAMES_SUGGESTIONS_LIMIT)
+                        .slice(0, this.autocompleteMaxMetrics)
                         .map(function (metricName) {
                         return _this.uiSegmentSrv.newSegment(metricName);
                     }));

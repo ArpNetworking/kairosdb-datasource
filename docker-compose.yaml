@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  grafana:
+    build: .
+    ports:
+      - 3000:3000
+    environment:
+      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-kairosdb-datasource
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin

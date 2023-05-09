@@ -68,6 +68,7 @@ System.register(["lodash", "../beans/function", "../beans/request/legacy_target_
                     this.legacyTargetConverter = new legacy_target_converter_1.LegacyTargetConverter();
                     this.snapToIntervals = time_unit_utils_1.TimeUnitUtils.intervalsToUnitValues(instanceSettings.jsonData.snapToIntervals);
                     this.enforceScalarSetting = instanceSettings.jsonData.enforceScalarSetting;
+                    this.autocompleteMaxMetrics = instanceSettings.jsonData.autocompleteMaxMetrics;
                     this.registerTemplatingFunctions();
                 }
                 KairosDBDatasource.prototype.initialize = function () {
@@ -119,15 +120,15 @@ System.register(["lodash", "../beans/function", "../beans/request/legacy_target_
                     return this.executeRequest(datapointsQuery)
                         .then(function (response) { return _this.responseHandler.convertToDatapoints(response.data, aliases); });
                 };
-                KairosDBDatasource.prototype.getMetricTags = function (metricNameTemplate, filters) {
+                KairosDBDatasource.prototype.getMetricTags = function (metricNameTemplate, filters, timeRange) {
                     if (filters === void 0) { filters = {}; }
                     var metricName = this.templatingUtils.replace(metricNameTemplate)[0];
-                    return this.executeRequest(this.getRequestBuilder().buildMetricTagsQuery(metricName, filters))
+                    return this.executeRequest(this.getRequestBuilder().buildMetricTagsQuery(metricName, filters, timeRange))
                         .then(this.handleMetricTagsResponse);
                 };
-                KairosDBDatasource.prototype.metricFindQuery = function (query) {
+                KairosDBDatasource.prototype.metricFindQuery = function (query, options) {
                     var _this = this;
-                    var func = this.templatingFunctionsCtrl.resolve(query);
+                    var func = this.templatingFunctionsCtrl.resolve(query, options);
                     return func().then(function (values) { return values.map(function (value) { return _this.mapToTemplatingValue(value); }); });
                 };
                 KairosDBDatasource.prototype.getMetricNames = function () {
@@ -155,12 +156,12 @@ System.register(["lodash", "../beans/function", "../beans/request/legacy_target_
                     return this.metricNamesStore.get()
                         .then(function (metricNames) { return lodash_1.default.filter(metricNames, function (metricName) { return lodash_1.default.includes(metricName, metricNamePart); }); });
                 };
-                KairosDBDatasource.prototype.getMetricTagNames = function (metricName) {
-                    return this.getMetricTags(metricName)
+                KairosDBDatasource.prototype.getMetricTagNames = function (metricName, timeRange) {
+                    return this.getMetricTags(metricName, {}, timeRange)
                         .then(function (tags) { return lodash_1.default.keys(tags); });
                 };
-                KairosDBDatasource.prototype.getMetricTagValues = function (metricName, tagName, filters) {
-                    return this.getMetricTags(metricName, filters)
+                KairosDBDatasource.prototype.getMetricTagValues = function (metricName, tagName, filters, timeRange) {
+                    return this.getMetricTags(metricName, filters, timeRange)
                         .then(function (tags) {
                         return lodash_1.default.values(tags[tagName]);
                     });

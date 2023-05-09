@@ -12,12 +12,12 @@ export class TemplatingFunctionResolver {
         this.templatingUtils = templatingUtils;
     }
 
-    public unpackFunction(matchedFunction, functionBody: string): () => Promise<string[]> {
+    public unpackFunction(matchedFunction, functionBody: string, options?: any): () => Promise<string[]> {
         const matched = functionBody.match(matchedFunction.regexp);
         const args = matched[1].split(TemplatingFunctionResolver.FUNCTION_ARGUMENTS_SEPARATOR).map((arg) => arg.trim());
         const simpleArgs = args.filter((argument) => !this.isFilterArgument(argument));
         const filters = _.difference(args, simpleArgs).map((filterArgument) => this.mapToFilter(filterArgument));
-        return () => matchedFunction.body(...simpleArgs, filters.reduce((filter1, filter2) => _.merge(filter1, filter2), {}));
+        return () => matchedFunction.body(...simpleArgs, filters.reduce((filter1, filter2) => _.merge(filter1, filter2), {}), options.range);
     }
 
     private mapToFilter(filter: string) {

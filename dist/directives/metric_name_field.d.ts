@@ -6,6 +6,7 @@ export declare class MetricNameFieldCtrl {
     segment: any;
     aliasInputVisible: boolean;
     aliasAddedVisible: boolean;
+    autocompleteMaxMetrics: number;
     private $q;
     private $scope;
     private promiseUtils;
@@ -25,6 +26,7 @@ export declare function MetricNameFieldDirective(): {
     restrict: string;
     scope: {
         alias: string;
+        autocompleteMaxMetrics: string;
         metricNames: string;
         value: string;
     };

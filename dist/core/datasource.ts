@@ -2,7 +2,7 @@ import _ from "lodash";
 import {UnitValue} from "../beans/aggregators/utils";
 import {TemplatingFunction} from "../beans/function";
 import {LegacyTargetConverter} from "../beans/request/legacy_target_converter";
-import {KairosDBTarget} from "../beans/request/target";
+import {KairosDBTarget, TimeRange} from "../beans/request/target";
 import {TemplatingFunctionsCtrl} from "../controllers/templating_functions_ctrl";
 import {PromiseUtils} from "../utils/promise_utils";
 import {TemplatingFunctionResolver} from "../utils/templating_function_resolver";
@@ -33,6 +33,7 @@ export class KairosDBDatasource {
     private legacyTargetConverter: LegacyTargetConverter;
     private templatingUtils: TemplatingUtils;
     private snapToIntervals?: UnitValue[];
+    private autocompleteMaxMetrics: number;
 
     constructor(instanceSettings, $q, backendSrv, templateSrv) {
         this.type = instanceSettings.type;
@@ -51,6 +52,7 @@ export class KairosDBDatasource {
         this.legacyTargetConverter = new LegacyTargetConverter();
         this.snapToIntervals = TimeUnitUtils.intervalsToUnitValues(instanceSettings.jsonData.snapToIntervals);
         this.enforceScalarSetting = instanceSettings.jsonData.enforceScalarSetting;
+        this.autocompleteMaxMetrics = instanceSettings.jsonData.autocompleteMaxMetrics;
         this.registerTemplatingFunctions();
     }
 
@@ -107,14 +109,14 @@ export class KairosDBDatasource {
             .then((response) => this.responseHandler.convertToDatapoints(response.data, aliases));
     }
 
-    public getMetricTags(metricNameTemplate, filters = {}) {
+    public getMetricTags(metricNameTemplate, filters: any = {}, timeRange?: TimeRange) {
         const metricName = this.templatingUtils.replace(metricNameTemplate)[0];
-        return this.executeRequest(this.getRequestBuilder().buildMetricTagsQuery(metricName, filters))
+        return this.executeRequest(this.getRequestBuilder().buildMetricTagsQuery(metricName, filters, timeRange))
             .then(this.handleMetricTagsResponse);
     }
 
-    public metricFindQuery(query: string) {
-        const func = this.templatingFunctionsCtrl.resolve(query);
+    public metricFindQuery(query: string, options?: any) {
+        const func = this.templatingFunctionsCtrl.resolve(query, options);
         return func().then((values) => values.map((value) => this.mapToTemplatingValue(value)));
     }
 
@@ -148,13 +150,13 @@ export class KairosDBDatasource {
             .then((metricNames) => _.filter(metricNames, (metricName) => _.includes(metricName, metricNamePart)));
     }
 
-    private getMetricTagNames(metricName) {
-        return this.getMetricTags(metricName)
+    private getMetricTagNames(metricName, timeRange?: TimeRange) {
+        return this.getMetricTags(metricName, {}, timeRange)
             .then((tags) => _.keys(tags));
     }
 
-    private getMetricTagValues(metricName: string, tagName: string, filters: any) {
-        return this.getMetricTags(metricName, filters)
+    private getMetricTagValues(metricName: string, tagName: string, filters: any, timeRange?: TimeRange) {
+        return this.getMetricTags(metricName, filters, timeRange)
             .then((tags) => {
                 return _.values(tags[tagName]);
             });

@@ -1,3 +1,4 @@
+import { TimeRange } from "../beans/request/target";
 import { MetricNamesStore } from "./metric_names_store";
 export declare class KairosDBDatasource {
     initialized: boolean;
@@ -18,12 +19,13 @@ export declare class KairosDBDatasource {
     private legacyTargetConverter;
     private templatingUtils;
     private snapToIntervals?;
+    private autocompleteMaxMetrics;
     constructor(instanceSettings: any, $q: any, backendSrv: any, templateSrv: any);
     initialize(): Promise<boolean>;
     testDatasource(): any;
     query(options: any): any;
-    getMetricTags(metricNameTemplate: any, filters?: {}): any;
-    metricFindQuery(query: string): Promise<{
+    getMetricTags(metricNameTemplate: any, filters?: any, timeRange?: TimeRange): any;
+    metricFindQuery(query: string, options?: any): Promise<{
         text: any;
         value: any;
     }[]>;

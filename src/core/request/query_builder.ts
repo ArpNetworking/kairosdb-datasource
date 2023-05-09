@@ -1,9 +1,11 @@
+import * as dateMath from "app/core/utils/datemath";
 import _ from "lodash";
+import {Moment} from "moment";
 import {Aggregator} from "../../beans/aggregators/aggregator";
 import {UnitValue} from "../../beans/aggregators/utils";
 import {DatapointsQuery} from "../../beans/request/datapoints_query";
 import {MetricQuery} from "../../beans/request/metric_query";
-import {KairosDBTarget} from "../../beans/request/target";
+import {KairosDBTarget, TimeRange} from "../../beans/request/target";
 import {TemplatingUtils} from "../../utils/templating_utils";
 import {GroupBysBuilder} from "./group_bys_builder";
 import {ParameterObjectBuilder} from "./parameter_object_builder";
@@ -46,9 +48,9 @@ export class KairosDBQueryBuilder {
         });
     }
 
-    public buildMetricTagsQuery(metricName: string, filters = {}, options = {}) {
+    public buildMetricTagsQuery(metricName: string, filters = {}, timeRange?: TimeRange) {
         return this.buildRequest({
-            data: this.buildTagsRequestBody(metricName, filters, options),
+            data: this.buildTagsRequestBody(metricName, filters, timeRange),
             method: "POST",
             url: "/datapoints/query/tags"
         });
@@ -115,15 +117,28 @@ export class KairosDBQueryBuilder {
         return this.url + this.apiPath + urlStub;
     }
 
-    private buildTagsRequestBody(metricName, filters = {}, options = {}) {
-        const from = { ...options.from };
-        const to = { ...options.to };
-        const body = {
+    private buildTagsRequestBody(metricName, filters = {}, timeRange?: TimeRange) {
+        const body: any = {
             cache_time: 0,
             metrics: [{name: metricName, tags: filters}],
-            ...to,
-            ...from,
         };
+        if (timeRange) {
+            if (timeRange.from) {
+                const startMoment: Moment = dateMath.parse(timeRange.from);
+                if (startMoment) {
+                    body.start_absolute = startMoment.unix() * 1000;
+                }
+            }
+            if (timeRange.to) {
+                const endMoment: Moment = dateMath.parse(timeRange.to);
+                if (endMoment) {
+                    body.end_absolute = endMoment.unix() * 1000;
+                }
+            }
+        }
+        if (!(body.start_absolute || body.start_relative)) {
+            body.start_absolute = 0;
+        }
         console.log("body: ", body);
         return body;
     }
