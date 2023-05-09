@@ -17,9 +17,9 @@ System.register(["lodash"], function (exports_1, context_1) {
                 TemplatingFunctionsCtrl.prototype.register = function (func) {
                     this.functions.push(func);
                 };
-                TemplatingFunctionsCtrl.prototype.resolve = function (functionBody) {
+                TemplatingFunctionsCtrl.prototype.resolve = function (functionBody, options) {
                     var matchedFunction = lodash_1.default.find(this.functions, function (func) { return new RegExp(func.regexp).test(functionBody); });
-                    return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody);
+                    return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody, options);
                 };
                 return TemplatingFunctionsCtrl;
             }());

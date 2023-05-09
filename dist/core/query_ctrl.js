@@ -106,7 +106,7 @@ System.register(["app/plugins/sdk", "../beans/aggregators/aggregators", "../bean
                     this.clear();
                     if (metricName) {
                         this.tags = new metric_tags_1.MetricTags();
-                        this.datasource.getMetricTags(metricName)
+                        this.datasource.getMetricTags(metricName, {}, { from: { start_absolute: query.startTime() }, to: { end_absolute: query.endTime() } })
                             .then(function (tags) { return $scope.$apply(function () { return _this.tags.updateTags(tags); }); }, function (error) { return _this.tagsInitializationError = error.data.message; })
                             .then(function () {
                             if (!_this.tagsInitializationError) {

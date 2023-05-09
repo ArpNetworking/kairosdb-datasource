@@ -77,7 +77,7 @@ export class KairosDBQueryCtrl extends QueryCtrl {
         this.clear();
         if (metricName) {
             this.tags = new MetricTags();
-            this.datasource.getMetricTags(metricName)
+            this.datasource.getMetricTags(metricName, {}, {from: {start_absolute: query.startTime()}, to: {end_absolute: query.endTime()}})
                 .then(
                     (tags) => $scope.$apply(() => this.tags.updateTags(tags)),
                     (error) => this.tagsInitializationError = error.data.message

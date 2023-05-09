@@ -1,0 +1,15 @@
+apiVersion: 1
+deleteDatasources: []
+
+datasources:
+  - name: KairosDB
+    type: grafana-kairosdb-datasource
+    access: proxy
+    orgId: 1
+    url: http://kairosdb:8080
+    isDefault: true
+    version: 1
+    editable: false
+    jsonData:
+      snapToIntervals: "1m,5m,1h,3h,6h,12h,1d"
+      autocompleteMaxMetrics: "1000"

@@ -10,6 +10,7 @@ export class MetricNameFieldCtrl {
     public segment: any;
     public aliasInputVisible: boolean = false;
     public aliasAddedVisible: boolean = false;
+    public autocompleteMaxMetrics: number;
     private $q: any;
     private $scope: any;
     private promiseUtils: PromiseUtils;
@@ -32,7 +33,7 @@ export class MetricNameFieldCtrl {
         const query = this.$scope.getMetricInputValue();
         return this.promiseUtils.resolvedPromise(this.metricNames
             .filter((metricName) => _.includes(metricName, query))
-            .slice(0, METRIC_NAMES_SUGGESTIONS_LIMIT)
+            .slice(0, this.autocompleteMaxMetrics)
             .map((metricName) => {
                 return this.uiSegmentSrv.newSegment(metricName);
             }));
@@ -64,6 +65,7 @@ export function MetricNameFieldDirective() {
         restrict: "E",
         scope: {
             alias: "=",
+            autocompleteMaxMetrics: "=",
             metricNames: "=",
             value: "="
         },

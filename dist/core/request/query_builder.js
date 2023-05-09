@@ -1,9 +1,12 @@
-System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/request/metric_query", "../../beans/request/target", "../../utils/templating_utils", "./group_bys_builder", "./parameter_object_builder", "./sampling_converter", "./sampling_parameter_converter"], function (exports_1, context_1) {
+System.register(["app/core/utils/datemath", "lodash", "../../beans/request/datapoints_query", "../../beans/request/metric_query", "../../beans/request/target", "../../utils/templating_utils", "./group_bys_builder", "./parameter_object_builder", "./sampling_converter", "./sampling_parameter_converter"], function (exports_1, context_1) {
     "use strict";
-    var lodash_1, datapoints_query_1, metric_query_1, target_1, templating_utils_1, group_bys_builder_1, parameter_object_builder_1, sampling_converter_1, sampling_parameter_converter_1, KairosDBQueryBuilder;
+    var dateMath, lodash_1, datapoints_query_1, metric_query_1, target_1, templating_utils_1, group_bys_builder_1, parameter_object_builder_1, sampling_converter_1, sampling_parameter_converter_1, KairosDBQueryBuilder;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
+            function (dateMath_1) {
+                dateMath = dateMath_1;
+            },
             function (lodash_1_1) {
                 lodash_1 = lodash_1_1;
             },
@@ -57,10 +60,10 @@ System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/
                         url: "/metricnames"
                     });
                 };
-                KairosDBQueryBuilder.prototype.buildMetricTagsQuery = function (metricName, filters) {
+                KairosDBQueryBuilder.prototype.buildMetricTagsQuery = function (metricName, filters, timeRange) {
                     if (filters === void 0) { filters = {}; }
                     return this.buildRequest({
-                        data: this.buildTagsRequestBody(metricName, filters),
+                        data: this.buildTagsRequestBody(metricName, filters, timeRange),
                         method: "POST",
                         url: "/datapoints/query/tags"
                     });
@@ -108,13 +111,31 @@ System.register(["lodash", "../../beans/request/datapoints_query", "../../beans/
                 KairosDBQueryBuilder.prototype.buildUrl = function (urlStub) {
                     return this.url + this.apiPath + urlStub;
                 };
-                KairosDBQueryBuilder.prototype.buildTagsRequestBody = function (metricName, filters) {
+                KairosDBQueryBuilder.prototype.buildTagsRequestBody = function (metricName, filters, timeRange) {
                     if (filters === void 0) { filters = {}; }
-                    return {
+                    var body = {
                         cache_time: 0,
                         metrics: [{ name: metricName, tags: filters }],
-                        start_absolute: 0
                     };
+                    if (timeRange) {
+                        if (timeRange.from) {
+                            var startMoment = dateMath.parse(timeRange.from);
+                            if (startMoment) {
+                                body.start_absolute = startMoment.unix() * 1000;
+                            }
+                        }
+                        if (timeRange.to) {
+                            var endMoment = dateMath.parse(timeRange.to);
+                            if (endMoment) {
+                                body.end_absolute = endMoment.unix() * 1000;
+                            }
+                        }
+                    }
+                    if (!(body.start_absolute || body.start_relative)) {
+                        body.start_absolute = 0;
+                    }
+                    console.log("body: ", body);
+                    return body;
                 };
                 return KairosDBQueryBuilder;
             }());

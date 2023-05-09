@@ -20,7 +20,7 @@
     "brace": "^0.10.0",
     "chai": "^4.1.2",
     "es6-shim": "^0.35.3",
-    "grafana-sdk-mocks": "github:briangann/grafana-sdk-mocks",
+    "grafana-sdk-mocks": "git+https://github.com/briangann/grafana-sdk-mocks",
     "grunt": "^1.0.1",
     "grunt-babel": "~6.0.0",
     "grunt-contrib-clean": "^1.1.0",
@@ -30,12 +30,12 @@
     "grunt-execute": "~0.2.2",
     "grunt-karma": "^2.0.0",
     "grunt-mocha-test": "~0.13.3",
-    "grunt-package-modules": "~1.0.0",
+    "@string-bean/grunt-package-modules": "~1.3.0",
     "grunt-systemjs-builder": "^1.0.0",
     "grunt-ts": "^6.0.0-beta.21",
     "grunt-tslint": "~5.0.1",
     "jsdom": "~11.4.0",
-    "karma": "^1.7.1",
+    "karma": "^3.1.4",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-es6-shim": "^1.0.0",
@@ -60,7 +60,6 @@
   },
   "dependencies": {
     "angular": "^1.6.6",
-    "grafana-sdk-mocks": "github:briangann/grafana-sdk-mocks",
     "moment": "^2.22.2"
   },
   "homepage": "https://github.com/grafana/kairosdb-datasource"

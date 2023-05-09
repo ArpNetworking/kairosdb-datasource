@@ -14,8 +14,8 @@ export class TemplatingFunctionsCtrl {
         this.functions.push(func);
     }
 
-    public resolve(functionBody: string) {
+    public resolve(functionBody: string, options?: any) {
         const matchedFunction = _.find(this.functions, (func) => new RegExp(func.regexp).test(functionBody));
-        return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody);
+        return this.templatingFunctionResolver.unpackFunction(matchedFunction, functionBody, options);
     }
 }
