@@ -40,6 +40,7 @@ export class TemplatingUtils {
     }
 
     public replace(expression: string): string[] {
+        const scopedVars = this.scopedVars;
         const replacedExpression = this.templateSrv.replace(expression, this.scopedVars, TemplatingUtils.customFormatterFn);
         if (replacedExpression) {
             // Looks like "thing0" if single value, or "{thing1_MAGIC_DELIM_thing2}" if multivalue
@@ -52,7 +53,11 @@ export class TemplatingUtils {
                         .split(TemplatingUtils.MULTI_VALUE_SEPARATOR);
                     replacedValues = _.flatMap(values, (value) => {
                         return replacedValues.map((replacedValue) => {
-                            return replacedValue.replace(multiValue, value);
+                            if (Object.hasOwn(scopedVars, value)) {
+                                return replacedValue.replace(multiValue, value);
+                            } else {
+                                return replacedValue;
+                            }
                         });
                     });
                 });

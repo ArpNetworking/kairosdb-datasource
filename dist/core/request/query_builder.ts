@@ -139,7 +139,6 @@ export class KairosDBQueryBuilder {
         if (!(body.start_absolute || body.start_relative)) {
             body.start_absolute = 0;
         }
-        console.log("body: ", body);
         return body;
     }
 }
