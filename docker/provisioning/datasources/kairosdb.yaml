@@ -4,9 +4,9 @@ deleteDatasources: []
 datasources:
   - name: KairosDB
     type: grafana-kairosdb-datasource
-    access: proxy
+    access: direct
     orgId: 1
-    url: http://kairosdb:8080
+    url: http://localhost:9223
     isDefault: true
     version: 1
     editable: false

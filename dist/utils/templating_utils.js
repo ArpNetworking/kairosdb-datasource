@@ -15,6 +15,7 @@ System.register(["lodash"], function (exports_1, context_1) {
                     this.scopedVars = scopedVars;
                 }
                 TemplatingUtils.prototype.replace = function (expression) {
+                    var scopedVars = this.scopedVars;
                     var replacedExpression = this.templateSrv.replace(expression, this.scopedVars, TemplatingUtils.customFormatterFn);
                     if (replacedExpression) {
                         var matchedMultiValues = replacedExpression.match(TemplatingUtils.MULTI_VALUE_REGEX);
@@ -25,7 +26,12 @@ System.register(["lodash"], function (exports_1, context_1) {
                                     .split(TemplatingUtils.MULTI_VALUE_SEPARATOR);
                                 replacedValues_1 = lodash_1.default.flatMap(values, function (value) {
                                     return replacedValues_1.map(function (replacedValue) {
-                                        return replacedValue.replace(multiValue, value);
+                                        if (Object.hasOwn(scopedVars, value)) {
+                                            return replacedValue.replace(multiValue, value);
+                                        }
+                                        else {
+                                            return replacedValue;
+                                        }
                                     });
                                 });
                             });
