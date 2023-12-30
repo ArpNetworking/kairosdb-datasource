@@ -35,6 +35,7 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'brandonarp-github-token', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
           sh "github-release release --user ${org} --repo ${repo} --tag ${TAG_NAME}"
+          sh "sleep 5"
           sh "github-release upload --user ${org} --repo ${repo} --tag ${TAG_NAME} --name kairosdb-datasource.zip --file kairosdb-datasource.zip"
         }
       }
