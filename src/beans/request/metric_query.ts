@@ -6,6 +6,7 @@ export class MetricQuery {
     public group_by: any[];
     public start_absolute?: number;
     public end_absolute?: number;
+    public exclude_tags: boolean = true;
 
     constructor(name: string, tags: any, aggregators: any[], group_by: any[], start_absolute?: number, end_absolute?: number) {
         this.name = name;
