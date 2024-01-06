@@ -24,6 +24,6 @@ COPY . /root/
 RUN npm install
 RUN grunt --force
 
-FROM grafana/grafana:7.3.10 as prod
+FROM grafana/grafana:8.5.24 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
 COPY docker/provisioning /etc/grafana/provisioning
