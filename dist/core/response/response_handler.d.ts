@@ -3,6 +3,6 @@ export declare class KairosDBResponseHandler {
     private seriesNameBuilder;
     constructor(seriesNameBuilder: SeriesNameBuilder);
     convertToDatapoints(data: any, aliases: string[]): {
-        data: any;
+        data: any[];
     };
 }

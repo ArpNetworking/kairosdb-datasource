@@ -6,5 +6,6 @@ export declare class MetricQuery {
     group_by: any[];
     start_absolute?: number;
     end_absolute?: number;
+    exclude_tags: boolean;
     constructor(name: string, tags: any, aggregators: any[], group_by: any[], start_absolute?: number, end_absolute?: number);
 }

@@ -59,7 +59,8 @@
   },
   "dependencies": {
     "angular": "^1.8.3",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "grafana-data": "^2.0.1"
   },
   "homepage": "https://github.com/grafana/kairosdb-datasource"
 }

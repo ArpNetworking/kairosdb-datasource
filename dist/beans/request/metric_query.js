@@ -8,6 +8,7 @@ System.register([], function (exports_1, context_1) {
             MetricQuery = (function () {
                 function MetricQuery(name, tags, aggregators, group_by, start_absolute, end_absolute) {
                     this.limit = 0;
+                    this.exclude_tags = true;
                     this.name = name;
                     this.tags = tags;
                     this.aggregators = aggregators;
