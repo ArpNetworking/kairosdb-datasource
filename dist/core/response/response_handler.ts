@@ -1,6 +1,6 @@
+import {ArrayVector, FieldType, TIME_SERIES_TIME_FIELD_NAME, TIME_SERIES_VALUE_FIELD_NAME} from "@grafana/data";
 import _ from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
-import {FieldType, DataFrame, TIME_SERIES_TIME_FIELD_NAME, TIME_SERIES_VALUE_FIELD_NAME} from "grafana-data";
 
 export class KairosDBResponseHandler {
     private seriesNameBuilder: SeriesNameBuilder;
@@ -10,27 +10,27 @@ export class KairosDBResponseHandler {
     }
 
     public convertToDatapoints(data, aliases: string[]) {
-        console.log("Data:", data);
-        const datapoints = _.zip(aliases, data.queries)
-            .map((pair) => {
-                return {alias: pair[0], results: pair[1].results};
-            })
-            .map((entry) => _.map(entry.results, (result) => {
-                return {
-                    datapoints: _.flatMap(result.values, (value) => {
-                      const v = value[1];
-                      if (v !== null && typeof(v) === "object" && v.bins) {
-                        const bins = v.bins;
-                        return _.map(Object.keys(bins), (k) => [parseFloat(k), value[0], bins[k]]);
-                      } else {
-                        return [value.reverse()];
-                      }
-                    }),
-                    target: this.seriesNameBuilder.build(result.name, entry.alias, result.group_by)
-                };
-            }));
-        const flattened = _.flatten(datapoints);
-
+        // console.log("Data:", data);
+        // const datapoints = _.zip(aliases, data.queries)
+        //     .map((pair) => {
+        //         return {alias: pair[0], results: pair[1].results};
+        //     })
+        //     .map((entry) => _.map(entry.results, (result) => {
+        //         return {
+        //             datapoints: _.flatMap(result.values, (value) => {
+        //               const v = value[1];
+        //               if (v !== null && typeof(v) === "object" && v.bins) {
+        //                 const bins = v.bins;
+        //                 return _.map(Object.keys(bins), (k) => [parseFloat(k), value[0], bins[k]]);
+        //               } else {
+        //                 return [value.reverse()];
+        //               }
+        //             }),
+        //             target: this.seriesNameBuilder.build(result.name, entry.alias, result.group_by)
+        //         };
+        //     }));
+        // const flattened = _.flatten(datapoints);
+        //
         //
         //
         //
@@ -44,15 +44,15 @@ export class KairosDBResponseHandler {
         //
         // console.log("Flattened:", flattened);
         const queries = data.queries;
-        let dataFrames = [];
+        const dataFrames = [];
         for (const query of queries) {
             for (const result of query.results) {
-                let times = [];
-                let values = [];
-                let tags = {};
+                const times = new ArrayVector();
+                const values = new ArrayVector();
+                const tags = {};
                 for (const datapoint of result.values) {
-                    times.push(datapoint[0]);
-                    values.push(datapoint[1]);
+                    times.add(datapoint[0] as number);
+                    values.add(datapoint[1]);
                 }
                 const group_by = result.group_by;
                 const tags_element: any = _.filter(group_by, (g) => g.name === "tag")[0];
@@ -78,7 +78,7 @@ export class KairosDBResponseHandler {
                         labels: tags,
                     },
                 ];
-                let df = {
+                const df = {
                     name: result.name,
                     // refId: timeSeries.refId,
                     // meta: timeSeries.meta,
@@ -88,7 +88,8 @@ export class KairosDBResponseHandler {
                 dataFrames.push(df);
             }
         }
-
+        //
+        console.log("DataFrames:", dataFrames);
         return {data: dataFrames};
         // return {data: flattened};
     }

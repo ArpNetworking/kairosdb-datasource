@@ -26,6 +26,7 @@ System.register(["lodash"], function (exports_1, context_1) {
             GroupByTagsCtrl = (function () {
                 function GroupByTagsCtrl() {
                     var _this = this;
+                    this.tags = [];
                     this.selectedTags = {};
                     this.tags.forEach(function (tag) { return _this.selectedTags[tag] = true; });
                 }

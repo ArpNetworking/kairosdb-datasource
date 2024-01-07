@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 export class GroupByTagsCtrl {
-    public tags: string[];
+    public tags: string[] = [];
     public selectedTags: { [key: string]: boolean } = {};
     public inputVisible: boolean;
     public allowedValues: string[];

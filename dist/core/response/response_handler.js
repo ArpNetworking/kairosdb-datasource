@@ -1,14 +1,14 @@
-System.register(["lodash", "grafana-data"], function (exports_1, context_1) {
+System.register(["@grafana/data", "lodash"], function (exports_1, context_1) {
     "use strict";
-    var lodash_1, grafana_data_1, KairosDBResponseHandler;
+    var data_1, lodash_1, KairosDBResponseHandler;
     var __moduleName = context_1 && context_1.id;
     return {
         setters: [
+            function (data_1_1) {
+                data_1 = data_1_1;
+            },
             function (lodash_1_1) {
                 lodash_1 = lodash_1_1;
-            },
-            function (grafana_data_1_1) {
-                grafana_data_1 = grafana_data_1_1;
             }
         ],
         execute: function () {
@@ -17,41 +17,19 @@ System.register(["lodash", "grafana-data"], function (exports_1, context_1) {
                     this.seriesNameBuilder = seriesNameBuilder;
                 }
                 KairosDBResponseHandler.prototype.convertToDatapoints = function (data, aliases) {
-                    var _this = this;
-                    console.log("Data:", data);
-                    var datapoints = lodash_1.default.zip(aliases, data.queries)
-                        .map(function (pair) {
-                        return { alias: pair[0], results: pair[1].results };
-                    })
-                        .map(function (entry) { return lodash_1.default.map(entry.results, function (result) {
-                        return {
-                            datapoints: lodash_1.default.flatMap(result.values, function (value) {
-                                var v = value[1];
-                                if (v !== null && typeof (v) === "object" && v.bins) {
-                                    var bins_1 = v.bins;
-                                    return lodash_1.default.map(Object.keys(bins_1), function (k) { return [parseFloat(k), value[0], bins_1[k]]; });
-                                }
-                                else {
-                                    return [value.reverse()];
-                                }
-                            }),
-                            target: _this.seriesNameBuilder.build(result.name, entry.alias, result.group_by)
-                        };
-                    }); });
-                    var flattened = lodash_1.default.flatten(datapoints);
                     var queries = data.queries;
                     var dataFrames = [];
                     for (var _i = 0, queries_1 = queries; _i < queries_1.length; _i++) {
                         var query = queries_1[_i];
                         for (var _a = 0, _b = query.results; _a < _b.length; _a++) {
                             var result = _b[_a];
-                            var times = [];
-                            var values = [];
+                            var times = new data_1.ArrayVector();
+                            var values = new data_1.ArrayVector();
                             var tags = {};
                             for (var _c = 0, _d = result.values; _c < _d.length; _c++) {
                                 var datapoint = _d[_c];
-                                times.push(datapoint[0]);
-                                values.push(datapoint[1]);
+                                times.add(datapoint[0]);
+                                values.add(datapoint[1]);
                             }
                             var group_by = result.group_by;
                             var tags_element = lodash_1.default.filter(group_by, function (g) { return g.name === "tag"; })[0];
@@ -65,14 +43,14 @@ System.register(["lodash", "grafana-data"], function (exports_1, context_1) {
                             }
                             var fields = [
                                 {
-                                    name: grafana_data_1.TIME_SERIES_TIME_FIELD_NAME,
-                                    type: grafana_data_1.FieldType.time,
+                                    name: data_1.TIME_SERIES_TIME_FIELD_NAME,
+                                    type: data_1.FieldType.time,
                                     config: {},
                                     values: times,
                                 },
                                 {
-                                    name: grafana_data_1.TIME_SERIES_VALUE_FIELD_NAME,
-                                    type: grafana_data_1.FieldType.number,
+                                    name: data_1.TIME_SERIES_VALUE_FIELD_NAME,
+                                    type: data_1.FieldType.number,
                                     config: {},
                                     values: values,
                                     labels: tags,
@@ -86,6 +64,7 @@ System.register(["lodash", "grafana-data"], function (exports_1, context_1) {
                             dataFrames.push(df);
                         }
                     }
+                    console.log("DataFrames:", dataFrames);
                     return { data: dataFrames };
                 };
                 return KairosDBResponseHandler;

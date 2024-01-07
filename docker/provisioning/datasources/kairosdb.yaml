@@ -6,7 +6,7 @@ datasources:
     type: grafana-kairosdb-datasource
     access: direct
     orgId: 1
-    url: https://kairosdb.arpnetworking.com
+    url: http://localhost:9223
     isDefault: true
     version: 1
     editable: false

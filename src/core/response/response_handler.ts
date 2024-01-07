@@ -1,4 +1,4 @@
-import {DataFrame, FieldType, TIME_SERIES_TIME_FIELD_NAME, TIME_SERIES_VALUE_FIELD_NAME} from "grafana-data";
+import {ArrayVector, FieldType, TIME_SERIES_TIME_FIELD_NAME, TIME_SERIES_VALUE_FIELD_NAME} from "@grafana/data";
 import _ from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
 
@@ -47,12 +47,12 @@ export class KairosDBResponseHandler {
         const dataFrames = [];
         for (const query of queries) {
             for (const result of query.results) {
-                const times = [];
-                const values = [];
+                const times = new ArrayVector();
+                const values = new ArrayVector();
                 const tags = {};
                 for (const datapoint of result.values) {
-                    times.push(datapoint[0] as number);
-                    values.push(datapoint[1]);
+                    times.add(datapoint[0] as number);
+                    values.add(datapoint[1]);
                 }
                 const group_by = result.group_by;
                 const tags_element: any = _.filter(group_by, (g) => g.name === "tag")[0];
@@ -65,14 +65,14 @@ export class KairosDBResponseHandler {
                 }
                 const fields = [
                     {
-                        name: "Time",
-                        type: "time",
+                        name: TIME_SERIES_TIME_FIELD_NAME,
+                        type: FieldType.time,
                         config: {},
                         values: times,
                     },
                     {
-                        name: "Value",
-                        type: "number",
+                        name: TIME_SERIES_VALUE_FIELD_NAME,
+                        type: FieldType.number,
                         config: {},
                         values: values,
                         labels: tags,
