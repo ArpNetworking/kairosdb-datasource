@@ -35,12 +35,14 @@ System.register(["lodash", "../utils/promise_utils"], function (exports_1, conte
                     this.uiSegmentSrv = uiSegmentSrv;
                     this.aliasInputVisible = false;
                     this.aliasAddedVisible = false;
-                    this.$scope = $scope;
-                    this.$q = $q;
-                    this.uiSegmentSrv = uiSegmentSrv;
-                    this.promiseUtils = new promise_utils_1.PromiseUtils($q);
-                    this.segment = this.value ? uiSegmentSrv.newSegment(this.value) : uiSegmentSrv.newSelectMetric();
-                    this.aliasAddedVisible = !lodash_1.default.isNil(this.alias);
+                    this.$onInit = function () {
+                        this.$scope = $scope;
+                        this.$q = $q;
+                        this.uiSegmentSrv = uiSegmentSrv;
+                        this.promiseUtils = new promise_utils_1.PromiseUtils($q);
+                        this.segment = this.value ? uiSegmentSrv.newSegment(this.value) : uiSegmentSrv.newSelectMetric();
+                        this.aliasAddedVisible = !lodash_1.default.isNil(this.alias);
+                    };
                 }
                 MetricNameFieldCtrl.prototype.onChange = function (segment) {
                     this.value = this.$scope.getMetricInputValue();

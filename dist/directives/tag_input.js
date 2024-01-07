@@ -32,8 +32,10 @@ System.register(["lodash", "../utils/promise_utils"], function (exports_1, conte
             TagInputCtrl = (function () {
                 function TagInputCtrl($scope, $q, uiSegmentSrv) {
                     this.uiSegmentSrv = uiSegmentSrv;
-                    this.promiseUtils = new promise_utils_1.PromiseUtils($q);
-                    this.$scope = $scope;
+                    this.$onInit = function () {
+                        this.promiseUtils = new promise_utils_1.PromiseUtils($q);
+                        this.$scope = $scope;
+                    };
                 }
                 TagInputCtrl.prototype.getTags = function () {
                     var _this = this;

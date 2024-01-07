@@ -8,7 +8,9 @@ export class GroupByTimeCtrl {
     public allowedUnitValues: string[] = EnumValues(TimeUnit);
 
     constructor() {
-        this.entries = this.entries || [];
+        this.$onInit = function() {
+            this.entries = this.entries || [];
+        };
     }
 
     public add(entry: any): void {

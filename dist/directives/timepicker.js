@@ -37,34 +37,38 @@ System.register(["angular", "app/core/utils/datemath", "lodash", "moment", "../u
         execute: function () {
             TimePickerCtrl = (function () {
                 function TimePickerCtrl($scope, $rootScope, timeSrv) {
-                    var _this = this;
                     this.$scope = $scope;
                     this.$rootScope = $rootScope;
                     this.timeSrv = timeSrv;
-                    this.$scope.ctrl = this;
-                    $scope.$parent.$watch("timeOverridden", function (newValue, oldValue) {
-                        if (newValue !== undefined) {
-                            if (newValue) {
-                                _this.enableOverride();
+                    this.$onInit = function () {
+                        var _this = this;
+                        this.$scope.ctrl = this;
+                        $scope.$parent.$watch("timeOverridden", function (newValue, oldValue) {
+                            if (newValue !== undefined) {
+                                if (newValue) {
+                                    _this.enableOverride();
+                                }
+                                else {
+                                    _this.disableOverride();
+                                }
                             }
-                            else {
-                                _this.disableOverride();
-                            }
+                        });
+                        $rootScope.onAppEvent("closeTimepicker", this.openDropdown.bind(this), $scope);
+                        if (this.dashboard.on !== undefined) {
+                            this.dashboard.on("refresh", this.onRefresh.bind(this), $scope);
                         }
-                    });
-                    $rootScope.onAppEvent("closeTimepicker", this.openDropdown.bind(this), $scope);
-                    this.dashboard.on("refresh", this.onRefresh.bind(this), $scope);
-                    this.panel = this.dashboard.timepicker;
-                    lodash_1.default.defaults(this.panel, TimePickerCtrl.defaults);
-                    this.firstDayOfWeek = moment_1.default.localeData().firstDayOfWeek();
-                    this.onRefresh();
+                        this.panel = this.dashboard.timepicker;
+                        lodash_1.default.defaults(this.panel, TimePickerCtrl.defaults);
+                        this.firstDayOfWeek = moment_1.default.localeData().firstDayOfWeek();
+                        this.onRefresh();
+                    };
                 }
                 TimePickerCtrl.prototype.onRefresh = function () {
                     var timeRaw = angular_1.default.copy(this.query.timeRange);
                     if (!timeRaw) {
                         timeRaw = this.timeSrv.timeRange().raw;
                     }
-                    if (this.dashboard.getTimezone() !== "utc") {
+                    if (this.dashboard.getTimezone === undefined || this.dashboard.getTimezone() !== "utc") {
                         if (moment_1.default.isMoment(timeRaw.from)) {
                             timeRaw.from.local();
                         }
@@ -119,7 +123,12 @@ System.register(["angular", "app/core/utils/datemath", "lodash", "moment", "../u
                     this.editTimeRaw.to = this.getAbsoluteMomentForTimezone(this.absolute.toJs);
                 };
                 TimePickerCtrl.prototype.getAbsoluteMomentForTimezone = function (jsDate) {
-                    return this.dashboard.getTimezone() === "utc" ? moment_1.default(jsDate).utc() : moment_1.default(jsDate);
+                    if (this.dashboard.getTimezone !== undefined) {
+                        return this.dashboard.getTimezone() === "utc" ? moment_1.default(jsDate).utc() : moment_1.default(jsDate);
+                    }
+                    else {
+                        return moment_1.default(jsDate);
+                    }
                 };
                 TimePickerCtrl.prototype.setRelativeFilter = function (timespan) {
                     var range = { from: timespan.from, to: timespan.to };

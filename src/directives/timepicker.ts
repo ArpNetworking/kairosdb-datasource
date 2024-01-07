@@ -30,29 +30,33 @@ export class TimePickerCtrl {
 
   /** @ngInject */
   constructor(private $scope, private $rootScope, private timeSrv) {
-    this.$scope.ctrl = this;
+    this.$onInit = function() {
+      this.$scope.ctrl = this;
 
-    $scope.$parent.$watch("timeOverridden", (newValue, oldValue) => {
-      if (newValue !== undefined) {
+      $scope.$parent.$watch("timeOverridden", (newValue, oldValue) => {
+        if (newValue !== undefined) {
           if (newValue) {
-              this.enableOverride();
+            this.enableOverride();
           } else {
-              this.disableOverride();
+            this.disableOverride();
           }
+        }
+      });
+
+      $rootScope.onAppEvent("closeTimepicker", this.openDropdown.bind(this), $scope);
+
+      if (this.dashboard.on !== undefined) {
+        this.dashboard.on("refresh", this.onRefresh.bind(this), $scope);
       }
-    });
 
-    $rootScope.onAppEvent("closeTimepicker", this.openDropdown.bind(this), $scope);
+      // init options
+      this.panel = this.dashboard.timepicker;
+      _.defaults(this.panel, TimePickerCtrl.defaults);
+      this.firstDayOfWeek = moment.localeData().firstDayOfWeek();
 
-    this.dashboard.on("refresh", this.onRefresh.bind(this), $scope);
-
-    // init options
-    this.panel = this.dashboard.timepicker;
-    _.defaults(this.panel, TimePickerCtrl.defaults);
-    this.firstDayOfWeek = moment.localeData().firstDayOfWeek();
-
-    // init time stuff
-    this.onRefresh();
+      // init time stuff
+      this.onRefresh();
+    };
   }
 
   public onRefresh() {
@@ -62,7 +66,8 @@ export class TimePickerCtrl {
       timeRaw = this.timeSrv.timeRange().raw;
     }
 
-    if (this.dashboard.getTimezone() !== "utc") {
+
+    if (this.dashboard.getTimezone === undefined || this.dashboard.getTimezone() !== "utc") {
       if (moment.isMoment(timeRaw.from)) {
         timeRaw.from.local();
       }
@@ -126,7 +131,11 @@ export class TimePickerCtrl {
   }
 
   public getAbsoluteMomentForTimezone(jsDate) {
-    return this.dashboard.getTimezone() === "utc" ? moment(jsDate).utc() : moment(jsDate);
+    if (this.dashboard.getTimezone !== undefined) {
+      return this.dashboard.getTimezone() === "utc" ? moment(jsDate).utc() : moment(jsDate);
+    } else {
+      return moment(jsDate);
+    }
   }
 
   public setRelativeFilter(timespan) {

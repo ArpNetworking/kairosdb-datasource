@@ -32,7 +32,9 @@ System.register(["lodash", "../../beans/aggregators/utils", "../../directives/gr
                 function GroupByTimeCtrl() {
                     this.inputVisible = false;
                     this.allowedUnitValues = utils_1.EnumValues(utils_1.TimeUnit);
-                    this.entries = this.entries || [];
+                    this.$onInit = function () {
+                        this.entries = this.entries || [];
+                    };
                 }
                 GroupByTimeCtrl.prototype.add = function (entry) {
                     if (this.isValidEntry(entry)) {

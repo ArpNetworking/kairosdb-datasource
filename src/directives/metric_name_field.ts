@@ -17,12 +17,14 @@ export class MetricNameFieldCtrl {
 
     /** @ngInject **/
     constructor($scope, $q, private uiSegmentSrv) {
-        this.$scope = $scope;
-        this.$q = $q;
-        this.uiSegmentSrv = uiSegmentSrv;
-        this.promiseUtils = new PromiseUtils($q);
-        this.segment = this.value ? uiSegmentSrv.newSegment(this.value) : uiSegmentSrv.newSelectMetric();
-        this.aliasAddedVisible = !_.isNil(this.alias);
+        this.$onInit = function() {
+            this.$scope = $scope;
+            this.$q = $q;
+            this.uiSegmentSrv = uiSegmentSrv;
+            this.promiseUtils = new PromiseUtils($q);
+            this.segment = this.value ? uiSegmentSrv.newSegment(this.value) : uiSegmentSrv.newSelectMetric();
+            this.aliasAddedVisible = !_.isNil(this.alias);
+        };
     }
 
     public onChange(segment): void {

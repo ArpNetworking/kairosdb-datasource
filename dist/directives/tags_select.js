@@ -30,9 +30,11 @@ System.register(["lodash"], function (exports_1, context_1) {
             TagsSelectCtrl = (function () {
                 function TagsSelectCtrl(uiSegmentSrv) {
                     this.uiSegmentSrv = uiSegmentSrv;
-                    this.selectedValues = (this.selectedValues || []).filter(notNil);
-                    this.segments = this.selectedValues.map(uiSegmentSrv.newSegment);
-                    this.showPlusButtonIfNeeded();
+                    this.$onInit = function () {
+                        this.selectedValues = (this.selectedValues || []).filter(notNil);
+                        this.segments = this.selectedValues.map(uiSegmentSrv.newSegment);
+                        this.showPlusButtonIfNeeded();
+                    };
                 }
                 TagsSelectCtrl.prototype.onChange = function () {
                     this.showPlusButtonIfNeeded();

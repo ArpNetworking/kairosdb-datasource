@@ -25,10 +25,11 @@ System.register(["lodash"], function (exports_1, context_1) {
         execute: function () {
             GroupByTagsCtrl = (function () {
                 function GroupByTagsCtrl() {
-                    var _this = this;
-                    this.tags = [];
                     this.selectedTags = {};
-                    this.tags.forEach(function (tag) { return _this.selectedTags[tag] = true; });
+                    this.$onInit = function () {
+                        var _this = this;
+                        this.tags.forEach(function (tag) { return _this.selectedTags[tag] = true; });
+                    };
                 }
                 GroupByTagsCtrl.prototype.onChange = function () {
                     this.tags = lodash_1.default.keys(lodash_1.default.pickBy(this.selectedTags));
