@@ -1,4 +1,10 @@
-import {ArrayVector, FieldType, TIME_SERIES_TIME_FIELD_NAME, TIME_SERIES_VALUE_FIELD_NAME} from "@grafana/data";
+import {
+    ArrayVector,
+    DataFrameType,
+    FieldType,
+    TIME_SERIES_TIME_FIELD_NAME,
+    TIME_SERIES_VALUE_FIELD_NAME
+} from "@grafana/data";
 import _ from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
 
@@ -43,6 +49,11 @@ export class KairosDBResponseHandler {
         //
         //
         // console.log("Flattened:", flattened);
+
+        const MANTISSA_BITS = 52;
+
+        const buffer = new ArrayBuffer(8);
+        const dataview = new DataView(buffer);
         const queries = data.queries;
         const dataFrames = [];
         queries.forEach((query, index) => {
@@ -51,6 +62,7 @@ export class KairosDBResponseHandler {
                 const times = new ArrayVector();
                 const values = new ArrayVector();
                 const counts = new ArrayVector();
+                const yMax = new ArrayVector();
                 const tags = {};
                 let histogram = false;
                 if (result.values
@@ -66,13 +78,30 @@ export class KairosDBResponseHandler {
                         values.add(datapoint[1]);
                     }
                 } else {
+
                     for (const datapoint of result.values) {
                         const v = datapoint[1];
                         const bins = v.bins;
+                        const precision = v.precision;
+                        const shift = BigInt(MANTISSA_BITS - precision);
                         Object.keys(bins).forEach((k) => {
+                            const value = parseFloat(k);
                             times.add(datapoint[0] as number);
-                            values.add(parseFloat(k));
+                            values.add(value);
                             counts.add(bins[k]);
+
+                            dataview.setFloat64(0, value);
+                            let upperBound = dataview.getBigInt64(0);
+                            // tslint:disable-next-line:no-bitwise
+                            upperBound >>= shift;
+                            upperBound++;
+                            // tslint:disable-next-line:no-bitwise
+                            upperBound <<= shift;
+                            upperBound--;
+                            dataview.setBigInt64(0, upperBound);
+                            upperBound = dataview.getFloat64(0);
+
+                            yMax.add(upperBound);
                         });
                     }
                 }
@@ -93,7 +122,7 @@ export class KairosDBResponseHandler {
                         values: times,
                     },
                     {
-                        name: histogram ? "y" : TIME_SERIES_VALUE_FIELD_NAME,
+                        name: histogram ? "yMin" : TIME_SERIES_VALUE_FIELD_NAME,
                         type: FieldType.number,
                         config: {},
                         values: values,
@@ -101,6 +130,14 @@ export class KairosDBResponseHandler {
                     },
                 ];
                 if (histogram) {
+                    fields.push(
+                        {
+                            name: "yMax",
+                            type: FieldType.number,
+                            config: {},
+                            values: yMax,
+                                labels: tags,
+                        });
                     fields.push(
                         {
                             name: "Count",
@@ -115,6 +152,7 @@ export class KairosDBResponseHandler {
                     name: target,
                     fields,
                     length: values.length,
+                    meta: { type: histogram ? DataFrameType.HeatmapCells : DataFrameType.TimeSeriesMulti}
                 };
                 dataFrames.push(df);
             }

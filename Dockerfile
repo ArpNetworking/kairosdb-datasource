@@ -19,10 +19,12 @@ ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 WORKDIR /root/
 COPY package.json package-lock.json /root/
 RUN npm install
-COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js src specs /root/
-RUN npm install
+COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js /root/
+COPY src /root/src
+COPY specs /root/specs
 RUN grunt --force
 
 FROM grafana/grafana:9.5.15 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
 COPY docker/provisioning /etc/grafana/provisioning
+COPY docker/dashboards  /var/lib/grafana/dashboards
