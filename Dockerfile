@@ -17,10 +17,9 @@ RUN touch /root/.bashrc && \
 
 ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 WORKDIR /root/
-COPY package.json /root/
-COPY package-lock.json /root/
+COPY package.json package-lock.json /root/
 RUN npm install
-COPY . /root/
+COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js src specs /root/
 RUN npm install
 RUN grunt --force
 
