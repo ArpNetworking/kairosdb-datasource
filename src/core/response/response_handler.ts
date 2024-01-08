@@ -45,14 +45,36 @@ export class KairosDBResponseHandler {
         // console.log("Flattened:", flattened);
         const queries = data.queries;
         const dataFrames = [];
-        for (const query of queries) {
+        queries.forEach((query, index) => {
+            const alias = aliases[index];
             for (const result of query.results) {
                 const times = new ArrayVector();
                 const values = new ArrayVector();
+                const counts = new ArrayVector();
                 const tags = {};
-                for (const datapoint of result.values) {
-                    times.add(datapoint[0] as number);
-                    values.add(datapoint[1]);
+                let histogram = false;
+                if (result.values
+                        && result.values[0]
+                        && result.values[0][1]
+                        && typeof(result.values[0][1]) === "object"
+                        && result.values[0][1].bins) {
+                    histogram = true;
+                }
+                if (!histogram) {
+                    for (const datapoint of result.values) {
+                        times.add(datapoint[0] as number);
+                        values.add(datapoint[1]);
+                    }
+                } else {
+                    for (const datapoint of result.values) {
+                        const v = datapoint[1];
+                        const bins = v.bins;
+                        Object.keys(bins).forEach((k) => {
+                            times.add(datapoint[0] as number);
+                            values.add(parseFloat(k));
+                            counts.add(bins[k]);
+                        });
+                    }
                 }
                 const group_by = result.group_by;
                 const tags_element: any = _.filter(group_by, (g) => g.name === "tag")[0];
@@ -65,29 +87,38 @@ export class KairosDBResponseHandler {
                 }
                 const fields = [
                     {
-                        name: TIME_SERIES_TIME_FIELD_NAME,
+                        name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,
                         type: FieldType.time,
                         config: {},
                         values: times,
                     },
                     {
-                        name: TIME_SERIES_VALUE_FIELD_NAME,
+                        name: histogram ? "y" : TIME_SERIES_VALUE_FIELD_NAME,
                         type: FieldType.number,
                         config: {},
                         values: values,
                         labels: tags,
                     },
                 ];
+                if (histogram) {
+                    fields.push(
+                        {
+                            name: "Count",
+                            type: FieldType.number,
+                            config: {},
+                            values: counts,
+                            labels: tags,
+                        });
+                }
+                const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
                 const df = {
-                    name: result.name,
-                    // refId: timeSeries.refId,
-                    // meta: timeSeries.meta,
+                    name: target,
                     fields,
                     length: values.length,
                 };
                 dataFrames.push(df);
             }
-        }
+        });
         //
         console.log("DataFrames:", dataFrames);
         return {data: dataFrames};
