@@ -9,6 +9,7 @@ import {SamplerAggregator} from "./sampler_aggregator";
 import {ScaleAggregator} from "./scale_aggregator";
 import {SmaAggregator} from "./sma_aggregator";
 import {TrimAggregator} from "./trim_aggregator";
+import {MergeAggregator} from "./merge_aggregator";
 
 export const AGGREGATORS = [
     new RangeAggregator("avg"),
@@ -20,7 +21,7 @@ export const AGGREGATORS = [
     new RangeAggregator("least_squares"),
     new RangeAggregator("max"),
     new RangeAggregator("min"),
-    new RangeAggregator("merge"),
+    new MergeAggregator(),
     new RangeAggregator("movingWindow"),
     new PercentileAggregator(),
     new ApdexAggregator(),

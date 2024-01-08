@@ -5,7 +5,7 @@ import {
     TIME_SERIES_TIME_FIELD_NAME,
     TIME_SERIES_VALUE_FIELD_NAME
 } from "@grafana/data";
-import _ from "lodash";
+import _, {sortBy} from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
 
 export class KairosDBResponseHandler {
@@ -84,7 +84,11 @@ export class KairosDBResponseHandler {
                         const bins = v.bins;
                         const precision = v.precision;
                         const shift = BigInt(MANTISSA_BITS - precision);
-                        Object.keys(bins).forEach((k) => {
+
+                        const keys = Object.keys(bins);
+
+                        keys.sort((a, b) => parseFloat(a) - parseFloat(b));
+                        keys.forEach((k) => {
                             const value = parseFloat(k);
                             times.add(datapoint[0] as number);
                             values.add(value);
@@ -116,7 +120,7 @@ export class KairosDBResponseHandler {
                 }
                 const fields = [
                     {
-                        name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,
+                        name: TIME_SERIES_TIME_FIELD_NAME,
                         type: FieldType.time,
                         config: {},
                         values: times,
@@ -136,7 +140,7 @@ export class KairosDBResponseHandler {
                             type: FieldType.number,
                             config: {},
                             values: yMax,
-                                labels: tags,
+                            labels: tags,
                         });
                     fields.push(
                         {
