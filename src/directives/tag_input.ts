@@ -10,8 +10,10 @@ export class TagInputCtrl {
 
     /** @ngInject **/
     constructor($scope, $q, private uiSegmentSrv) {
-        this.promiseUtils = new PromiseUtils($q);
-        this.$scope = $scope;
+        this.$onInit = function() {
+            this.promiseUtils = new PromiseUtils($q);
+            this.$scope = $scope;
+        };
     }
 
     public getTags(): Promise<string[]> {

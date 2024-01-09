@@ -7,7 +7,9 @@ export class GroupByTagsCtrl {
     public allowedValues: string[];
 
     constructor() {
-        this.tags.forEach((tag) => this.selectedTags[tag] = true);
+        this.$onInit = function() {
+            this.tags.forEach((tag) => this.selectedTags[tag] = true);
+        };
     }
 
     public onChange(): void {

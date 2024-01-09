@@ -1,0 +1,1580 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 14,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Incoming",
+      "type": "row"
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolateCubehelixDefault",
+        "exponent": 0.5,
+        "mode": "spectrum"
+      },
+      "dataFormat": "timeseries",
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 6,
+      "legend": {
+        "show": true
+      },
+      "pluginVersion": "7.3.6",
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "merge",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "groupBy": {
+              "tags": [],
+              "time": [],
+              "value": []
+            },
+            "metricName": "rest_service/POST/metrics/v3/application/request",
+            "tags": {
+              "cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Metrics Post Latencies",
+      "tooltip": {
+        "show": true,
+        "showHistogram": true
+      },
+      "transparent": true,
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": "5m",
+      "yAxis": {
+        "decimals": null,
+        "format": "s",
+        "logBase": 10,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": 8
+      },
+      "yBucketBound": "lower",
+      "yBucketNumber": 25,
+      "yBucketSize": null
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "hiddenSeries": false,
+      "id": 7,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "percentile",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  },
+                  {
+                    "name": "percentile",
+                    "text": "percentile (0,1]",
+                    "type": "any",
+                    "value": "0.95"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "rest_service/POST/metrics/v3/application/request",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "P95 Metrics Post Latencies",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "sum",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/periodic_statistics/application_http_periodic_statistics_sink/metric_samples",
+            "tags": {
+              "_period": [],
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Per Node Samples Incoming",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
+      "id": 15,
+      "panels": [],
+      "title": "Publish",
+      "type": "row"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 8,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "sum",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/http_post/application_http_cluster_sink/evicted_requests",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Evicted",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "max",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/periodic_statistics/application_http_periodic_statistics_sink/age",
+            "tags": {
+              "cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Max Age",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "s",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 9,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "count",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/http_post/application_http_cluster_sink/request_latency",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Publish Count",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 10,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "avg",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/http_post/application_http_cluster_sink/inflight_count",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Publish Queue Inflight",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 26
+      },
+      "hiddenSeries": false,
+      "id": 11,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "max",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host max",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/http_post/application_http_cluster_sink/queue_size",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "A"
+        },
+        {
+          "query": {
+            "aggregators": [
+              {
+                "autoValueSwitch": {
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "type": "sampling",
+                      "value": "1"
+                    },
+                    {
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "name": "unit",
+                      "text": "unit",
+                      "type": "sampling_unit",
+                      "value": "HOURS"
+                    }
+                  ],
+                  "enabled": true
+                },
+                "name": "avg",
+                "parameters": [
+                  {
+                    "allowedValues": {
+                      "0": "NONE",
+                      "1": "START_TIME",
+                      "2": "SAMPLING",
+                      "3": "PERIOD"
+                    },
+                    "name": "sampling",
+                    "text": "align by",
+                    "type": "alignment",
+                    "value": "PERIOD"
+                  },
+                  {
+                    "name": "value",
+                    "text": "every",
+                    "type": "sampling",
+                    "value": "1"
+                  },
+                  {
+                    "allowedValues": {
+                      "0": "MILLISECONDS",
+                      "1": "SECONDS",
+                      "2": "MINUTES",
+                      "3": "HOURS",
+                      "4": "DAYS",
+                      "5": "WEEKS",
+                      "6": "MONTHS",
+                      "7": "YEARS"
+                    },
+                    "name": "unit",
+                    "text": "unit",
+                    "type": "sampling_unit",
+                    "value": "HOURS"
+                  }
+                ]
+              }
+            ],
+            "alias": "$_tag_group_host avg",
+            "groupBy": {
+              "tags": [
+                "host"
+              ],
+              "time": [],
+              "value": []
+            },
+            "metricName": "sinks/http_post/application_http_cluster_sink/queue_size",
+            "tags": {
+              "cluster": [],
+              "eks_cluster": [],
+              "host": [],
+              "service": []
+            }
+          },
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Publish Queue Depth",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 26,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "MAD",
+  "uid": "mR26pEVnz",
+  "version": 1
+}

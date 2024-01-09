@@ -11,8 +11,10 @@ export class AggregatorCtrl {
     public isAutoValue: boolean = false;
 
     constructor() {
-        this.isAutoValue = !_.isNil(this.value.autoValueSwitch) && this.value.autoValueSwitch.enabled;
-        this.visibleParameters = this.isAutoValue ? this.getVisibleParameters() : this.value.parameters;
+        this.$onInit = function() {
+            this.isAutoValue = !_.isNil(this.value.autoValueSwitch) && this.value.autoValueSwitch.enabled;
+            this.visibleParameters = this.isAutoValue ? this.getVisibleParameters() : this.value.parameters;
+        };
     }
 
     private getVisibleParameters(): AggregatorParameter[] {

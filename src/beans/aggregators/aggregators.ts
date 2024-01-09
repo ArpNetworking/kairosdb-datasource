@@ -2,6 +2,7 @@ import {Aggregator} from "./aggregator";
 import {ApdexAggregator} from "./apdex_aggregator";
 import {DivideAggregator} from "./divide_aggregator";
 import {FilterAggregator} from "./filter_aggregator";
+import {MergeAggregator} from "./merge_aggregator";
 import {PercentileAggregator} from "./percentile_aggregator";
 import {RangeAggregator} from "./range_aggregator";
 import {RateAggregator} from "./rate_aggregator";
@@ -20,7 +21,7 @@ export const AGGREGATORS = [
     new RangeAggregator("least_squares"),
     new RangeAggregator("max"),
     new RangeAggregator("min"),
-    new RangeAggregator("merge"),
+    new MergeAggregator(),
     new RangeAggregator("movingWindow"),
     new PercentileAggregator(),
     new ApdexAggregator(),
@@ -37,7 +38,7 @@ export const AGGREGATORS = [
 ].sort( (a, b) => a.name.localeCompare(b.name));
 
 const RANGE_AGGREGATORS = ["avg", "dev", "count", "first", "gaps",
-    "last", "least_squares", "max", "min", "gaps", "merge", "sum", "movingWindow"];
+    "last", "least_squares", "max", "min", "gaps", "sum", "movingWindow"];
 
 /* Loosely generated from running `grep -rl "oubleDataPointFactory"`
  pointed at the directories for kairosdb core and kairosdb-extensions
@@ -59,6 +60,7 @@ export const SCALAR_AGGREGATOR_NAMES = [
     "least_squares",
     "max",
     "min",
+    "merge",
     "percent_remaining",
     "percentile",
     "rate",
@@ -73,6 +75,8 @@ export function fromObject(object: Aggregator): Aggregator {
       return RangeAggregator.fromObject(object);
   } else if (object.name === PercentileAggregator.NAME) {
       return PercentileAggregator.fromObject(object);
+  } else if (object.name === MergeAggregator.NAME) {
+      return MergeAggregator.fromObject(object);
   } else if (object.name === ApdexAggregator.NAME) {
       return ApdexAggregator.fromObject(object);
   } else if (object.name === SmaAggregator.NAME) {
