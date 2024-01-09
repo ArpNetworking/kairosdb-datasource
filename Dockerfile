@@ -24,7 +24,7 @@ COPY src /root/src
 COPY specs /root/specs
 RUN grunt --force
 
-FROM grafana/grafana:9.5.15 as prod
+FROM grafana/grafana:10.2.3 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
 COPY docker/provisioning /etc/grafana/provisioning
 COPY docker/dashboards  /var/lib/grafana/dashboards

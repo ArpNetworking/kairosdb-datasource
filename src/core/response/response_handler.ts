@@ -16,40 +16,6 @@ export class KairosDBResponseHandler {
     }
 
     public convertToDatapoints(data, aliases: string[]) {
-        // console.log("Data:", data);
-        // const datapoints = _.zip(aliases, data.queries)
-        //     .map((pair) => {
-        //         return {alias: pair[0], results: pair[1].results};
-        //     })
-        //     .map((entry) => _.map(entry.results, (result) => {
-        //         return {
-        //             datapoints: _.flatMap(result.values, (value) => {
-        //               const v = value[1];
-        //               if (v !== null && typeof(v) === "object" && v.bins) {
-        //                 const bins = v.bins;
-        //                 return _.map(Object.keys(bins), (k) => [parseFloat(k), value[0], bins[k]]);
-        //               } else {
-        //                 return [value.reverse()];
-        //               }
-        //             }),
-        //             target: this.seriesNameBuilder.build(result.name, entry.alias, result.group_by)
-        //         };
-        //     }));
-        // const flattened = _.flatten(datapoints);
-        //
-        //
-        //
-        //
-        // if (timeSeries.title) {
-        //     (fields[1].config as FieldConfig).displayNameFromDS = timeSeries.title;
-        // }
-        //
-        //
-        //
-        //
-        //
-        // console.log("Flattened:", flattened);
-
         const MANTISSA_BITS = 52;
 
         const buffer = new ArrayBuffer(8);
@@ -162,7 +128,6 @@ export class KairosDBResponseHandler {
             }
         });
         //
-        console.log("DataFrames:", dataFrames);
         return {data: dataFrames};
         // return {data: flattened};
     }

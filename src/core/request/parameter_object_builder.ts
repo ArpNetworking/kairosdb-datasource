@@ -75,7 +75,9 @@ export class ParameterObjectBuilder {
         const parameterObject = {};
         const interpretedValues = this.templatingUtils.replace(parameter.value);
         if (interpretedValues.length === 1) {
-            parameterObject[parameter.name] = interpretedValues[0];
+            if (interpretedValues[0]) {
+                parameterObject[parameter.name] = interpretedValues[0];
+            }
         } else {
             throw new Error(
                 "Multi-value variables not supported in aggregator parameters; name=" + parameter.name +

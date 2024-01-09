@@ -8,20 +8,17 @@ export class MergeAggregator extends RangeAggregator {
         const rval = new MergeAggregator();
         const rangeObj = RangeAggregator.fromObject(object);
         rval.autoValueSwitch = rangeObj.autoValueSwitch;
-        let precision = {
-            name: "precision",
-            text: "precision [1, 52]",
-            value: 52
-        };
-        if (object.parameters.len === 4) {
-            precision = object.parameters[3];
+        if (object.parameters.length === 4) {
+            const precision = object.parameters[3];
+            rval.parameters = rangeObj.parameters.concat([AnyAggregatorParameter.fromObject(precision)]);
+        } else {
+            rval.parameters = rangeObj.parameters;
         }
-        rval.parameters = rangeObj.parameters.concat([AnyAggregatorParameter.fromObject(precision)]);
         return rval;
     }
 
     constructor() {
         super(MergeAggregator.NAME);
-        this.parameters = this.parameters.concat([new AnyAggregatorParameter("precision", "precision [1, 52]")]);
+        this.parameters = this.parameters.concat([new AnyAggregatorParameter("precision", "precision [1, 52]", null)]);
     }
 }
