@@ -7,6 +7,7 @@ export class TagInputCtrl {
     public tagValues: string[];
     private $scope: any;
     private promiseUtils: PromiseUtils;
+    private $onInit: () => void;
 
     /** @ngInject **/
     constructor($scope, $q, private uiSegmentSrv) {

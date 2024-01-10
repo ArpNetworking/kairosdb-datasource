@@ -14,6 +14,7 @@ export class MetricNameFieldCtrl {
     private $q: any;
     private $scope: any;
     private promiseUtils: PromiseUtils;
+    private $onInit: () => void;
 
     /** @ngInject **/
     constructor($scope, $q, private uiSegmentSrv) {

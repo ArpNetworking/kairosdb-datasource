@@ -13,6 +13,7 @@ export class TagsSelectCtrl {
 
     // UI list of <all selected values> and the plus button
     public segments: SegmentLike[];
+    private $onInit: () => void;
 
     /** @ngInject **/
     constructor(private uiSegmentSrv) {

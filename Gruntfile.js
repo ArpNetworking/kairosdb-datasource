@@ -18,12 +18,6 @@ module.exports = function (grunt) {
             },
         },
         copy: {
-            src_to_dist: {
-                cwd: "src",
-                expand: true,
-                src: ["**/*", "!**/*.js", "!**/*.scss", "!node_modules/**/*"],
-                dest: "dist"
-            },
             metadata: {
                 expand: true,
                 src: ["plugin.json", "README.md"],
@@ -56,14 +50,15 @@ module.exports = function (grunt) {
         ts: {
             build: {
                 src: [
-                    "dist/**/*.ts"
+                    "src/**/*.ts"
                 ],
                 dest: "dist/",
                 options: {
+                    skipLibCheck: true,
                     moduleResolution: "node",
                     module: "system",
-                    target: "es5",
-                    rootDir: "dist/",
+                    target: "es2022",
+                    rootDir: "src/",
                     allowSyntheticDefaultImports: true,
                     keepDirectoryHierarchy: false,
                     declaration: true,

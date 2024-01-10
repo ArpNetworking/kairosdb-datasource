@@ -1,5 +1,3 @@
-/// <reference path="node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
-
 import angular from "angular";
 
 import {KairosDBConfigCtrl} from "./core/config_ctrl";

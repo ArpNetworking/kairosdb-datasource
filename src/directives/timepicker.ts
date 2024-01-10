@@ -27,6 +27,7 @@ export class TimePickerCtrl {
   public firstDayOfWeek: number;
   public isOpen: boolean;
   public isAbsolute: boolean;
+  private $onInit: () => void;
 
   /** @ngInject */
   constructor(private $scope, private $rootScope, private timeSrv) {

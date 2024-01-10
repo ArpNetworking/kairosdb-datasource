@@ -5,6 +5,7 @@ export class GroupByTagsCtrl {
     public selectedTags: { [key: string]: boolean } = {};
     public inputVisible: boolean;
     public allowedValues: string[];
+    private $onInit: () => void;
 
     constructor() {
         this.$onInit = function() {
