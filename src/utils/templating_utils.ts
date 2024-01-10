@@ -55,6 +55,8 @@ export class TemplatingUtils {
                         return replacedValues.map((replacedValue) => {
                             if (Object.hasOwn(scopedVars, value)) {
                                 return replacedValue.replace(multiValue, value);
+                            } else if (values.length > 1) {
+                                return replacedValue.replace(multiValue, value);
                             } else {
                                 return replacedValue;
                             }
