@@ -1,4 +1,5 @@
-import {QueryCtrl} from "grafana-sdk-mocks/app/plugins/sdk";
+/// <reference path="../../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
+import {QueryCtrl} from "app/plugins/sdk";
 import {Aggregator} from "../beans/aggregators/aggregator";
 import {AGGREGATORS} from "../beans/aggregators/aggregators";
 import {LegacyTargetConverter} from "../beans/request/legacy_target_converter";

@@ -18,6 +18,24 @@ module.exports = function (grunt) {
             },
         },
         copy: {
+            source: {
+                expand: true,
+                cwd: "src",
+                src: ["**/*.ts"],
+                dest: "dist/"
+            },
+            static: {
+                expand: true,
+                cwd: "src",
+                src: ["css/*.css", "img/*"],
+                dest: "dist/"
+            },
+            partials: {
+                expand: true,
+                cwd: "src/partials",
+                src: ["*.html"],
+                dest: "dist/partials"
+            },
             metadata: {
                 expand: true,
                 src: ["plugin.json", "README.md"],
