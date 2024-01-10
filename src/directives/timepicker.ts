@@ -66,7 +66,6 @@ export class TimePickerCtrl {
       timeRaw = this.timeSrv.timeRange().raw;
     }
 
-
     if (this.dashboard.getTimezone === undefined || this.dashboard.getTimezone() !== "utc") {
       if (moment.isMoment(timeRaw.from)) {
         timeRaw.from.local();

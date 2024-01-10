@@ -95,7 +95,7 @@ export class KairosDBResponseHandler {
                         name: histogram ? "yMin" : TIME_SERIES_VALUE_FIELD_NAME,
                         type: FieldType.number,
                         config: {},
-                        values: values,
+                        values,
                         labels: tags,
                     },
                 ];

@@ -21,6 +21,7 @@
     "chai": "^4.1.2",
     "es6-shim": "^0.35.3",
     "@grafana/data": "^9.5.15",
+    "@grafana/runtime": "^9.5.15",
     "grafana-sdk-mocks": "git+https://github.com/briangann/grafana-sdk-mocks",
     "grunt": "^1.0.1",
     "grunt-babel": "~6.0.0",

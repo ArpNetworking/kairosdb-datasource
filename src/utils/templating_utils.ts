@@ -1,3 +1,5 @@
+import {ScopedVars} from "@grafana/data";
+import {TemplateSrv} from "@grafana/runtime";
 import _ from "lodash";
 
 export class TemplatingUtils {
@@ -31,10 +33,10 @@ export class TemplatingUtils {
 
     private static MULTI_VALUE_REGEX: RegExp = /{.*?}/g;
     private static MULTI_VALUE_BOUNDARIES: RegExp = /[{}]/g;
-    private templateSrv: any;
-    private scopedVars: any;
+    private templateSrv: TemplateSrv;
+    private scopedVars: ScopedVars;
 
-    constructor(templateSrv: any, scopedVars: any) {
+    constructor(templateSrv: TemplateSrv, scopedVars: ScopedVars) {
         this.templateSrv = templateSrv;
         this.scopedVars = scopedVars;
     }
