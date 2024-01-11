@@ -1,3 +1,4 @@
+import {DataSourceApi} from "@grafana/data";
 import _ from "lodash";
 import {UnitValue} from "../beans/aggregators/utils";
 import {TemplatingFunction} from "../beans/function";
@@ -14,15 +15,13 @@ import {TargetValidator, ValidatorFailureResponse} from "./request/target_valida
 import {KairosDBResponseHandler} from "./response/response_handler";
 import {SeriesNameBuilder} from "./response/series_name_builder";
 
-export class KairosDBDatasource {
+export class KairosDBDatasource extends DataSourceApi<any, any, any> {
     public initialized: boolean = false;
     public initializationError: boolean = false;
     public metricNamesStore: MetricNamesStore;
     public enforceScalarSetting?: boolean;
-    private type: string;
     private url: string;
     private withCredentials: boolean;
-    private name: string;
     private basicAuth: string;
     private responseHandler: KairosDBResponseHandler;
     private templatingFunctionsCtrl: TemplatingFunctionsCtrl;
@@ -36,9 +35,8 @@ export class KairosDBDatasource {
     private autocompleteMaxMetrics: number;
 
     constructor(instanceSettings, $q, backendSrv, templateSrv) {
-        this.type = instanceSettings.type;
+        super(instanceSettings);
         this.url = instanceSettings.url;
-        this.name = instanceSettings.name;
         this.withCredentials = instanceSettings.withCredentials;
         this.basicAuth = instanceSettings.basicAuth;
         this.backendSrv = backendSrv;
