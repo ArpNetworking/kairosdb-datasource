@@ -1,3 +1,4 @@
+import {assert} from "chai";
 import {Aggregator} from "../../../src/beans/aggregators/aggregator";
 import {AnyAggregatorParameter} from "../../../src/beans/aggregators/parameters/any_aggregator_parameter";
 import {SamplingAggregatorParameter} from "../../../src/beans/aggregators/parameters/sampling_aggregator_parameter";

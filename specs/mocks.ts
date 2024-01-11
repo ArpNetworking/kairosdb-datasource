@@ -1,3 +1,5 @@
+import _ = require("lodash");
+import {sinon} from "sinon";
 import {SamplingConverter} from "../src/core/request/sampling_converter";
 
 interface Variables {
