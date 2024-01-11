@@ -3,19 +3,7 @@ module.exports = function(config) {
     config.set({
         frameworks: ["systemjs", "mocha", "chai", "sinon", "es6-shim", "karma-typescript"],
         files: [
-            "specs/*.ts",
-            "specs/**/*test.ts",
-            { pattern: "src/**/*.ts", included: false },
-            { pattern: "src/css/*.css", included: false },
-            { pattern: "node_modules/grafana-sdk-mocks/**/*.ts", included: false },
-            { pattern: "node_modules/grafana-sdk-mocks/**/*.js", included: false },
-            { pattern: "node_modules/lodash/lodash.js", included: false },
-            { pattern: "node_modules/mocha-each/build/index.js", included: false },
-            { pattern: "node_modules/moment/moment.js", included: false },
-            { pattern: "node_modules/q/q.js", included: false },
-            { pattern: "node_modules/sprintf-js/dist/sprintf.min.js", included: false },
-            { pattern: "node_modules/systemjs-plugin-css/css.js", included: false },
-            { pattern: "node_modules/typescript/lib/typescript.js", included: false },
+            "specs/**/*.ts",
         ],
         karmaTypescriptConfig: {
             compilerOptions: {
@@ -23,7 +11,7 @@ module.exports = function(config) {
                 moduleResolution: "node",
                 module: "system",
                 target: "es2022",
-                rootDir: "dist/",
+                rootDirs: ["specs", "dist"],
                 allowSyntheticDefaultImports: true,
                 keepDirectoryHierarchy: false,
                 declaration: true,

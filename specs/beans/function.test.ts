@@ -1,3 +1,4 @@
+import {sinon} from "sinon";
 import {TemplatingFunction} from "../../src/beans/function";
 
 describe("TemplatingFunction", () => {

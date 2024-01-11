@@ -1,4 +1,5 @@
 import {MetricTags} from "../../../src/beans/request/metric_tags";
+import {expect} from "chai";
 
 describe("MetricTags", () => {
     const metricTags: MetricTags = new MetricTags();

@@ -4,7 +4,7 @@
     "moduleResolution": "node",
     "module": "system",
     "target": "es2022",
-    "rootDir": "src/",
+    "rootDirs": ["src/", "specs/"],
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "emitDecoratorMetadata": true,

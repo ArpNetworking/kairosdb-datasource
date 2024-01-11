@@ -1,3 +1,4 @@
+import {expect} from "chai";
 import _ from "lodash";
 import {Aggregator} from "../../src/beans/aggregators/aggregator";
 import {AGGREGATORS, SCALAR_AGGREGATOR_NAMES} from "../../src/beans/aggregators/aggregators";
