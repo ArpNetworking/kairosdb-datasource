@@ -1,7 +1,7 @@
 "use strict";
 module.exports = function(config) {
     config.set({
-        frameworks: ["systemjs", "mocha", "chai", "sinon", "es6-shim"],
+        frameworks: ["systemjs", "mocha", "chai", "sinon", "es6-shim", "karma-typescript"],
         files: [
             "specs/*.ts",
             "specs/**/*test.ts",
@@ -17,6 +17,26 @@ module.exports = function(config) {
             { pattern: "node_modules/systemjs-plugin-css/css.js", included: false },
             { pattern: "node_modules/typescript/lib/typescript.js", included: false },
         ],
+        karmaTypescriptConfig: {
+            compilerOptions: {
+                skipLibCheck: true,
+                moduleResolution: "node",
+                module: "system",
+                target: "es2022",
+                rootDir: "dist/",
+                allowSyntheticDefaultImports: true,
+                keepDirectoryHierarchy: false,
+                declaration: true,
+                emitDecoratorMetadata: true,
+                esModuleInterop: true,
+                experimentalDecorators: true,
+                sourceMap: true,
+                noImplicitAny: false
+            }
+        },
+        preprocessors: {
+            "**/*.ts": "karma-typescript"
+        },
         singleRun: true,
         systemjs: {
             // SystemJS configuration specifically for tests, added after your config file.
@@ -30,7 +50,6 @@ module.exports = function(config) {
                     "lodash": "node_modules/lodash/lodash.js",
                     "mocha-each": "node_modules/mocha-each/build/index.js",
                     "moment": "node_modules/moment/moment.js",
-                    // "plugin-typescript": "node_modules/plugin-typescript/lib/plugin.js",
                     "q": "node_modules/q/q.js",
                     "sprintf-js": "node_modules/sprintf-js/dist/sprintf.min.js",
                     "system-polyfills": "node_modules/systemjs/dist/system-polyfills.js",
@@ -38,15 +57,11 @@ module.exports = function(config) {
                     "typescript": "node_modules/typescript/lib/typescript.js",
                 },
                 map: {
-                    "plugin-typescript": "node_modules/plugin-typescript/lib/",
                     css: "node_modules/systemjs-plugin-css/css.js",
                     "typescript": "node_modules/typescript/",
                     "app/core/utils/kbn": "node_modules/grafana-sdk-mocks/app/core/utils/kbn.js"
                 },
                 packages: {
-                    "plugin-typescript": {
-                        "main": "plugin.js"
-                    },
                     "typescript": {
                         "main": "lib/typescript.js",
                         "meta": {
@@ -78,10 +93,9 @@ module.exports = function(config) {
                         }
                     },
                 },
-                transpiler: "plugin-typescript",
             }
         },
-        reporters: ["mocha", "junit"],
+        reporters: ["mocha", "junit", "karma-typescript"],
         logLevel: config.LOG_INFO,
         browsers: ["ChromeHeadless"],
         junitReporter: {

@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
-    "module": "system",
+    "skipLibCheck": true,
     "moduleResolution": "node",
+    "module": "system",
     "target": "es2022",
-    "noImplicitAny": false,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": "src/",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
     "sourceMap": true,
+    "noImplicitAny": false,
+    "outDir": "dist"
   },
 
   "include": [
