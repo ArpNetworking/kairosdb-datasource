@@ -8,14 +8,7 @@ export class SeriesNameBuilder {
             tagGroupBysValues = this.getTagGroupBys(tagGroupBys),
             valueGroupBysValues = this.getValueGroupBys(groupBys),
             timeGroupBysValues = this.getTimeGroupBys(groupBys);
-        return alias ? this.buildAlias(alias, tagGroupBys, valueGroupBysValues, timeGroupBysValues) :
-            this.buildDefault(metricName, tagGroupBysValues, valueGroupBysValues, timeGroupBysValues);
-    }
-
-    private buildDefault(metricName, tagGroupBysValues, valueGroupBysValues, timeGroupBysValues): string {
-        return _.flatten([metricName, tagGroupBysValues, valueGroupBysValues, timeGroupBysValues])
-            .filter((part) => !_.isEmpty(part))
-            .join(SeriesNameBuilder.SEPARATOR);
+        return alias ? this.buildAlias(alias, tagGroupBys, valueGroupBysValues, timeGroupBysValues) : metricName;
     }
 
     private buildAlias(alias, tagGroupBys, valueGroupBysValues, timeGroupBysValues): string {
