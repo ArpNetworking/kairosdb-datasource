@@ -1,7 +1,11 @@
 FROM ubuntu as build
 RUN apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -y curl && \
+	DEBIAN_FRONTEND=noninteractive apt install -y curl gnupg-agent zip && \
 	rm -rf /var/lib/apt/lists/*
+RUN curl -q -o- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
+    DEBIAN_FRONTEND=noninteractive apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y google-chrome-stable
 ENV NVM_DIR=/usr/local/nvm
 ENV NODE_VERSION=v20.8.0
 RUN touch /root/.bashrc && \
@@ -14,6 +18,9 @@ RUN touch /root/.bashrc && \
 	npm install -g grunt-cli && \
 	npm install -g yarn && \
     chown -R 1000:1000 /root/.npm
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip && \
+    unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/ && \
+    rm /tmp/chromedriver.zip
 
 ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 WORKDIR /root/

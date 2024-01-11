@@ -30,7 +30,7 @@ module.exports = function(config) {
                     "lodash": "node_modules/lodash/lodash.js",
                     "mocha-each": "node_modules/mocha-each/build/index.js",
                     "moment": "node_modules/moment/moment.js",
-                    "plugin-typescript": "node_modules/plugin-typescript/lib/plugin.js",
+                    // "plugin-typescript": "node_modules/plugin-typescript/lib/plugin.js",
                     "q": "node_modules/q/q.js",
                     "sprintf-js": "node_modules/sprintf-js/dist/sprintf.min.js",
                     "system-polyfills": "node_modules/systemjs/dist/system-polyfills.js",
