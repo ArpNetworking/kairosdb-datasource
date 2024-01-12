@@ -98,23 +98,7 @@ describe("SeriesNameBuilder", () => {
             // when
             const seriesName = seriesNameBuilder.build(metricName, null, groupBys);
             // then
-            expect(seriesName).toEqual(expect.arrayContaining([metricName]));
-            groupBys.forEach((groupBy) => {
-                switch (groupBy.name) {
-                    case "tag":
-                        _.values(groupBy.group).forEach((value) => {
-                            expect(seriesName).toEqual(expect.arrayContaining([value]));
-                        });
-                        break;
-                    case "value":
-                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group.group_number]));
-                        break;
-                    case "time":
-                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group.group_number]));
-                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group_count]));
-                        break;
-                }
-            });
+            expect(seriesName).toEqual(metricName);
         });
 
     it("should replace grouping expression for tag, value and time", () => {
