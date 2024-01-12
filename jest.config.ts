@@ -178,6 +178,7 @@ const config: Config = {
 
   // A map from regular expressions to paths to transformers
   // transform: {
+  //   "^node_modules/d3-interpolate/.*\\.js$": "babel-jest"
   //   "^.+\\.(ts|tsx)?$": "ts-jest",
   //   "^.+\\.(js|jsx)$": "babel-jest"
   // },
@@ -187,6 +188,9 @@ const config: Config = {
   //   "/node_modules/",
   //   "\\.pnp\\.[^\\/]+$"
   // ],
+  transformIgnorePatterns: [
+    "node_modules/(?!d3-interpolate|d3-color)"
+  ],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
