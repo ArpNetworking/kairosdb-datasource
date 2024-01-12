@@ -1,4 +1,4 @@
-import {sinon} from "sinon";
+import {expect, jest} from "@jest/globals";
 import {TemplatingFunction} from "../../src/beans/function";
 
 describe("TemplatingFunction", () => {

@@ -1,12 +1,12 @@
-import {assert, expect} from "chai";
+import {expect, jest} from "@jest/globals";
 import _ from "lodash";
 import forEach from "mocha-each";
-import {sinon} from "sinon";
 import {TemplatingFunction} from "../../src/beans/function";
 import {TemplatingFunctionsCtrl} from "../../src/controllers/templating_functions_ctrl";
 import {TemplatingFunctionResolver} from "../../src/utils/templating_function_resolver";
 import {TemplatingUtils} from "../../src/utils/templating_utils";
 import {buildTemplatingSrvMock} from "../mocks";
+import {assert} from "chai";
 
 describe("TemplatingFunctionsController", () => {
     const variables = {

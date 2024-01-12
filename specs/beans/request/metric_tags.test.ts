@@ -1,3 +1,4 @@
+import {expect} from "@jest/globals";
 import {MetricTags} from "../../../src/beans/request/metric_tags";
 
 describe("MetricTags", () => {

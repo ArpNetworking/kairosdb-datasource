@@ -1,5 +1,5 @@
 import {
-    ArrayVector,
+    ArrayVector, DataFrame,
     DataFrameType,
     FieldType,
     TIME_SERIES_TIME_FIELD_NAME,
@@ -21,7 +21,7 @@ export class KairosDBResponseHandler {
         const buffer = new ArrayBuffer(8);
         const dataview = new DataView(buffer);
         const queries = data.queries;
-        const dataFrames = [];
+        const dataFrames: DataFrame[] = [];
         queries.forEach((query, index) => {
             const alias = aliases[index];
             for (const result of query.results) {

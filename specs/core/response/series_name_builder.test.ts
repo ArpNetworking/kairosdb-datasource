@@ -1,4 +1,4 @@
-import _ from "lodash";
+import {expect} from "@jest/globals";
 import forEach from "mocha-each";
 
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";

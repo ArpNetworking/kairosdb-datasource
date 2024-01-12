@@ -1,4 +1,4 @@
-import {sinon} from "sinon";
+import {expect, jest} from "@jest/globals";
 import {KairosDBDatasource} from "../../src/core/datasource";
 import {buildNoopTemplatingSrvMock} from "../mocks";
 
