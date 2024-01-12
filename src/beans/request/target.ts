@@ -1,4 +1,4 @@
-import * as dateMath from "app/core/utils/datemath";
+import {dateMath} from "@grafana/data";
 import {Moment} from "moment";
 import {Aggregator} from "../aggregators/aggregator";
 import * as Aggregators from "../aggregators/aggregators";

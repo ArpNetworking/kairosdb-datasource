@@ -1,4 +1,3 @@
-import kbn from "app/core/utils/kbn";
 import {TimeUnit} from "../../beans/aggregators/utils";
 import {TimeUnitUtils} from "../../utils/time_unit_utils";
 
@@ -25,6 +24,6 @@ export class SamplingConverter {
     }
 
     private convertToMiliseconds(value: number, shortUnit: string): number {
-        return Math.round(kbn.intervals_in_seconds[shortUnit] * value * 1000);
+        return Math.round(TimeUnitUtils.unitValueToMillis([TimeUnitUtils.getTimeUnit(shortUnit), value]));
     }
 }

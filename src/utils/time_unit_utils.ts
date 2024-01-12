@@ -101,7 +101,7 @@ export class TimeUnitUtils {
         ["millisecond", "second", "minute", "hour", "day", "week", "month", "year"],
         TimeUnitUtils.TIME_UNIT_STRINGS);
 
-    private static getTimeUnit(unit: string): TimeUnit {
+    public static getTimeUnit(unit: string): TimeUnit {
         return TimeUnit[this.convertTimeUnit(unit)];
     }
 }

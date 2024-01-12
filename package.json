@@ -58,6 +58,7 @@
     "sprintf-js": "^1.1.1",
     "systemjs": "^0.19.47",
     "systemjs-plugin-css": "^0.1.35",
+    "ts-jest": "^29.1.1",
     "ts-node": "^10.9.2",
     "tslint": "~5.20.1",
     "typescript": "^4.9.5"
