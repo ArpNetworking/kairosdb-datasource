@@ -5,7 +5,7 @@ describe("TemplatingFunction", () => {
     it("should pass all arguments to body", () => {
         // given
         const name: string = "name";
-        const body: any = sinon.spy();
+        const body: any = jest.fn();
         const templatingFunction: TemplatingFunction = new TemplatingFunction(name, body);
         const functionArgs: string[] = ["function arg1", "function 2", "function arg3"];
         // when

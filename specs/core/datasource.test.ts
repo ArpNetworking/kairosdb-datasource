@@ -4,7 +4,7 @@ import {buildNoopTemplatingSrvMock} from "../mocks";
 
 describe("KairosDBDatasource", () => {
     const instanceSettings = {type: "type", url: "url", name: "name", jsonData: {}};
-    const promiseUtils = sinon.spy();
+    const promiseUtils = jest.fn();
 
     it("should handle metric tags response correctly", () => {
         // given

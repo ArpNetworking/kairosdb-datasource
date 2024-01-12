@@ -22,7 +22,7 @@ describe("TemplatingFunctionsController", () => {
         (metricName, tagName, filters) => ["tag_value1", "tag_value2", "tag_value3"]);
     [metricsFunction, tagNamesFunction, tagValuesFunction].forEach((func) => {
         templatingFunctionsController.register(func);
-        func.body = sinon.spy(func.body);
+        func.body = jest.fn(func.body);
     });
 
     forEach([
