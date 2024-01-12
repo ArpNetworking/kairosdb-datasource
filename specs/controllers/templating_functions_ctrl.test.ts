@@ -1,4 +1,5 @@
 import {assert, expect} from "chai";
+import _ from "lodash";
 import forEach from "mocha-each";
 import {sinon} from "sinon";
 import {TemplatingFunction} from "../../src/beans/function";

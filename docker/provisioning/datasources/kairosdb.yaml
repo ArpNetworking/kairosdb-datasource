@@ -4,7 +4,6 @@ deleteDatasources: []
 datasources:
   - name: KairosDB
     type: grafana-kairosdb-datasource
-    access: direct
     orgId: 1
     url: https://kairosdb.arpnetworking.com
     isDefault: true
@@ -13,3 +12,4 @@ datasources:
     jsonData:
       snapToIntervals: "1m,5m,1h,3h,6h,12h,1d"
       autocompleteMaxMetrics: "1000"
+      timeout: "115"

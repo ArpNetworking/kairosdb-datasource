@@ -2,6 +2,7 @@ import forEach from "mocha-each";
 import {GroupBysBuilder} from "../../../src/core/request/group_bys_builder";
 import {TemplatingUtils} from "../../../src/utils/templating_utils";
 
+import _ from "lodash";
 import {GroupByTimeEntry} from "../../../src/directives/group_by/group_by_time_entry";
 import {buildSamplingConverterMock, buildTemplatingSrvMock} from "../../mocks";
 
@@ -201,7 +202,7 @@ describe("GroupBysBuilder", () => {
         // then
         groupBys.should.have.lengthOf(testCase.expectedGroupBys.length);
         testCase.expectedGroupBys.forEach((expectedGroupBy) => {
-            groupBys.should.deep.contain(expectedGroupBy);
+            groupBys.should.deep.include(expectedGroupBy);
         });
     });
 
@@ -226,6 +227,6 @@ describe("GroupBysBuilder", () => {
         const groupBys: object[] = samplingConvertingGroupBysBuilder.build(groupBysDefinition);
         // then
         groupBys.should.have.lengthOf(1);
-        groupBys.should.deep.contain(expectedGroupBy);
+        groupBys.should.deep.include(expectedGroupBy);
     });
 });

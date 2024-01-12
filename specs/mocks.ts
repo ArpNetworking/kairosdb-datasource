@@ -1,4 +1,6 @@
-import _ = require("lodash");
+import {ScopedVars, TimeRange, TypedVariableModel} from "@grafana/data";
+import {TemplateSrv, VariableInterpolation} from "@grafana/runtime";
+import _ from "lodash";
 import {sinon} from "sinon";
 import {SamplingConverter} from "../src/core/request/sampling_converter";
 
@@ -7,9 +9,12 @@ interface Variables {
 }
 type FormatterFn = (value: string | string[], variable: any, _unused?: any) => string;
 
-export const buildTemplatingSrvMock = (variables: Variables) => {
+export const buildTemplatingSrvMock = (variables: Variables): TemplateSrv => {
     return {
-        replace: (expression, scopedVars?: any, format?: string | FormatterFn) => {
+        replace: (expression?: string,
+                  scopedVars?: ScopedVars,
+                  format?: string | FormatterFn,
+                  interpolations?: VariableInterpolation[]): string => {
             let replacedExpression = expression;
             _.forOwn(variables, (values, key) => {
                 const templatedValue = formatterFromTemplateSrv(values, format, variables);
@@ -17,7 +22,10 @@ export const buildTemplatingSrvMock = (variables: Variables) => {
                 replacedExpression = replacedExpression.replace("[[" + key + "]]", templatedValue);
             });
             return replacedExpression;
-        }
+        },
+        getVariables: (): TypedVariableModel[] => [],
+        containsTemplate: (target?: string): boolean => false,
+        updateTimeRange: (timeRange: TimeRange): void => null
     };
 };
 
@@ -25,7 +33,7 @@ const formatterFromTemplateSrv = (
     value: string | string[],
     format: string | FormatterFn,
     variable?: Variables
-) => {
+): string => {
     /*
     Based heavily off the real deal.
     https://github.com/grafana/grafana/blob/master/public/app/features/templating/template_srv.ts#L128
@@ -60,7 +68,7 @@ const formatterFromTemplateSrv = (
             if (Array.isArray(value) && value.length > 1) {
                 return `{${value.join(",")}}`;
             }
-            return value;
+            return String(value);
         }
     }
 };

@@ -1,4 +1,8 @@
-import {AggregatorParameter} from "../../../src/beans/aggregators/parameters/aggregator_parameter";
+import {expect} from "chai";
+import {
+    AggregatorParameter,
+    AggregatorParameterType
+} from "../../../src/beans/aggregators/parameters/aggregator_parameter";
 import {AlignmentAggregatorParameter} from "../../../src/beans/aggregators/parameters/alignment_aggregator_parameter";
 import {AnyAggregatorParameter} from "../../../src/beans/aggregators/parameters/any_aggregator_parameter";
 import {SamplingAggregatorParameter} from "../../../src/beans/aggregators/parameters/sampling_aggregator_parameter";
@@ -43,7 +47,7 @@ describe("ParameterObjectBuilder", () => {
         // given
         const parameterObjectBuilder: ParameterObjectBuilder = new ParameterObjectBuilder(templatingUtils, INTERVAL, null);
         const parameter = new AnyAggregatorParameter("parameterOfUnknownType");
-        parameter.type = "UnKnOwN";
+        parameter.type = ("UnKnOwN" as AggregatorParameterType);
         parameter.name = "unknownParameterName";
         parameter.value = "unknownParameterValue";
         // when

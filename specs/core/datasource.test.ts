@@ -1,3 +1,4 @@
+import {sinon} from "sinon";
 import {KairosDBDatasource} from "../../src/core/datasource";
 import {buildNoopTemplatingSrvMock} from "../mocks";
 
