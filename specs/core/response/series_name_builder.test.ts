@@ -98,20 +98,20 @@ describe("SeriesNameBuilder", () => {
             // when
             const seriesName = seriesNameBuilder.build(metricName, null, groupBys);
             // then
-            seriesName.should.contain(metricName);
+            expect(seriesName).toEqual(expect.arrayContaining([metricName]));
             groupBys.forEach((groupBy) => {
                 switch (groupBy.name) {
                     case "tag":
                         _.values(groupBy.group).forEach((value) => {
-                            seriesName.should.contain(value);
+                            expect(seriesName).toEqual(expect.arrayContaining([value]));
                         });
                         break;
                     case "value":
-                        seriesName.should.contain(groupBy.group.group_number);
+                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group.group_number]));
                         break;
                     case "time":
-                        seriesName.should.contain(groupBy.group.group_number);
-                        seriesName.should.contain(groupBy.group_count);
+                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group.group_number]));
+                        expect(seriesName).toEqual(expect.arrayContaining([groupBy.group_count]));
                         break;
                 }
             });
@@ -165,6 +165,6 @@ describe("SeriesNameBuilder", () => {
         // when
         const seriesName = seriesNameBuilder.build(metricName, alias, groupBys);
         // then
-        seriesName.should.be.equal("kairosdb_some_text_G2_other_text_G1_3");
+        expect(seriesName).toBe("kairosdb_some_text_G2_other_text_G1_3");
     });
 });

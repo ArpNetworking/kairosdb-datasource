@@ -200,9 +200,9 @@ describe("GroupBysBuilder", () => {
         // when
         const groupBys: object[] = groupBysBuilder.build(groupBysDefinition);
         // then
-        groupBys.should.have.lengthOf(testCase.expectedGroupBys.length);
+        expect(groupBys).toHaveLength(testCase.expectedGroupBys.length);
         testCase.expectedGroupBys.forEach((expectedGroupBy) => {
-            groupBys.should.deep.include(expectedGroupBy);
+            expect(groupBys).toEqual(expect.arrayContaining([expectedGroupBy]));
         });
     });
 
@@ -226,7 +226,7 @@ describe("GroupBysBuilder", () => {
         // when
         const groupBys: object[] = samplingConvertingGroupBysBuilder.build(groupBysDefinition);
         // then
-        groupBys.should.have.lengthOf(1);
-        groupBys.should.deep.include(expectedGroupBy);
+        expect(groupBys).toHaveLength(1);
+        expect(groupBys).toEqual(expect.arrayContaining([expectedGroupBy]));
     });
 });

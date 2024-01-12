@@ -38,7 +38,7 @@ describe("QueryBuilder", () => {
         const datapointsQuery = queryBuilder.buildDatapointsQuery([emptyTarget], options);
         // then
         // tslint:disable-next-line
-        datapointsQuery.withCredentials.should.be.true;
+        expect(datapointsQuery.withCredentials).toBe(true);
     });
 
     it("should build without credentials", () => {
@@ -54,7 +54,7 @@ describe("QueryBuilder", () => {
             queryBuilderWithoutCredentials.buildDatapointsQuery([emptyTarget], options);
         // then
         // tslint:disable-next-line
-        datapointsQuery.withCredentials.should.be.false;
+        expect(datapointsQuery.withCredentials).toBe(false);
     });
 
     it("should use correct time range", () => {
@@ -70,8 +70,8 @@ describe("QueryBuilder", () => {
         // when
         const datapointsQuery = queryBuilder.buildDatapointsQuery([], options);
         // then
-        datapointsQuery.data.start_absolute.should.equal(expectedFrom);
-        datapointsQuery.data.end_absolute.should.equal(expectedTo);
+        expect(datapointsQuery.data.start_absolute).toBe(expectedFrom);
+        expect(datapointsQuery.data.end_absolute).toBe(expectedTo);
     });
 
     it("should unpack tags correctly", () => {
@@ -104,7 +104,7 @@ describe("QueryBuilder", () => {
             }
         }], options);
         // then
-        datapointsQuery.data.metrics[0].tags.should.deep.equal(expectedTags);
+        expect(datapointsQuery.data.metrics[0].tags).toEqual(expectedTags);
     });
 
     it("should include filters in tags request", () => {
@@ -116,7 +116,7 @@ describe("QueryBuilder", () => {
         // when
         const request = queryBuilder.buildMetricTagsQuery("metric_name", tagsFilters);
         // then
-        request.data.metrics[0].tags.should.be.equal(tagsFilters);
+        expect(request.data.metrics[0].tags).toBe(tagsFilters);
     });
 
     it("should use correct time range for tags", () => {
@@ -132,7 +132,7 @@ describe("QueryBuilder", () => {
         // when
         const datapointsQuery = queryBuilder.buildMetricTagsQuery("metric_name", {}, {from, to});
         // then
-        datapointsQuery.data.start_absolute.should.equal(expectedFrom);
-        datapointsQuery.data.end_absolute.should.equal(expectedTo);
+        expect(datapointsQuery.data.start_absolute).toBe(expectedFrom);
+        expect(datapointsQuery.data.end_absolute).toBe(expectedTo);
     });
 });

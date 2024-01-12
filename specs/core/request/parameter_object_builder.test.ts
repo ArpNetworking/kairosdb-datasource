@@ -1,4 +1,3 @@
-import {expect} from "chai";
 import {
     AggregatorParameter,
     AggregatorParameterType
@@ -40,7 +39,7 @@ describe("ParameterObjectBuilder", () => {
             alignmentParameter.value = alignmentType;
             // when
             parameterObjectBuilder.build(alignmentParameter);
-        }).to.throw("Unknown alignment type");
+        }).toThrow("Unknown alignment type");
     });
 
     it("should build default parameter given unknown parameter type", () => {
@@ -53,8 +52,8 @@ describe("ParameterObjectBuilder", () => {
         // when
         const parameterObject = parameterObjectBuilder.build(parameter);
         // then
-        parameterObject.should.have.property(parameter.name);
-        parameterObject[parameter.name].should.equal(parameter.value);
+        expect(parameterObject).toHaveProperty(parameter.name);
+        expect(parameterObject[parameter.name]).toBe(parameter.value);
     });
 
     it("should use interval values for sampling parameter when auto value is enabled", () => {
@@ -67,7 +66,7 @@ describe("ParameterObjectBuilder", () => {
         // when
         const parameterObject = parameterObjectBuilder.build(parameter);
         // then
-        parameterObject.sampling.value.should.equal(INTERVAL_VALUE);
+        expect(parameterObject.sampling.value).toBe(INTERVAL_VALUE);
     });
 
     it("should use interval values snapped to the closest value when auto value is enabled", () => {
@@ -79,7 +78,7 @@ describe("ParameterObjectBuilder", () => {
         const samplingParameterObject = parameterObjectBuilder.build(samplingParameter);
         const samplingUnitParameterObject = parameterObjectBuilder.build(samplingUnitParameter);
 
-        samplingParameterObject.sampling.value.should.equal("5");
-        samplingUnitParameterObject.sampling.unit.should.equal("MINUTES");
+        expect(samplingParameterObject.sampling.value).toBe("5");
+        expect(samplingUnitParameterObject.sampling.unit).toBe("MINUTES");
     });
 });

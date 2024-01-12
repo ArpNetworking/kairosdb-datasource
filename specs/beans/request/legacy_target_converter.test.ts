@@ -1,4 +1,3 @@
-import {should} from "chai";
 import {LegacyTargetConverter} from "../../../src/beans/request/legacy_target_converter";
 import {GroupByTimeEntry} from "../../../src/directives/group_by/group_by_time_entry";
 
@@ -199,35 +198,35 @@ describe("LegacyTargetConverter", () => {
     describe("isApplicable", () => {
         it("should return true for legacy structure", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.isApplicable(legacy_simple).should.be.true;
+            expect(legacyTargetConverter.isApplicable(legacy_simple)).toBe(true);
         });
         it("should return false for new structure", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.isApplicable(modern_simple).should.be.false;
+            expect(legacyTargetConverter.isApplicable(modern_simple)).toBe(false);
         });
     });
     describe("convert base case", () => {
         it("should", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.convert(legacy_simple).metricName.should.be.equal(modern_simple.query.metricName);
+            expect(legacyTargetConverter.convert(legacy_simple).metricName).toBe(modern_simple.query.metricName);
         });
     });
     describe("convert metric name in complex case", () => {
         it("should", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.convert(legacy_complex).metricName.should.be.equal(modern_complex.query.metricName);
+            expect(legacyTargetConverter.convert(legacy_complex).metricName).toBe(modern_complex.query.metricName);
         });
     });
     describe("alias", () => {
         it("convert alias properly", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.convert(legacy_complex).alias.should.be.equal(modern_complex.query.alias);
+            expect(legacyTargetConverter.convert(legacy_complex).alias).toBe(modern_complex.query.alias);
         });
     });
     describe("alias", () => {
         it("convert tags properly", () => {
             // tslint:disable-next-line
-            legacyTargetConverter.convert(legacy_complex).tags.should.be.deep.equal(modern_complex.query.tags);
+            expect(legacyTargetConverter.convert(legacy_complex).tags).toEqual(modern_complex.query.tags);
         });
     });
     describe("alias", () => {
@@ -235,18 +234,18 @@ describe("LegacyTargetConverter", () => {
             const legacyGroupBy = legacyTargetConverter.convert(legacy_complex).groupBy;
             // For some reason deep.equals returns a false negative even though the contents match
             // tslint:disable-next-line
-            legacyGroupBy.time.should.be.deep.equal(modern_complex.query.groupBy.time);
+            expect(legacyGroupBy.time).toEqual(modern_complex.query.groupBy.time);
             // tslint:disable-next-line
-            legacyGroupBy.tags.should.be.deep.equal(modern_complex.query.groupBy.tags);
+            expect(legacyGroupBy.tags).toEqual(modern_complex.query.groupBy.tags);
             // tslint:disable-next-line
-            legacyGroupBy.value.should.be.deep.equal(modern_complex.query.groupBy.value);
+            expect(legacyGroupBy.value).toEqual(modern_complex.query.groupBy.value);
         });
     });
     describe("alias", () => {
         it("convert aggregators properly", () => {
             const converted = legacyTargetConverter.convert(legacy_complex).aggregators;
             const modern = modern_complex.query.aggregators;
-            sortNestedJSON(converted).should.be.deep.equal(sortNestedJSON(modern));
+            expect(sortNestedJSON(converted)).toEqual(sortNestedJSON(modern));
         });
     });
 });

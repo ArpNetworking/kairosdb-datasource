@@ -13,8 +13,8 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replace(expression);
         // then
-        values.length.should.be.equal(1);
-        values[0].should.be.equal("value");
+        expect(values.length).toBe(1);
+        expect(values[0]).toBe("value");
     });
 
     it("should unpack single variable with multiple values", () => {
@@ -28,10 +28,10 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replace(expression);
         // then
-        values.length.should.be.equal(3);
-        values[0].should.be.equal("value1");
-        values[1].should.be.equal("value2");
-        values[2].should.be.equal("value3");
+        expect(values.length).toBe(3);
+        expect(values[0]).toBe("value1");
+        expect(values[1]).toBe("value2");
+        expect(values[2]).toBe("value3");
     });
 
     it("should unpack single variable with prefix and suffix and multiple values", () => {
@@ -45,10 +45,10 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replace(expression);
         // then
-        values.length.should.be.equal(3);
-        values[0].should.be.equal("prefix_value1_suffix");
-        values[1].should.be.equal("prefix_value2_suffix");
-        values[2].should.be.equal("prefix_value3_suffix");
+        expect(values.length).toBe(3);
+        expect(values[0]).toBe("prefix_value1_suffix");
+        expect(values[1]).toBe("prefix_value2_suffix");
+        expect(values[2]).toBe("prefix_value3_suffix");
     });
 
     it("should replace many multivalue variables with cartesian", () => {
@@ -63,13 +63,13 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replace(expression);
         // then
-        values.should.contain("datacenter_dc1_ip_127.0.0.1_sth");
-        values.should.contain("datacenter_dc2_ip_127.0.0.1_sth");
-        values.should.contain("datacenter_dc3_ip_127.0.0.1_sth");
-        values.should.contain("datacenter_dc1_ip_192.168.0.1_sth");
-        values.should.contain("datacenter_dc2_ip_192.168.0.1_sth");
-        values.should.contain("datacenter_dc3_ip_192.168.0.1_sth");
-        values.length.should.be.equal(6);
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc1_ip_127.0.0.1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc2_ip_127.0.0.1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc3_ip_127.0.0.1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc1_ip_192.168.0.1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc2_ip_192.168.0.1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["datacenter_dc3_ip_192.168.0.1_sth"]));
+        expect(values.length).toBe(6);
     });
 
     it("should replace all expressions", () => {
@@ -83,15 +83,15 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replaceAll(expressions);
         // then
-        values.should.contain("dc1");
-        values.should.contain("dc2");
-        values.should.contain("dc3");
-        values.should.contain("sth_dc1");
-        values.should.contain("sth_dc2");
-        values.should.contain("sth_dc3");
-        values.should.contain("dc1_sth");
-        values.should.contain("dc2_sth");
-        values.should.contain("dc3_sth");
+        expect(values).toEqual(expect.arrayContaining(["dc1"]));
+        expect(values).toEqual(expect.arrayContaining(["dc2"]));
+        expect(values).toEqual(expect.arrayContaining(["dc3"]));
+        expect(values).toEqual(expect.arrayContaining(["sth_dc1"]));
+        expect(values).toEqual(expect.arrayContaining(["sth_dc2"]));
+        expect(values).toEqual(expect.arrayContaining(["sth_dc3"]));
+        expect(values).toEqual(expect.arrayContaining(["dc1_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["dc2_sth"]));
+        expect(values).toEqual(expect.arrayContaining(["dc3_sth"]));
     });
 
     it("should handle variable-values containing ','", () => {
@@ -105,10 +105,10 @@ describe("TemplatingUtils", () => {
         // when
         const values = templatingUtils.replaceAll(expressions);
         // then
-        values.should.contain("v0,1");
-        values.should.contain("v0,2");
-        values.should.not.contain("v0");
-        values.should.not.contain("1");
+        expect(values).toEqual(expect.arrayContaining(["v0,1"]));
+        expect(values).toEqual(expect.arrayContaining(["v0,2"]));
+        expect(values).toEqual(expect.not.arrayContaining(["v0"]));
+        expect(values).toEqual(expect.not.arrayContaining(["1"]));
     });
 
     describe("Custom formatter fn", () => {
@@ -116,21 +116,21 @@ describe("TemplatingUtils", () => {
             const input = "hello";
             const expected = "hello";
             const actual = TemplatingUtils.customFormatterFn(input);
-            expected.should.equal(actual);
+            expect(expected).toBe(actual);
         });
 
         it("Uses the new MULTI_VALUE_SEPARATOR for multi-value", () => {
             const input = ["thing,1", "thing,2"];
             const expected = "{thing,1_MAGIC_DELIM_thing,2}";
             const actual = TemplatingUtils.customFormatterFn(input);
-            expected.should.equal(actual);
+            expect(expected).toBe(actual);
         });
 
         it("Handles array with length 1 gracefully", () => {
             const input = ["thing,1"];
             const expected = "thing,1";
             const actual = TemplatingUtils.customFormatterFn(input);
-            expected.should.equal(actual);
+            expect(expected).toBe(actual);
         });
     });
 });

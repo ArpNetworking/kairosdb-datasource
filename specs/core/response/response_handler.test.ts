@@ -46,7 +46,7 @@ describe("KairosDBResponseHandler", () => {
         // when
         const datapoints = responseHandler.convertToDatapoints(data, aliases);
         // then
-        datapoints.data[0].datapoints.should.deep.equal(expectedDatapoints);
+        expect(datapoints.data[0].datapoints).toEqual(expectedDatapoints);
     });
 
     it("should convert datapoints correctly with multiple results", () => {
@@ -110,7 +110,7 @@ describe("KairosDBResponseHandler", () => {
         // when
         const datapoints = responseHandler.convertToDatapoints(data, aliases);
         // then
-        datapoints.data[0].datapoints.should.deep.equal(expectedDatapoints1);
-        datapoints.data[1].datapoints.should.deep.equal(expectedDatapoints2);
+        expect(datapoints.data[0].datapoints).toEqual(expectedDatapoints1);
+        expect(datapoints.data[1].datapoints).toEqual(expectedDatapoints2);
     });
 });

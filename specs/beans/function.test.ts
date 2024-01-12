@@ -11,6 +11,6 @@ describe("TemplatingFunction", () => {
         // when
         templatingFunction.run(functionArgs);
         // then
-        body.getCall(0).args.should.deep.equal(functionArgs);
+        expect(body.getCall(0).args).toEqual(functionArgs);
     });
 });

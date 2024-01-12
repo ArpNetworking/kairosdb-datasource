@@ -16,7 +16,7 @@ describe("AggregatorEditorController", () => {
         // when
         scope.pickAggregator(aggregatorName);
         // then
-        scope.newAggregator.should.not.equal(aggregator);
-        scope.newAggregator.should.deep.equal(aggregator);
+        expect(scope.newAggregator).not.toBe(aggregator);
+        expect(scope.newAggregator).toEqual(aggregator);
     });
 });

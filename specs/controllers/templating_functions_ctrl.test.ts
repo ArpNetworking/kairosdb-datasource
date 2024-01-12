@@ -37,7 +37,7 @@ describe("TemplatingFunctionsController", () => {
         // when
         templatingFunctionsController.resolve(functionQuery)();
         // then
-        assert(expectedFunction.body.calledOnce);
+        assert(expectedFunction.toHaveBeenCalledTimes(1));
         expectedFunction.body.reset();
     });
 
@@ -50,7 +50,7 @@ describe("TemplatingFunctionsController", () => {
         expect(() => {
             // when
             templatingFunctionsController.resolve(functionQuery);
-        }).to.throw();
+        }).toThrow();
     });
 
     it("should convert single filter argument to single entry filter object", () => {

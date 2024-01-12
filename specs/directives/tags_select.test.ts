@@ -38,8 +38,8 @@ describe("TagsSelectCtrl", () => {
 
     it("render, even when the selected values contain nil values", () => {
         const tagsSelectCtrl: TagsSelectCtrl = new TagsSelectCtrl(uiSegmentSrv);
-        tagsSelectCtrl.selectedValues.should.deep.equal([val1]);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.selectedValues).toEqual([val1]);
+        expect(tagsSelectCtrl.segments).toEqual([
             valAsSegment(val1), // the set value
             newPlusButtonSegment(), // the plus-button after it
         ]);
@@ -47,22 +47,22 @@ describe("TagsSelectCtrl", () => {
 
     it("Remove works", () => {
         const tagsSelectCtrl: TagsSelectCtrl = new TagsSelectCtrl(uiSegmentSrv);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.segments).toEqual([
             valAsSegment(val1),
             newPlusButtonSegment(), // the plus-button after it
         ]);
 
         // remove the first one and see what happens
         tagsSelectCtrl.remove(tagsSelectCtrl.segments[0]);
-        tagsSelectCtrl.selectedValues.should.deep.equal([]);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.selectedValues).toEqual([]);
+        expect(tagsSelectCtrl.segments).toEqual([
             newPlusButtonSegment(),
         ]);
     });
 
     it("Update changes selected values", () => {
         const tagsSelectCtrl: TagsSelectCtrl = new TagsSelectCtrl(uiSegmentSrv);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.segments).toEqual([
             valAsSegment(val1),
             newPlusButtonSegment(), // the plus-button after it
         ]);
@@ -71,8 +71,8 @@ describe("TagsSelectCtrl", () => {
         tagsSelectCtrl.segments[0].value = val2;
 
         tagsSelectCtrl.onChange();
-        tagsSelectCtrl.selectedValues.should.deep.equal([val2]);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.selectedValues).toEqual([val2]);
+        expect(tagsSelectCtrl.segments).toEqual([
             valAsSegment(val2),
             newPlusButtonSegment(),
         ]);
@@ -82,8 +82,8 @@ describe("TagsSelectCtrl", () => {
         // nasty hack to avoid DI
         TagsSelectCtrl.prototype.selectedValues = undefined;
         const tagsSelectCtrl: TagsSelectCtrl = new TagsSelectCtrl(uiSegmentSrv);
-        tagsSelectCtrl.selectedValues.should.deep.equal([]);
-        tagsSelectCtrl.segments.should.deep.equal([
+        expect(tagsSelectCtrl.selectedValues).toEqual([]);
+        expect(tagsSelectCtrl.segments).toEqual([
             newPlusButtonSegment(),
         ]);
     });

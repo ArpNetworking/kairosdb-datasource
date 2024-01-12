@@ -12,7 +12,7 @@ describe("AggregatorsController", () => {
         // when
         aggregatorCtrl.add(aggregator);
         // then
-        aggregatorCtrl.entries.should.contain(aggregator);
+        expect(aggregatorCtrl.entries).toEqual(expect.arrayContaining([aggregator]));
     });
 
     it("should remove aggregator", () => {
@@ -22,7 +22,7 @@ describe("AggregatorsController", () => {
         // when
         aggregatorCtrl.remove(aggregator);
         // then
-        aggregatorCtrl.entries.should.not.contain(aggregator);
+        expect(aggregatorCtrl.entries).toEqual(expect.not.arrayContaining([aggregator]));
     });
 
     it("should allow to add more aggregators of the same type", () => {
@@ -33,7 +33,7 @@ describe("AggregatorsController", () => {
         aggregatorCtrl.add(aggregator1);
         aggregatorCtrl.add(aggregator2);
         // then
-        aggregatorCtrl.entries.should.contain(aggregator1);
-        aggregatorCtrl.entries.should.contain(aggregator2);
+        expect(aggregatorCtrl.entries).toEqual(expect.arrayContaining([aggregator1]));
+        expect(aggregatorCtrl.entries).toEqual(expect.arrayContaining([aggregator2]));
     });
 });

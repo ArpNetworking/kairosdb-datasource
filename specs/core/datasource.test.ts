@@ -33,6 +33,6 @@ describe("KairosDBDatasource", () => {
         // when
         const metricTags = datasource.getMetricTags(metricName);
         // then
-        metricTags.should.equal(expectedTags);
+        expect(metricTags).toBe(expectedTags);
     });
 });

@@ -49,14 +49,14 @@ describe("TargetValidator", () => {
             const targetIsValid = targetValidator.isValidTarget(target);
             // then
             // tslint:disable-next-line
-            targetIsValid.valid.should.be.false;
+            expect(targetIsValid.valid).toBe(false);
           });
           forEach(split.validTargets).it("should recognize target `%(metricName)s` as valid", (target) => {
             // when
             const targetIsValid = targetValidator.isValidTarget(target);
             // then
             // tslint:disable-next-line
-            targetIsValid.valid.should.be.true;
+            expect(targetIsValid.valid).toBe(true);
           });
         });
       });
@@ -74,7 +74,7 @@ describe("TargetValidator", () => {
               const targetsAreValid = targetValidator.areValidTargets(targets);
               // then
               // tslint:disable-next-line
-              targetsAreValid.valid.should.be.true;
+              expect(targetsAreValid.valid).toBe(true);
             });
 
             it("should recognize list of targets with an invalid target as invalid", () => {
@@ -86,7 +86,7 @@ describe("TargetValidator", () => {
               const targetsAreValid = targetValidator.areValidTargets(targets);
               // then
               // tslint:disable-next-line
-              targetsAreValid.valid.should.be.false;
+              expect(targetsAreValid.valid).toBe(false);
             });
           });
         });

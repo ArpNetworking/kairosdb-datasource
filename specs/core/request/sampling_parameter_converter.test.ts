@@ -34,11 +34,11 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
-        assert(samplingConverterMock.convert.calledOnce);
-        assert(samplingConverterMock.isApplicable.calledOnce);
-        convertedAggregator.parameters.should.have.lengthOf(2);
-        convertedAggregator.parameters[0].value.should.be.equal(convertedValue);
-        convertedAggregator.parameters[1].value.should.be.equal(millisecondsString);
+        assert(samplingConverterMock.toHaveBeenCalledTimes(1));
+        assert(samplingConverterMock.toHaveBeenCalledTimes(1));
+        expect(convertedAggregator.parameters).toHaveLength(2);
+        expect(convertedAggregator.parameters[0].value).toBe(convertedValue);
+        expect(convertedAggregator.parameters[1].value).toBe(millisecondsString);
     });
 
     it("should not convert parameter-less aggregator", () => {
@@ -49,7 +49,7 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
-        convertedAggregator.parameters.should.have.lengthOf(0);
+        expect(convertedAggregator.parameters).toHaveLength(0);
         assert(samplingConverterMock.isApplicable.notCalled);
         assert(samplingConverterMock.convert.notCalled);
     });
@@ -64,7 +64,7 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
-        convertedAggregator.parameters.should.have.lengthOf(1);
+        expect(convertedAggregator.parameters).toHaveLength(1);
         assert(samplingConverterMock.isApplicable.notCalled);
         assert(samplingConverterMock.convert.notCalled);
     });
@@ -79,7 +79,7 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
-        convertedAggregator.parameters.should.have.lengthOf(1);
+        expect(convertedAggregator.parameters).toHaveLength(1);
         assert(samplingConverterMock.isApplicable.notCalled);
         assert(samplingConverterMock.convert.notCalled);
     });
