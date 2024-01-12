@@ -6,7 +6,7 @@ describe("AggregatorEditorController", () => {
         // given
         const aggregatorName: string = "diff";
         const aggregator: Aggregator = new Aggregator(aggregatorName);
-        const scope = {
+        const scope: any = {
             ctrl: {
                 availableAggregators: [aggregator]
             }

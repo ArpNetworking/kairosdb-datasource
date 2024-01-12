@@ -26,7 +26,7 @@ module.exports = function(config) {
         preprocessors: {
             "**/*.ts": "karma-typescript"
         },
-        singleRun: false,
+        singleRun: true,
         systemjs: {
             // SystemJS configuration specifically for tests, added after your config file.
             // Good for adding test libraries and mock modules
