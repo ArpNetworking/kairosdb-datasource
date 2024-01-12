@@ -1,30 +1,27 @@
 "use strict";
 module.exports = function(config) {
     config.set({
-        // frameworks: ["systemjs", "mocha", "chai", "es6-shim", "karma-typescript"],
-        frameworks: ["systemjs", "mocha", "karma-typescript"],
+        frameworks: ["systemjs", "sinon", "mocha", "chai", "es6-shim", "karma-typescript"],
         files: [
             "specs/**/*.ts",
+            "specs/**/*.js",
+            "src/**/*.ts",
+            { pattern: 'node_modules/@grafana/data/**/*.js', included: false },
+            { pattern: 'node_modules/@grafana/schema/**/*.js', included: false },
+            { pattern: 'node_modules/grafana-sdk-mocks/**/*.ts', included: false },
+            // { pattern: 'node_modules/grafana-sdk-mocks/**/*.js', included: false },
+            { pattern: 'node_modules/typescript/lib/typescript.js', included: false },
+            { pattern: 'node_modules/mocha-each/build/index.js', included: false },
+            { pattern: 'node_modules/lodash/lodash.js', included: false },
+            { pattern: 'node_modules/moment/moment.js', included: false },
+            { pattern: 'node_modules/sprintf-js/dist/sprintf.min.js', included: false },
+            { pattern: 'node_modules/q/q.js', included: false }
         ],
         karmaTypescriptConfig: {
-            compilerOptions: {
-                skipLibCheck: true,
-                moduleResolution: "node",
-                module: "system",
-                target: "es2022",
-                rootDirs: ["specs", "dist"],
-                allowSyntheticDefaultImports: true,
-                keepDirectoryHierarchy: false,
-                declaration: true,
-                emitDecoratorMetadata: true,
-                esModuleInterop: true,
-                experimentalDecorators: true,
-                sourceMap: false,
-                noImplicitAny: false
-            }
+            tsconfig: "./tsconfig.json"
         },
         preprocessors: {
-            "**/*.ts": "karma-typescript"
+            "**/*.ts": "karma-typescript",
         },
         singleRun: true,
         systemjs: {
@@ -33,6 +30,8 @@ module.exports = function(config) {
             config: {
                 // Set path for third-party libraries as modules
                 paths: {
+                    "@grafana/data": "node_modules/@grafana/data/dist/index.js",
+                    "@grafana/schema": "node_modules/@grafana/schema/dist/index.js",
                     "app/": "node_modules/grafana-sdk-mocks/app/",
                     "chai": "node_modules/chai/chai.js",
                     "css": "node_modules/systemjs-plugin-css/css.js",
@@ -40,6 +39,7 @@ module.exports = function(config) {
                     "mocha-each": "node_modules/mocha-each/build/index.js",
                     "moment": "node_modules/moment/moment.js",
                     "q": "node_modules/q/q.js",
+                    "sinon": "node_modules/sinon/pkg/sinon.js",
                     "sprintf-js": "node_modules/sprintf-js/dist/sprintf.min.js",
                     "system-polyfills": "node_modules/systemjs/dist/system-polyfills.js",
                     "systemjs": "node_modules/systemjs/dist/system.js",
@@ -63,21 +63,24 @@ module.exports = function(config) {
                         "defaultExtension": "ts",
                         "meta": {
                             "*.js": {
-                                "loader": "typescript"
+                                "loader": "typescript",
+                                "format": "register"
                             }
                         }
                     },
                     "src": {
-                        "defaultExtension": "ts",
+                        "defaultExtension": "js",
                         meta: {
-                            "*.css": { loader: "css" }
+                            "*.css": { loader: "css" },
+                            "*.js": { "format": "register"}
                         }
                     },
                     "specs": {
-                        "defaultExtension": "ts",
+                        "defaultExtension": "js",
                         "meta": {
                             "*.js": {
-                                "loader": "typescript"
+                                "loader": "typescript",
+                                "format": "register"
                             }
                         }
                     },
@@ -85,7 +88,7 @@ module.exports = function(config) {
             }
         },
         reporters: ["mocha", "junit", "karma-typescript"],
-        logLevel: config.LOG_DEBUG,
+        // logLevel: config.LOG_DEBUG,
         browsers: ['ChromeHeadlessNoSandbox'],
         browserConsoleLogOptions: {
             terminal: true,
