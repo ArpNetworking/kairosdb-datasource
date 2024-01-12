@@ -1,4 +1,4 @@
-import dateMath from "@grafana/data";
+import {dateMath} from "@grafana/data";
 import _ from "lodash";
 import {Moment} from "moment";
 import {Aggregator} from "../../beans/aggregators/aggregator";
