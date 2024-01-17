@@ -55,7 +55,7 @@ export class TemplatingUtils {
                         .split(TemplatingUtils.MULTI_VALUE_SEPARATOR);
                     replacedValues = _.flatMap(values, (value) => {
                         return replacedValues.map((replacedValue) => {
-                            if (Object.hasOwn(scopedVars, value)) {
+                            if (scopedVars.hasOwnProperty(value)) {
                                 return replacedValue.replace(multiValue, value);
                             } else if (values.length > 1) {
                                 return replacedValue.replace(multiValue, value);

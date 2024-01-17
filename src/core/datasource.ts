@@ -19,7 +19,7 @@ export class KairosDBDatasource extends DataSourceApi<any, any, any> {
     public initialized: boolean = false;
     public initializationError: boolean = false;
     public metricNamesStore: MetricNamesStore;
-    public enforceScalarSetting?: boolean;
+    public enforceScalarSetting: boolean;
     private url: string;
     private withCredentials: boolean;
     private basicAuth: string;
@@ -38,6 +38,7 @@ export class KairosDBDatasource extends DataSourceApi<any, any, any> {
         super(instanceSettings);
         this.url = instanceSettings.url;
         this.withCredentials = instanceSettings.withCredentials;
+        this.enforceScalarSetting = instanceSettings?.jsonData?.enforceScalarSetting ?? false;
         this.basicAuth = instanceSettings.basicAuth;
         this.backendSrv = backendSrv;
         this.templateSrv = templateSrv;
@@ -46,11 +47,10 @@ export class KairosDBDatasource extends DataSourceApi<any, any, any> {
         this.metricNamesStore = new MetricNamesStore(this, this.promiseUtils, this.url);
         this.templatingUtils = new TemplatingUtils(templateSrv, {});
         this.templatingFunctionsCtrl = new TemplatingFunctionsCtrl(new TemplatingFunctionResolver(this.templatingUtils));
-        this.targetValidator = new TargetValidator(instanceSettings.jsonData.enforceScalarSetting);
+        this.targetValidator = new TargetValidator(this.enforceScalarSetting);
         this.legacyTargetConverter = new LegacyTargetConverter();
-        this.snapToIntervals = TimeUnitUtils.intervalsToUnitValues(instanceSettings.jsonData.snapToIntervals);
-        this.enforceScalarSetting = instanceSettings.jsonData.enforceScalarSetting;
-        this.autocompleteMaxMetrics = instanceSettings.jsonData.autocompleteMaxMetrics;
+        this.snapToIntervals = TimeUnitUtils.intervalsToUnitValues(instanceSettings?.jsonData?.snapToIntervals ?? "1m, 5m, 1h, 1d");
+        this.autocompleteMaxMetrics = instanceSettings?.jsonData?.autocompleteMaxMetrics ?? 100;
         this.registerTemplatingFunctions();
     }
 

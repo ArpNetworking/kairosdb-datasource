@@ -74,7 +74,7 @@ module.exports = function (grunt) {
                     skipLibCheck: true,
                     moduleResolution: "node",
                     module: "system",
-                    target: "es2022",
+                    target: "es5",
                     rootDir: "./dist",
                     allowSyntheticDefaultImports: true,
                     keepDirectoryHierarchy: false,
