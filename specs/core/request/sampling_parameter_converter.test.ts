@@ -1,10 +1,11 @@
-import {expect} from "@jest/globals";
+import {expect, jest} from "@jest/globals";
 import {assert} from "chai";
 import {Aggregator} from "../../../src/beans/aggregators/aggregator";
 import {AnyAggregatorParameter} from "../../../src/beans/aggregators/parameters/any_aggregator_parameter";
 import {SamplingAggregatorParameter} from "../../../src/beans/aggregators/parameters/sampling_aggregator_parameter";
 import {SamplingUnitAggregatorParameter} from "../../../src/beans/aggregators/parameters/sampling_unit_aggregator_parameter";
 import {TimeUnit} from "../../../src/beans/aggregators/utils";
+import {SamplingConverter} from "../../../src/core/request/sampling_converter";
 import {SamplingParameterConverter} from "../../../src/core/request/sampling_parameter_converter";
 import {TemplatingUtils} from "../../../src/utils/templating_utils";
 import {TimeUnitUtils} from "../../../src/utils/time_unit_utils";
@@ -23,7 +24,10 @@ describe("SamplingParameterConverter", () => {
 
     it("should update both sampling parameters", () => {
         // given
-        const samplingConverterMock = buildSamplingConverterMock(convertedValue, millisecondsString, true);
+        const samplingConverterMock = buildSamplingConverterMock(
+            convertedValue,
+            millisecondsString,
+            true) as jest.MockedObject<SamplingConverter>;
         const samplingParameterConverter = new SamplingParameterConverter(templatingUtils, samplingConverterMock);
         const aggregator = new Aggregator("foo");
         const samplingUnitAggregatorParameter = new SamplingUnitAggregatorParameter();
@@ -35,8 +39,8 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
-        assert(samplingConverterMock.toHaveBeenCalledTimes(1));
-        assert(samplingConverterMock.toHaveBeenCalledTimes(1));
+        expect(samplingConverterMock.isApplicable.mock.calls).toHaveLength(1);
+        expect(samplingConverterMock.convert.mock.calls).toHaveLength(1);
         expect(convertedAggregator.parameters).toHaveLength(2);
         expect(convertedAggregator.parameters[0].value).toBe(convertedValue);
         expect(convertedAggregator.parameters[1].value).toBe(millisecondsString);
@@ -51,8 +55,8 @@ describe("SamplingParameterConverter", () => {
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
         expect(convertedAggregator.parameters).toHaveLength(0);
-        assert(samplingConverterMock.isApplicable.notCalled);
-        assert(samplingConverterMock.convert.notCalled);
+        expect(samplingConverterMock.isApplicable).not.toBeCalled();
+        expect(samplingConverterMock.convert).not.toBeCalled();
     });
 
     it("should pass not applicable parameters", () => {
@@ -66,8 +70,8 @@ describe("SamplingParameterConverter", () => {
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
         expect(convertedAggregator.parameters).toHaveLength(1);
-        assert(samplingConverterMock.isApplicable.notCalled);
-        assert(samplingConverterMock.convert.notCalled);
+        expect(samplingConverterMock.isApplicable).not.toBeCalled();
+        expect(samplingConverterMock.convert).not.toBeCalled();
     });
 
     it("should pass when only unit parameter is present", () => {
@@ -81,7 +85,7 @@ describe("SamplingParameterConverter", () => {
         const convertedAggregator = samplingParameterConverter.convertSamplingParameters(aggregator);
         // then
         expect(convertedAggregator.parameters).toHaveLength(1);
-        assert(samplingConverterMock.isApplicable.notCalled);
-        assert(samplingConverterMock.convert.notCalled);
+        expect(samplingConverterMock.isApplicable).not.toBeCalled();
+        expect(samplingConverterMock.convert).not.toBeCalled();
     });
 });

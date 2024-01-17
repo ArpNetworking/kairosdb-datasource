@@ -37,8 +37,7 @@ describe("TemplatingFunctionsController", () => {
         // when
         templatingFunctionsController.resolve(functionQuery)();
         // then
-        assert(expectedFunction.toHaveBeenCalledTimes(1));
-        expectedFunction.body.reset();
+        expect(expectedFunction.body).toBeCalledTimes(1);
     });
 
     forEach([
@@ -60,8 +59,7 @@ describe("TemplatingFunctionsController", () => {
         // when
         templatingFunctionsController.resolve(functionQuery)();
         // then
-        assert(expectedFunction.body.calledWith("metric_name", "tag_name", {filter1: variables.variable1}));
-        expectedFunction.body.reset();
+        expect(expectedFunction.body).toBeCalledWith("metric_name", "tag_name", {filter1: variables.variable1}, undefined);
     });
 
     it("should convert single filter argument with prefix and suffix to single entry filter object", () => {
@@ -72,8 +70,7 @@ describe("TemplatingFunctionsController", () => {
         // when
         templatingFunctionsController.resolve(functionQuery)();
         // then
-        assert(expectedFunction.body.calledWith("metric_name", "tag_name", {filter1: expectedFilters}));
-        expectedFunction.body.reset();
+        expect(expectedFunction.body).toBeCalledWith("metric_name", "tag_name", {filter1: expectedFilters}, undefined);
     });
 
     it("should convert multiple filter arguments to multiple entries filter object", () => {
@@ -83,7 +80,7 @@ describe("TemplatingFunctionsController", () => {
         // when
         templatingFunctionsController.resolve(functionQuery)();
         // then
-        assert(expectedFunction.body.calledWith("metric_name", "tag_name", {filter1: variables.variable1, filter2: variables.variable2}));
-        expectedFunction.body.reset();
+        expect(expectedFunction.body).toBeCalledWith(
+            "metric_name", "tag_name", {filter1: variables.variable1, filter2: variables.variable2}, undefined);
     });
 });

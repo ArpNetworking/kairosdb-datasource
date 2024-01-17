@@ -3,6 +3,7 @@ import {TemplateSrv, VariableInterpolation} from "@grafana/runtime";
 import _ from "lodash";
 import {sinon} from "sinon";
 import {SamplingConverter} from "../src/core/request/sampling_converter";
+import {jest} from "@jest/globals";
 
 interface Variables {
     [variableLabel: string]: string[];
@@ -80,12 +81,8 @@ export const buildNoopTemplatingSrvMock = () => {
 };
 
 export const buildSamplingConverterMock = (interval, unit, applicable) => {
-    const converterMock = sinon.mock(SamplingConverter);
-    converterMock.isApplicable = () => applicable;
-    converterMock.convert = (ignore1, ignore2) => {
-        return {interval, unit};
-    };
-    sinon.stub(converterMock, "isApplicable").callThrough();
-    sinon.stub(converterMock, "convert").callThrough();
+    const converterMock = jest.fn() as unknown as SamplingConverter;
+    converterMock.isApplicable = jest.fn().mockReturnValue(applicable) as any;
+    converterMock.convert = jest.fn().mockReturnValue({interval, unit}) as any;
     return converterMock;
 };
