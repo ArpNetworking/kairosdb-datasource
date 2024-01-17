@@ -4,7 +4,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("@string-bean/grunt-package-modules");
     grunt.loadNpmTasks("grunt-tslint");
-    grunt.loadNpmTasks("grunt-karma");
 
     grunt.initConfig({
         clean: {
@@ -103,11 +102,6 @@ module.exports = function (grunt) {
                 }]
             }
         },
-        karma: {
-            unit: {
-                configFile: "karma.conf.js"
-            }
-        }
     });
 
     grunt.registerTask("default", [
@@ -117,7 +111,6 @@ module.exports = function (grunt) {
         "tslint",
         "ts:build",
         "babel",
-        "karma",
         "clean:post"
     ]);
 };

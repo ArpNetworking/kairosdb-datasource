@@ -6,7 +6,6 @@ import {TemplatingFunctionsCtrl} from "../../src/controllers/templating_function
 import {TemplatingFunctionResolver} from "../../src/utils/templating_function_resolver";
 import {TemplatingUtils} from "../../src/utils/templating_utils";
 import {buildTemplatingSrvMock} from "../mocks";
-import {assert} from "chai";
 
 describe("TemplatingFunctionsController", () => {
     const variables = {

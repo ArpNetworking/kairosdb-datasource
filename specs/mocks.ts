@@ -1,9 +1,9 @@
 import {ScopedVars, TimeRange, TypedVariableModel} from "@grafana/data";
 import {TemplateSrv, VariableInterpolation} from "@grafana/runtime";
+import {jest} from "@jest/globals";
 import _ from "lodash";
 import {sinon} from "sinon";
 import {SamplingConverter} from "../src/core/request/sampling_converter";
-import {jest} from "@jest/globals";
 
 interface Variables {
     [variableLabel: string]: string[];
