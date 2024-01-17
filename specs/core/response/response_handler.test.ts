@@ -1,8 +1,9 @@
+import {expect, jest} from "@jest/globals";
 import {KairosDBResponseHandler} from "../../../src/core/response/response_handler";
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";
 
 describe("KairosDBResponseHandler", () => {
-    const seriesNameBuilder: SeriesNameBuilder = sinon.createStubInstance(SeriesNameBuilder);
+    const seriesNameBuilder = new SeriesNameBuilder();
     const responseHandler: KairosDBResponseHandler = new KairosDBResponseHandler(seriesNameBuilder);
 
     it("should convert datapoints correctly with single result", () => {
@@ -17,6 +18,10 @@ describe("KairosDBResponseHandler", () => {
                                     key: "GROUPby1",
                                     key2: "GROUPby2"
                                 },
+                                tags: [
+                                    "GROUPby1",
+                                    "GROUPby2"
+                                ],
                                 name: "tag"
                             },
                             {
@@ -41,11 +46,19 @@ describe("KairosDBResponseHandler", () => {
             ]
         };
         const aliases = ["result1"];
-        const expectedDatapoints = [[1512405294, 1], [1512405294, 234], [null, 500]];
+        const expectedTimeValues = [1, 234, 500];
+        const expectedDataValues = [1512405294, 1512405294, null];
         // when
         const datapoints = responseHandler.convertToDatapoints(data, aliases);
         // then
-        datapoints.data[0].datapoints.should.deep.equal(expectedDatapoints);
+        expect(datapoints.data.length).toEqual(1);
+        expect(datapoints.data[0].name).toEqual("result1");
+        expect(datapoints.data[0].fields.length).toEqual(2);
+        const timeField = datapoints.data[0].fields[0];
+        expect(timeField.values.toArray()).toEqual(expectedTimeValues);
+        const valuesField = datapoints.data[0].fields[1];
+        expect(valuesField.values.toArray()).toEqual(expectedDataValues);
+
     });
 
     it("should convert datapoints correctly with multiple results", () => {
@@ -60,6 +73,10 @@ describe("KairosDBResponseHandler", () => {
                                     key: "GROUPby1",
                                     key2: "GROUPby2"
                                 },
+                                tags: [
+                                    "GROUPby1",
+                                    "GROUPby2"
+                                ],
                                 name: "tag"
                             },
                             {
@@ -86,6 +103,10 @@ describe("KairosDBResponseHandler", () => {
                                     key: "key",
                                     someOtherKey: "other_key"
                                 },
+                                tags: [
+                                    "key",
+                                    "someOtherKey"
+                                ],
                                 name: "tag"
                             },
                             {
@@ -106,10 +127,28 @@ describe("KairosDBResponseHandler", () => {
         const aliases = ["result1"];
         const expectedDatapoints1 = [[1512405294, 1], [1512405294, 234]];
         const expectedDatapoints2 = [[1512413381, 14], [1512427385, 2343]];
+        const expectedTimeValues1 = [1, 234];
+        const expectedDataValues1 = [1512405294, 1512405294];
+        const expectedTimeValues2 = [14, 2343];
+        const expectedDataValues2 = [1512413381, 1512427385];
         // when
         const datapoints = responseHandler.convertToDatapoints(data, aliases);
         // then
-        datapoints.data[0].datapoints.should.deep.equal(expectedDatapoints1);
-        datapoints.data[1].datapoints.should.deep.equal(expectedDatapoints2);
+
+        expect(datapoints.data.length).toEqual(2);
+        let frame = datapoints.data[0];
+        expect(frame.name).toEqual("result1");
+        expect(frame.fields.length).toEqual(2);
+        let timeField = frame.fields[0];
+        expect(timeField.values.toArray()).toEqual(expectedTimeValues1);
+        let valuesField = frame.fields[1];
+        expect(valuesField.values.toArray()).toEqual(expectedDataValues1);
+        frame = datapoints.data[1];
+        expect(frame.name).toEqual("result1");
+        expect(frame.fields.length).toEqual(2);
+        timeField = frame.fields[0];
+        expect(timeField.values.toArray()).toEqual(expectedTimeValues2);
+        valuesField = frame.fields[1];
+        expect(valuesField.values.toArray()).toEqual(expectedDataValues2);
     });
 });

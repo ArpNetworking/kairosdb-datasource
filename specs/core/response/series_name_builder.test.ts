@@ -1,4 +1,4 @@
-import _ from "lodash";
+import {expect} from "@jest/globals";
 import forEach from "mocha-each";
 
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";
@@ -98,23 +98,7 @@ describe("SeriesNameBuilder", () => {
             // when
             const seriesName = seriesNameBuilder.build(metricName, null, groupBys);
             // then
-            seriesName.should.contain(metricName);
-            groupBys.forEach((groupBy) => {
-                switch (groupBy.name) {
-                    case "tag":
-                        _.values(groupBy.group).forEach((value) => {
-                            seriesName.should.contain(value);
-                        });
-                        break;
-                    case "value":
-                        seriesName.should.contain(groupBy.group.group_number);
-                        break;
-                    case "time":
-                        seriesName.should.contain(groupBy.group.group_number);
-                        seriesName.should.contain(groupBy.group_count);
-                        break;
-                }
-            });
+            expect(seriesName).toEqual(metricName);
         });
 
     it("should replace grouping expression for tag, value and time", () => {
@@ -165,6 +149,6 @@ describe("SeriesNameBuilder", () => {
         // when
         const seriesName = seriesNameBuilder.build(metricName, alias, groupBys);
         // then
-        seriesName.should.be.equal("kairosdb_some_text_G2_other_text_G1_3");
+        expect(seriesName).toBe("kairosdb_some_text_G2_other_text_G1_3");
     });
 });

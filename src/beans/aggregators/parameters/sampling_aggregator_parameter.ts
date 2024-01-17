@@ -8,7 +8,7 @@ export class SamplingAggregatorParameter extends AnyAggregatorParameter {
         return new SamplingAggregatorParameter(object.text, object.value);
     }
 
-    constructor(text: string = name, value: any = null) {
+    constructor(text: string, value: any = null) {
         super("value", text, value);
         this.type = SamplingAggregatorParameter.TYPE;
     }

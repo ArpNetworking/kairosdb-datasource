@@ -11,7 +11,7 @@ describe("TimeUnitUtils", () => {
             const extractedTimeUnit = TimeUnitUtils.extractUnit(interval);
             // then
             // tslint:disable-next-line
-            extractedTimeUnit.should.be.equal("s");
+            expect(extractedTimeUnit).toBe("s");
         });
         it("should extract 'm' from '1.5m'", () => {
             // given
@@ -20,7 +20,7 @@ describe("TimeUnitUtils", () => {
             const extractedTimeUnit = TimeUnitUtils.extractUnit(interval);
             // then
             // tslint:disable-next-line
-            extractedTimeUnit.should.be.equal("m");
+            expect(extractedTimeUnit).toBe("m");
         });
     });
     describe("extractValue", () => {
@@ -30,7 +30,7 @@ describe("TimeUnitUtils", () => {
             const extractedTimeValue = TimeUnitUtils.extractValue(interval);
             // then
             // tslint:disable-next-line
-            extractedTimeValue.should.be.equal("2");
+            expect(extractedTimeValue).toBe("2");
         });
         it("should extract '3.5' from '3.5d'", () => {
             const interval = "3.5d";
@@ -38,7 +38,7 @@ describe("TimeUnitUtils", () => {
             const extractedTimeValue = TimeUnitUtils.extractValue(interval);
             // then
             // tslint:disable-next-line
-            extractedTimeValue.should.be.equal("3.5");
+            expect(extractedTimeValue).toBe("3.5");
         });
     });
     describe("convertTimeUnit", () => {
@@ -52,7 +52,7 @@ describe("TimeUnitUtils", () => {
             ["M", "MONTHS"],
             ["y", "YEARS"]
         ]).it("should convert short format time unit: %s into %s", (timeUnit, expected) => {
-            TimeUnitUtils.convertTimeUnit(timeUnit).should.be.equal(expected);
+            expect(TimeUnitUtils.convertTimeUnit(timeUnit)).toBe(expected);
         });
         forEach([
             ["millisecond", "MILLISECONDS"],
@@ -64,7 +64,7 @@ describe("TimeUnitUtils", () => {
             ["month", "MONTHS"],
             ["year", "YEARS"]
         ]).it("should convert long format time unit: %s into %s", (timeUnit, expected) => {
-            TimeUnitUtils.convertTimeUnit(timeUnit).should.be.equal(expected);
+            expect(TimeUnitUtils.convertTimeUnit(timeUnit)).toBe(expected);
         });
     });
     describe("getString", () => {
@@ -78,7 +78,7 @@ describe("TimeUnitUtils", () => {
             [TimeUnit.MONTHS, "MONTHS"],
             [TimeUnit.YEARS, "YEARS"]
         ]).it("should use TimeUnit.%s and get %s", (timeUnit, expected) => {
-            TimeUnitUtils.getString(timeUnit).should.be.equal(expected);
+            expect(TimeUnitUtils.getString(timeUnit)).toBe(expected);
         });
     });
     describe("getShortUnit", () => {
@@ -92,7 +92,7 @@ describe("TimeUnitUtils", () => {
             ["MONTHS", "M"],
             ["YEARS", "y"]
         ]).it("should use %s and get %s", (timeUnit, expected) => {
-            TimeUnitUtils.getShortUnit(timeUnit).should.be.equal(expected);
+            expect(TimeUnitUtils.getShortUnit(timeUnit)).toBe(expected);
         });
     });
     describe("intervalToUnitValue", () => {
@@ -108,7 +108,7 @@ describe("TimeUnitUtils", () => {
             ["3b", [undefined, 3]],
             ["h", [TimeUnit.HOURS, NaN]]
         ]).it("should use %s and get %s", (interval, expected) => {
-            TimeUnitUtils.intervalToUnitValue(interval).should.be.eql(expected);
+            expect(TimeUnitUtils.intervalToUnitValue(interval)).toEqual(expected);
         });
     });
 
@@ -118,7 +118,7 @@ describe("TimeUnitUtils", () => {
             ["4h,1d, 1w", [[TimeUnit.HOURS, 4], [TimeUnit.DAYS, 1], [TimeUnit.WEEKS, 1]]],
             ["1w,1d, 4h,3b,h", [[TimeUnit.HOURS, 4], [TimeUnit.DAYS, 1], [TimeUnit.WEEKS, 1]]]
         ]).it("should use %s and get %s", (interval, expected) => {
-            TimeUnitUtils.intervalsToUnitValues(interval).should.be.eql(expected);
+            expect(TimeUnitUtils.intervalsToUnitValues(interval)).toEqual(expected);
         });
     });
 
@@ -131,7 +131,7 @@ describe("TimeUnitUtils", () => {
             [[TimeUnit.DAYS, 1], 24 * 60 * 60 * 1000],
             [[TimeUnit.WEEKS, 1], 7 * 24 * 60 * 60 * 1000]
         ]).it("should use %s and get %s", (unitValue, expected) => {
-            TimeUnitUtils.unitValueToMillis(unitValue).should.be.equal(expected);
+            expect(TimeUnitUtils.unitValueToMillis(unitValue)).toBe(expected);
         });
     });
 
@@ -144,7 +144,7 @@ describe("TimeUnitUtils", () => {
             ["1d", 24 * 60 * 60 * 1000],
             ["1w", 7 * 24 * 60 * 60 * 1000]
         ]).it("should use %s and get %s", (interval, expected) => {
-            TimeUnitUtils.intervalToMillis(interval).should.be.equal(expected);
+            expect(TimeUnitUtils.intervalToMillis(interval)).toBe(expected);
         });
     });
 
@@ -157,7 +157,7 @@ describe("TimeUnitUtils", () => {
             [TimeUnit.DAYS, 24 * 60 * 60 * 1000],
             [TimeUnit.WEEKS, 7 * 24 * 60 * 60 * 1000]
         ]).it("should use %s and get %s", (unit, expected) => {
-            TimeUnitUtils.timeUnitToMillis(unit).should.be.equal(expected);
+            expect(TimeUnitUtils.timeUnitToMillis(unit)).toBe(expected);
         });
     });
 
@@ -179,7 +179,7 @@ describe("TimeUnitUtils", () => {
             ["10h", [TimeUnitUtils.getString(TimeUnit.DAYS), "1"]],
             ["10d", [TimeUnitUtils.getString(TimeUnit.DAYS), "1"]],
         ]).it("should use %s and get %s", (interval, expected) => {
-           TimeUnitUtils.ceilingToAvailableUnit(interval, availableUnits).should.be.eql(expected);
+           expect(TimeUnitUtils.ceilingToAvailableUnit(interval, availableUnits)).toEqual(expected);
         });
     });
 });

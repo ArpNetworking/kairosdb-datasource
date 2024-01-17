@@ -1,3 +1,4 @@
+import {expect} from "@jest/globals";
 import {MetricTags} from "../../../src/beans/request/metric_tags";
 
 describe("MetricTags", () => {
@@ -18,11 +19,11 @@ describe("MetricTags", () => {
         metricTags.updateTags(tags);
         // then
         // tslint:disable
-        expect(metricTags.size).to.equal(4);
-        expect(metricTags.combinations).to.equal(15);
-        expect(metricTags.size).to.equal(4);
-        expect(metricTags.combinations).to.equal(15);
-        expect(metricTags.multiValuedTags).to.deep.equal(["tag1", "another tag"]);
-        expect(metricTags.initialized).to.be.true;
+        expect(metricTags.size).toBe(4);
+        expect(metricTags.combinations).toBe(15);
+        expect(metricTags.size).toBe(4);
+        expect(metricTags.combinations).toBe(15);
+        expect(metricTags.multiValuedTags).toEqual(["tag1", "another tag"]);
+        expect(metricTags.initialized).toBe(true);
     });
 });

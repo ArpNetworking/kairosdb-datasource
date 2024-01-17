@@ -9,6 +9,7 @@ export class AggregatorCtrl {
     public isLast: boolean;
     public visibleParameters: AggregatorParameter[];
     public isAutoValue: boolean = false;
+    private $onInit: () => void;
 
     constructor() {
         this.$onInit = function() {

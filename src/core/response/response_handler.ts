@@ -1,11 +1,11 @@
 import {
-    ArrayVector,
+    ArrayVector, DataFrame,
     DataFrameType,
     FieldType,
     TIME_SERIES_TIME_FIELD_NAME,
     TIME_SERIES_VALUE_FIELD_NAME
 } from "@grafana/data";
-import _, {sortBy} from "lodash";
+import _ from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
 
 export class KairosDBResponseHandler {
@@ -21,7 +21,7 @@ export class KairosDBResponseHandler {
         const buffer = new ArrayBuffer(8);
         const dataview = new DataView(buffer);
         const queries = data.queries;
-        const dataFrames = [];
+        const dataFrames: DataFrame[] = [];
         queries.forEach((query, index) => {
             const alias = aliases[index];
             for (const result of query.results) {
@@ -61,17 +61,17 @@ export class KairosDBResponseHandler {
                             counts.add(bins[k]);
 
                             dataview.setFloat64(0, value);
-                            let upperBound = dataview.getBigInt64(0);
+                            let upperBoundBig = dataview.getBigInt64(0);
                             // tslint:disable-next-line:no-bitwise
-                            upperBound >>= shift;
-                            upperBound++;
+                            upperBoundBig >>= shift;
+                            upperBoundBig++;
                             // tslint:disable-next-line:no-bitwise
-                            upperBound <<= shift;
-                            upperBound--;
-                            dataview.setBigInt64(0, upperBound);
-                            upperBound = dataview.getFloat64(0);
+                            upperBoundBig <<= shift;
+                            upperBoundBig--;
+                            dataview.setBigInt64(0, upperBoundBig);
+                            const upperBoundNum = dataview.getFloat64(0);
 
-                            yMax.add(upperBound);
+                            yMax.add(upperBoundNum);
                         });
                     }
                 }
@@ -95,7 +95,7 @@ export class KairosDBResponseHandler {
                         name: histogram ? "yMin" : TIME_SERIES_VALUE_FIELD_NAME,
                         type: FieldType.number,
                         config: {},
-                        values: values,
+                        values,
                         labels: tags,
                     },
                 ];

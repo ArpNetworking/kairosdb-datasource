@@ -9,7 +9,7 @@ describe("AGGREGATORS", () => {
         AGGREGATORS.forEach((agg: Aggregator) => {
             const isRangeAgg = agg instanceof RangeAggregator;
             it(`${agg.name} should ${!isRangeAgg ? "not" : ""} have an alignment param:`, () => {
-                expect(hasAlignmentParam(agg)).equal(isRangeAgg);
+                expect(hasAlignmentParam(agg)).toBe(isRangeAgg);
             });
         });
     });
@@ -24,14 +24,14 @@ function hasAlignmentParam(agg: Aggregator): boolean {
 
 describe("SCALAR_AGGREGATOR_NAMES", () => {
     it("should be sorted alphabetically", () => {
-        expect(_.sortBy(SCALAR_AGGREGATOR_NAMES)).eql(SCALAR_AGGREGATOR_NAMES);
+        expect(_.sortBy(SCALAR_AGGREGATOR_NAMES)).toEqual(SCALAR_AGGREGATOR_NAMES);
     });
     it("should not include duplicates", () => {
-        expect(_.uniq(SCALAR_AGGREGATOR_NAMES).length).equal(SCALAR_AGGREGATOR_NAMES.length);
+        expect(_.uniq(SCALAR_AGGREGATOR_NAMES).length).toBe(SCALAR_AGGREGATOR_NAMES.length);
     });
     it("should only include members of AGGREGATORS", () => {
         const aggregatorNames = AGGREGATORS.map((a) => a.name);
         const missing = _.difference(SCALAR_AGGREGATOR_NAMES, aggregatorNames);
-        expect(missing).eql([]);
+        expect(missing).toEqual([]);
     });
 });

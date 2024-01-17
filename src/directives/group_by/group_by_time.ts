@@ -6,6 +6,7 @@ export class GroupByTimeCtrl {
     public entries: GroupByTimeEntry[];
     public inputVisible: boolean = false;
     public allowedUnitValues: string[] = EnumValues(TimeUnit);
+    private $onInit: () => void;
 
     constructor() {
         this.$onInit = function() {

@@ -1,9 +1,10 @@
+import {expect, jest} from "@jest/globals";
 import {KairosDBDatasource} from "../../src/core/datasource";
 import {buildNoopTemplatingSrvMock} from "../mocks";
 
 describe("KairosDBDatasource", () => {
     const instanceSettings = {type: "type", url: "url", name: "name", jsonData: {}};
-    const promiseUtils = sinon.spy();
+    const promiseUtils = jest.fn();
 
     it("should handle metric tags response correctly", () => {
         // given
@@ -32,6 +33,6 @@ describe("KairosDBDatasource", () => {
         // when
         const metricTags = datasource.getMetricTags(metricName);
         // then
-        metricTags.should.equal(expectedTags);
+        expect(metricTags).toBe(expectedTags);
     });
 });

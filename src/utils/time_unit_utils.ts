@@ -93,6 +93,10 @@ export class TimeUnitUtils {
       }
     }
 
+    public static getTimeUnit(unit: string): TimeUnit {
+        return TimeUnit[this.convertTimeUnit(unit)];
+    }
+
     private static TIME_UNIT_STRINGS = _.values(EnumValues(TimeUnit));
     private static SHORT_UNITS = _.zipObject(
         ["ms", "s", "m", "h", "d", "w", "M", "y"],
@@ -100,8 +104,4 @@ export class TimeUnitUtils {
     private static LONG_UNITS = _.zipObject(
         ["millisecond", "second", "minute", "hour", "day", "week", "month", "year"],
         TimeUnitUtils.TIME_UNIT_STRINGS);
-
-    private static getTimeUnit(unit: string): TimeUnit {
-        return TimeUnit[this.convertTimeUnit(unit)];
-    }
 }

@@ -11,7 +11,7 @@ describe("SamplingParameterConverter", () => {
         const isApplicable = samplingConverter.isApplicable(42.2);
         // then
         // tslint:disable-next-line
-        isApplicable.should.be.true;
+        expect(isApplicable).toBe(true);
     });
 
     it("should not recognize as applicable", () => {
@@ -20,7 +20,7 @@ describe("SamplingParameterConverter", () => {
         const isApplicable = samplingConverter.isApplicable(42.0);
         // then
         // tslint:disable-next-line
-        isApplicable.should.be.false;
+        expect(isApplicable).toBe(false);
     });
 
     it("should not recognize as applicable", () => {
@@ -29,7 +29,7 @@ describe("SamplingParameterConverter", () => {
         const isApplicable = samplingConverter.isApplicable(42);
         // then
         // tslint:disable-next-line
-        isApplicable.should.be.false;
+        expect(isApplicable).toBe(false);
     });
 
     it("should convert to milliseconds", () => {
@@ -39,8 +39,8 @@ describe("SamplingParameterConverter", () => {
         // when
         const convertedSampling = samplingConverter.convert(value, unit);
         // then
-        convertedSampling.unit.should.be.equal("MILLISECONDS");
-        convertedSampling.interval.should.be.equal("5400000");
+        expect(convertedSampling.unit).toBe("MILLISECONDS");
+        expect(convertedSampling.interval).toBe("5400000");
     });
 
     it("should throw when value is is float and time unit is milliseconds", () => {
@@ -50,6 +50,6 @@ describe("SamplingParameterConverter", () => {
             const value = 1.5;
             // when
             samplingConverter.convert(value, unit);
-        }).to.throw();
+        }).toThrow();
     });
 });

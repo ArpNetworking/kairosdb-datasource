@@ -18,7 +18,7 @@ export class TemplatingFunctionResolver {
         const simpleArgs = args.filter((argument) => !this.isFilterArgument(argument));
         const filters = _.difference(args, simpleArgs).map((filterArgument) => this.mapToFilter(filterArgument));
         return () => matchedFunction.body(
-            ...simpleArgs, filters.reduce((filter1, filter2) => _.merge(filter1, filter2), {}), options.range);
+            ...simpleArgs, filters.reduce((filter1, filter2) => _.merge(filter1, filter2), {}), options?.range);
     }
 
     private mapToFilter(filter: string) {

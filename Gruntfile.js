@@ -4,7 +4,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("@string-bean/grunt-package-modules");
     grunt.loadNpmTasks("grunt-tslint");
-    grunt.loadNpmTasks("grunt-karma");
 
     grunt.initConfig({
         clean: {
@@ -18,11 +17,23 @@ module.exports = function (grunt) {
             },
         },
         copy: {
-            src_to_dist: {
-                cwd: "src",
+            source: {
                 expand: true,
-                src: ["**/*", "!**/*.js", "!**/*.scss", "!node_modules/**/*"],
-                dest: "dist"
+                cwd: "src",
+                src: ["**/*.ts"],
+                dest: "dist/"
+            },
+            static: {
+                expand: true,
+                cwd: "src",
+                src: ["css/*.css", "img/*"],
+                dest: "dist/"
+            },
+            partials: {
+                expand: true,
+                cwd: "src/partials",
+                src: ["*.html"],
+                dest: "dist/partials"
             },
             metadata: {
                 expand: true,
@@ -56,14 +67,15 @@ module.exports = function (grunt) {
         ts: {
             build: {
                 src: [
-                    "dist/**/*.ts"
+                    "src/**/*.ts"
                 ],
                 dest: "dist/",
                 options: {
+                    skipLibCheck: true,
                     moduleResolution: "node",
                     module: "system",
-                    target: "es5",
-                    rootDir: "dist/",
+                    target: "es2022",
+                    rootDir: "src/",
                     allowSyntheticDefaultImports: true,
                     keepDirectoryHierarchy: false,
                     declaration: true,
@@ -90,11 +102,6 @@ module.exports = function (grunt) {
                 }]
             }
         },
-        karma: {
-            unit: {
-                configFile: "karma.conf.js"
-            }
-        }
     });
 
     grunt.registerTask("default", [
@@ -104,7 +111,6 @@ module.exports = function (grunt) {
         "tslint",
         "ts:build",
         "babel",
-        "karma",
         "clean:post"
     ]);
 };

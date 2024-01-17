@@ -27,6 +27,7 @@ export class TimePickerCtrl {
   public firstDayOfWeek: number;
   public isOpen: boolean;
   public isAbsolute: boolean;
+  private $onInit: () => void;
 
   /** @ngInject */
   constructor(private $scope, private $rootScope, private timeSrv) {
@@ -65,7 +66,6 @@ export class TimePickerCtrl {
     if (!timeRaw) {
       timeRaw = this.timeSrv.timeRange().raw;
     }
-
 
     if (this.dashboard.getTimezone === undefined || this.dashboard.getTimezone() !== "utc") {
       if (moment.isMoment(timeRaw.from)) {
