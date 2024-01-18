@@ -67,15 +67,15 @@ module.exports = function (grunt) {
         ts: {
             build: {
                 src: [
-                    "src/**/*.ts"
+                    "dist/**/*.ts"
                 ],
                 dest: "dist/",
                 options: {
                     skipLibCheck: true,
                     moduleResolution: "node",
                     module: "system",
-                    target: "es2022",
-                    rootDir: "src/",
+                    target: "es5",
+                    rootDir: "./dist",
                     allowSyntheticDefaultImports: true,
                     keepDirectoryHierarchy: false,
                     declaration: true,
@@ -107,9 +107,9 @@ module.exports = function (grunt) {
     grunt.registerTask("default", [
         "clean:dist",
         "copy",
-        "packageModules",
         "tslint",
         "ts:build",
+        "packageModules",
         "babel",
         "clean:post"
     ]);
