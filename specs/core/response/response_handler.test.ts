@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import "../../mockMatchMedia";
+// tslint:disable-next-line
 import {expect, jest} from "@jest/globals";
 import {KairosDBResponseHandler} from "../../../src/core/response/response_handler";
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";

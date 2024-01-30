@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  */
 import "../mockMatchMedia";
+// tslint:disable-next-line
 import {expect, jest} from "@jest/globals";
 import {KairosDBDatasource} from "../../src/core/datasource";
 import {buildNoopTemplatingSrvMock} from "../mocks";
