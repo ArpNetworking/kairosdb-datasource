@@ -77,7 +77,7 @@ export class KairosDBResponseHandler {
                 }
                 const fields: FieldDTO[] = [
                 ];
-                if (!config.featureToggles.newVisToolTips) {
+                if (!config.featureToggles.newVizTooltips) {
                     fields.push(
                         {
                             name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,

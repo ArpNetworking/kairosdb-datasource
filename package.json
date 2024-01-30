@@ -53,8 +53,8 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@grafana/data": "^9.5.15",
-    "@grafana/runtime": "^9.5.15",
+    "@grafana/data": "^10.3.1",
+    "@grafana/runtime": "^10.3.1",
     "angular": "^1.8.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.4"
