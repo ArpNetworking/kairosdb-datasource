@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import {expect} from "@jest/globals";
 import {LegacyTargetConverter} from "../../../src/beans/request/legacy_target_converter";
 import {GroupByTimeEntry} from "../../../src/directives/group_by/group_by_time_entry";

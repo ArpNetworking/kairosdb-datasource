@@ -26,6 +26,7 @@ export class KairosDBResponseHandler {
         queries.forEach((query, index) => {
             const alias = aliases[index];
             for (const result of query.results) {
+                const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
                 const times = [];
                 const values = [];
                 const counts = [];
@@ -113,7 +114,7 @@ export class KairosDBResponseHandler {
                 }
                 fields.push(
                     {
-                        name: histogram ? "yMin" : TIME_SERIES_VALUE_FIELD_NAME,
+                        name: histogram ? "yMin" : target,
                         type: FieldType.number,
                         config: {},
                         values,
@@ -138,7 +139,6 @@ export class KairosDBResponseHandler {
                             labels: tags,
                         });
                 }
-                const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
                 const df = {
                     name: target,
                     fields,

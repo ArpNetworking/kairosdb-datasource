@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+import "../../mockMatchMedia";
 import {expect, jest} from "@jest/globals";
 import {KairosDBResponseHandler} from "../../../src/core/response/response_handler";
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";
