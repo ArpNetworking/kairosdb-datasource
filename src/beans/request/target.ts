@@ -1,4 +1,4 @@
-import {dateMath} from "@grafana/data";
+import {dateMath, DateTime} from "@grafana/data";
 import {Moment} from "moment";
 import {Aggregator} from "../aggregators/aggregator";
 import * as Aggregators from "../aggregators/aggregators";
@@ -6,8 +6,8 @@ import {AggregatorParameter} from "../aggregators/parameters/aggregator_paramete
 import {GroupBy} from "./group_by";
 
 export interface TimeRange {
-    from: Moment | string;
-    to: Moment | string;
+    from: DateTime | string;
+    to: DateTime | string;
 }
 
 export class KairosDBTarget {
@@ -36,7 +36,7 @@ export class KairosDBTarget {
 
     public startTime(): number | undefined {
       if (this.timeRange) {
-        const startMoment: Moment = dateMath.parse(this.timeRange.from);
+        const startMoment: DateTime = dateMath.parse(this.timeRange.from);
         if (startMoment) {
           return startMoment.unix() * 1000;
         }
@@ -46,7 +46,7 @@ export class KairosDBTarget {
 
     public endTime(): number | undefined {
       if (this.timeRange) {
-        const endMoment: Moment = dateMath.parse(this.timeRange.to);
+        const endMoment: DateTime = dateMath.parse(this.timeRange.to);
         if (endMoment) {
           return endMoment.unix() * 1000;
         }
