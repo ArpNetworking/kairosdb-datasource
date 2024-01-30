@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -13,14 +16,18 @@
     ]
   },
   "editable": true,
-  "gnetId": null,
+  "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 14,
+  "id": 2,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -29,14 +36,20 @@
       },
       "id": 13,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Incoming",
       "type": "row"
     },
     {
-      "cards": {
-        "cardPadding": null,
-        "cardRound": null
-      },
+      "cards": {},
       "color": {
         "cardColor": "#b4ff00",
         "colorScale": "sqrt",
@@ -45,11 +58,23 @@
         "mode": "spectrum"
       },
       "dataFormat": "timeseries",
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
         },
         "overrides": []
       },
@@ -66,61 +91,103 @@
       "legend": {
         "show": true
       },
-      "pluginVersion": "7.3.6",
+      "options": {
+        "calculate": false,
+        "calculation": {
+          "xBuckets": {
+            "mode": "size",
+            "value": "5m"
+          },
+          "yBuckets": {
+            "mode": "count",
+            "scale": {
+              "log": 10,
+              "type": "log"
+            },
+            "value": "8"
+          }
+        },
+        "cellGap": 2,
+        "cellValues": {},
+        "color": {
+          "exponent": 0.5,
+          "fill": "#b4ff00",
+          "mode": "scheme",
+          "reverse": false,
+          "scale": "exponential",
+          "scheme": "Cubehelix",
+          "steps": 128
+        },
+        "exemplars": {
+          "color": "rgba(255,0,255,0.7)"
+        },
+        "filterValues": {
+          "le": 1e-9
+        },
+        "legend": {
+          "show": true
+        },
+        "rowsFrame": {
+          "layout": "le"
+        },
+        "showValue": "never",
+        "tooltip": {
+          "show": true,
+          "showColorScale": false,
+          "yHistogram": true
+        },
+        "yAxis": {
+          "axisPlacement": "left",
+          "reverse": false,
+          "unit": "s"
+        }
+      },
+      "pluginVersion": "10.2.3",
       "reverseYBuckets": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
+            "metricName": "rest_service/POST/metrics/v3/application/request",
+            "tags": {
+              "cluster": [],
+              "host": [],
+              "service": []
+            },
+            "groupBy": {
+              "tags": [],
+              "value": [],
+              "time": []
+            },
             "aggregators": [
               {
-                "autoValueSwitch": {
-                  "dependentParameters": [
-                    {
-                      "name": "value",
-                      "text": "every",
-                      "type": "sampling",
-                      "value": "1"
-                    },
-                    {
-                      "allowedValues": {
-                        "0": "MILLISECONDS",
-                        "1": "SECONDS",
-                        "2": "MINUTES",
-                        "3": "HOURS",
-                        "4": "DAYS",
-                        "5": "WEEKS",
-                        "6": "MONTHS",
-                        "7": "YEARS"
-                      },
-                      "name": "unit",
-                      "text": "unit",
-                      "type": "sampling_unit",
-                      "value": "HOURS"
-                    }
-                  ],
-                  "enabled": true
-                },
-                "name": "merge",
                 "parameters": [
                   {
+                    "name": "sampling",
+                    "text": "align by",
+                    "value": "PERIOD",
                     "allowedValues": {
                       "0": "NONE",
                       "1": "START_TIME",
                       "2": "SAMPLING",
                       "3": "PERIOD"
                     },
-                    "name": "sampling",
-                    "text": "align by",
                     "type": "alignment",
-                    "value": "PERIOD"
+                    "$$hashKey": "object:292"
                   },
                   {
                     "name": "value",
                     "text": "every",
-                    "type": "sampling",
-                    "value": "1"
+                    "value": "1",
+                    "type": "sampling"
                   },
                   {
+                    "name": "unit",
+                    "text": "unit",
+                    "value": "HOURS",
                     "allowedValues": {
                       "0": "MILLISECONDS",
                       "1": "SECONDS",
@@ -131,31 +198,51 @@
                       "6": "MONTHS",
                       "7": "YEARS"
                     },
-                    "name": "unit",
-                    "text": "unit",
-                    "type": "sampling_unit",
-                    "value": "HOURS"
+                    "type": "sampling_unit"
+                  },
+                  {
+                    "name": "precision",
+                    "text": "precision [1, 52]",
+                    "value": "1",
+                    "type": "any",
+                    "$$hashKey": "object:293"
                   }
-                ]
+                ],
+                "autoValueSwitch": {
+                  "enabled": true,
+                  "dependentParameters": [
+                    {
+                      "name": "value",
+                      "text": "every",
+                      "value": "1",
+                      "type": "sampling"
+                    },
+                    {
+                      "name": "unit",
+                      "text": "unit",
+                      "value": "HOURS",
+                      "allowedValues": {
+                        "0": "MILLISECONDS",
+                        "1": "SECONDS",
+                        "2": "MINUTES",
+                        "3": "HOURS",
+                        "4": "DAYS",
+                        "5": "WEEKS",
+                        "6": "MONTHS",
+                        "7": "YEARS"
+                      },
+                      "type": "sampling_unit"
+                    }
+                  ]
+                },
+                "name": "merge",
+                "$$hashKey": "object:289"
               }
-            ],
-            "groupBy": {
-              "tags": [],
-              "time": [],
-              "value": []
-            },
-            "metricName": "rest_service/POST/metrics/v3/application/request",
-            "tags": {
-              "cluster": [],
-              "host": [],
-              "service": []
-            }
+            ]
           },
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Metrics Post Latencies",
       "tooltip": {
         "show": true,
@@ -166,34 +253,26 @@
       "xAxis": {
         "show": true
       },
-      "xBucketNumber": null,
       "xBucketSize": "5m",
       "yAxis": {
-        "decimals": null,
         "format": "s",
         "logBase": 10,
-        "max": null,
-        "min": null,
         "show": true,
         "splitFactor": 8
       },
       "yBucketBound": "lower",
-      "yBucketNumber": 25,
-      "yBucketSize": null
+      "yBucketNumber": 25
     },
     {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
       },
+      "description": "",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -220,7 +299,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "10.2.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -230,6 +309,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -325,9 +408,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "P95 Metrics Post Latencies",
       "tooltip": {
         "shared": true,
@@ -337,33 +418,24 @@
       "transparent": true,
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "s",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -371,12 +443,9 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
       },
       "fill": 1,
       "fillGradient": 0,
@@ -405,7 +474,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "10.2.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -415,6 +484,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -505,9 +578,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Per Node Samples Incoming",
       "tooltip": {
         "shared": true,
@@ -516,38 +587,32 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
       "collapsed": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -556,6 +621,15 @@
       },
       "id": 15,
       "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
+          "refId": "A"
+        }
+      ],
       "title": "Publish",
       "type": "row"
     },
@@ -564,7 +638,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -608,6 +685,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -697,9 +778,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Evicted",
       "tooltip": {
         "shared": true,
@@ -708,33 +787,24 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -742,7 +812,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -786,6 +859,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -874,9 +951,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Max Age",
       "tooltip": {
         "shared": true,
@@ -885,33 +960,24 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "s",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -919,7 +985,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -963,6 +1032,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -1052,9 +1125,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Publish Count",
       "tooltip": {
         "shared": true,
@@ -1063,33 +1134,24 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -1097,7 +1159,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1141,6 +1206,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -1230,9 +1299,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Publish Queue Inflight",
       "tooltip": {
         "shared": true,
@@ -1241,33 +1308,24 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     },
     {
@@ -1275,7 +1333,10 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": {
+        "type": "grafana-kairosdb-datasource",
+        "uid": "P60BA5072AB4AC9E4"
+      },
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1319,6 +1380,10 @@
       "steppedLine": false,
       "targets": [
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -1407,6 +1472,10 @@
           "refId": "A"
         },
         {
+          "datasource": {
+            "type": "grafana-kairosdb-datasource",
+            "uid": "P60BA5072AB4AC9E4"
+          },
           "query": {
             "aggregators": [
               {
@@ -1496,9 +1565,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": null,
       "timeRegions": [],
-      "timeShift": null,
       "title": "Publish Queue Depth",
       "tooltip": {
         "shared": true,
@@ -1507,39 +1574,29 @@
       },
       "type": "graph",
       "xaxis": {
-        "buckets": null,
         "mode": "time",
-        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         },
         {
           "format": "short",
-          "label": null,
           "logBase": 1,
-          "max": null,
-          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false,
-        "alignLevel": null
+        "align": false
       }
     }
   ],
   "refresh": "30s",
-  "schemaVersion": 26,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": []
@@ -1576,5 +1633,6 @@
   "timezone": "",
   "title": "MAD",
   "uid": "mR26pEVnz",
-  "version": 1
+  "version": 1,
+  "weekStart": ""
 }
