@@ -52,6 +52,21 @@ describe("TemplatingUtils", () => {
         expect(values[2]).toBe("prefix_value3_suffix");
     });
 
+    it("should unpack single variable packed into a word", () => {
+        // given
+        const variables = {
+            variable: ["value1", "value2", "value3"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expression = "begin${variable}end";
+        // when
+        const values = templatingUtils.replace(expression);
+        expect(values).toEqual(expect.arrayContaining(["beginvalue1end"]));
+        expect(values).toEqual(expect.arrayContaining(["beginvalue2end"]));
+        expect(values).toEqual(expect.arrayContaining(["beginvalue3end"]));
+    });
+
     it("should replace many multivalue variables with cartesian", () => {
         // given
         const variables = {
