@@ -127,6 +127,36 @@ describe("TemplatingUtils", () => {
         expect(values).toEqual(expect.arrayContaining(["/path/{id}/edit"]));
     });
 
+    it("should handle variable-values containing '{' and '}' in expressions", () => {
+        // given
+        const variables = {
+            var_with_curly: ["/path/{id}/new", "/path/{id}/edit"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["path_$var_with_curly"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["path_/path/{id}/new"]));
+        expect(values).toEqual(expect.arrayContaining(["path_/path/{id}/edit"]));
+    });
+
+    it("should handle variable-values containing '$'", () => {
+        // given
+        const variables = {
+            var_with_dollar: ["$value", "$value2"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["$var_with_dollar"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["$value"]));
+        expect(values).toEqual(expect.arrayContaining(["$value2"]));
+    });
+
     describe("Custom formatter fn", () => {
         it("Does no special-casing for single values", () => {
             const input = "hello";
