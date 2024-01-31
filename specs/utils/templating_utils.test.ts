@@ -1,3 +1,4 @@
+import {expect} from "@jest/globals";
 import {TemplatingUtils} from "../../src/utils/templating_utils";
 import {buildTemplatingSrvMock} from "../mocks";
 
@@ -109,6 +110,21 @@ describe("TemplatingUtils", () => {
         expect(values).toEqual(expect.arrayContaining(["v0,2"]));
         expect(values).toEqual(expect.not.arrayContaining(["v0"]));
         expect(values).toEqual(expect.not.arrayContaining(["1"]));
+    });
+
+    it("should handle variable-values containing '{' and '}'", () => {
+        // given
+        const variables = {
+            var_with_curly: ["/path/{id}/new", "/path/{id}/edit"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["$var_with_curly"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["/path/{id}/new"]));
+        expect(values).toEqual(expect.arrayContaining(["/path/{id}/edit"]));
     });
 
     describe("Custom formatter fn", () => {
