@@ -1,4 +1,4 @@
-import {dateMath} from "@grafana/data";
+import {dateMath, DateTime} from "@grafana/data";
 import _ from "lodash";
 import {Moment} from "moment";
 import {Aggregator} from "../../beans/aggregators/aggregator";
@@ -124,13 +124,13 @@ export class KairosDBQueryBuilder {
         };
         if (timeRange) {
             if (timeRange.from) {
-                const startMoment: Moment = dateMath.parse(timeRange.from);
+                const startMoment: DateTime = dateMath.parse(timeRange.from);
                 if (startMoment) {
                     body.start_absolute = startMoment.unix() * 1000;
                 }
             }
             if (timeRange.to) {
-                const endMoment: Moment = dateMath.parse(timeRange.to);
+                const endMoment: DateTime = dateMath.parse(timeRange.to);
                 if (endMoment) {
                     body.end_absolute = endMoment.unix() * 1000;
                 }

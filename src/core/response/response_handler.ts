@@ -1,10 +1,12 @@
 import {
-    ArrayVector, DataFrame,
+    DataFrameDTO,
     DataFrameType,
+    FieldDTO,
     FieldType,
     TIME_SERIES_TIME_FIELD_NAME,
     TIME_SERIES_VALUE_FIELD_NAME
 } from "@grafana/data";
+import { config } from "@grafana/runtime";
 import _ from "lodash";
 import {SeriesNameBuilder} from "./series_name_builder";
 
@@ -16,19 +18,19 @@ export class KairosDBResponseHandler {
     }
 
     public convertToDatapoints(data, aliases: string[]) {
-        const MANTISSA_BITS = 52;
 
         const buffer = new ArrayBuffer(8);
         const dataview = new DataView(buffer);
         const queries = data.queries;
-        const dataFrames: DataFrame[] = [];
+        const dataFrames: DataFrameDTO[] = [];
         queries.forEach((query, index) => {
             const alias = aliases[index];
             for (const result of query.results) {
-                const times = new ArrayVector();
-                const values = new ArrayVector();
-                const counts = new ArrayVector();
-                const yMax = new ArrayVector();
+                const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
+                const times = [];
+                const values = [];
+                const counts = [];
+                const yMax = [];
                 const tags = {};
                 let histogram = false;
                 if (result.values
@@ -40,38 +42,28 @@ export class KairosDBResponseHandler {
                 }
                 if (!histogram) {
                     for (const datapoint of result.values) {
-                        times.add(datapoint[0] as number);
-                        values.add(datapoint[1]);
+                        times.push(datapoint[0] as number);
+                        values.push(datapoint[1]);
                     }
                 } else {
 
                     for (const datapoint of result.values) {
                         const v = datapoint[1];
                         const bins = v.bins;
-                        const precision = v.precision;
-                        const shift = BigInt(MANTISSA_BITS - precision);
-
                         const keys = Object.keys(bins);
 
                         keys.sort((a, b) => parseFloat(a) - parseFloat(b));
                         keys.forEach((k) => {
                             const value = parseFloat(k);
-                            times.add(datapoint[0] as number);
-                            values.add(value);
-                            counts.add(bins[k]);
+                            times.push(datapoint[0] as number);
 
-                            dataview.setFloat64(0, value);
-                            let upperBoundBig = dataview.getBigInt64(0);
-                            // tslint:disable-next-line:no-bitwise
-                            upperBoundBig >>= shift;
-                            upperBoundBig++;
-                            // tslint:disable-next-line:no-bitwise
-                            upperBoundBig <<= shift;
-                            upperBoundBig--;
-                            dataview.setBigInt64(0, upperBoundBig);
-                            const upperBoundNum = dataview.getFloat64(0);
+                            counts.push(bins[k]);
 
-                            yMax.add(upperBoundNum);
+                            yMax.push(this.computeBinMax(value, v.precision, dataview));
+                            // if (value === 0) {
+                            //     value = 0.1;
+                            // }
+                            values.push(value);
                         });
                     }
                 }
@@ -84,21 +76,51 @@ export class KairosDBResponseHandler {
                         tags[tag_key] = tag_value_map[tag_key];
                     }
                 }
-                const fields = [
+                const fields: FieldDTO[] = [
+                ];
+                if (!config.featureToggles.newVizTooltips) {
+                    fields.push(
+                        {
+                            name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,
+                            type: FieldType.time,
+                            config: {},
+                            values: times,
+                        }
+                    );
+                } else {
+                    if (histogram) {
+                        const xMax = [];
+                        let diff = 60000;
+                        if (result.values.length > 1) {
+                            diff = result.values[1][0] - result.values[0][0];
+                        }
+                        for (const t of times) {
+                            xMax.push(t + diff);
+                        }
+
+                        fields.push(
+                            {
+                                name: "xMax",
+                                type: FieldType.time,
+                                config: {
+                                    interval: diff,
+                                },
+                                values: xMax,
+
+                            }
+                        );
+
+                    }
+                }
+                fields.push(
                     {
-                        name: TIME_SERIES_TIME_FIELD_NAME,
-                        type: FieldType.time,
-                        config: {},
-                        values: times,
-                    },
-                    {
-                        name: histogram ? "yMin" : TIME_SERIES_VALUE_FIELD_NAME,
+                        name: histogram ? "yMin" : target,
                         type: FieldType.number,
                         config: {},
                         values,
                         labels: tags,
-                    },
-                ];
+                    }
+                );
                 if (histogram) {
                     fields.push(
                         {
@@ -110,14 +132,13 @@ export class KairosDBResponseHandler {
                         });
                     fields.push(
                         {
-                            name: "Count",
+                            name: "count",
                             type: FieldType.number,
                             config: {},
                             values: counts,
                             labels: tags,
                         });
                 }
-                const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
                 const df = {
                     name: target,
                     fields,
@@ -130,5 +151,23 @@ export class KairosDBResponseHandler {
         //
         return {data: dataFrames};
         // return {data: flattened};
+    }
+
+    public computeBinMax(binMin: number, precision: number, dataView: DataView): number {
+        if (binMin === 0) {
+             return 0.00000001;
+        }
+        const MANTISSA_BITS = 52;
+        const shift = BigInt(MANTISSA_BITS - precision);
+        dataView.setFloat64(0, binMin);
+        let upperBoundBig = dataView.getBigInt64(0);
+        // tslint:disable-next-line:no-bitwise
+        upperBoundBig >>= shift;
+        upperBoundBig++;
+        // tslint:disable-next-line:no-bitwise
+        upperBoundBig <<= shift;
+        upperBoundBig--;
+        dataView.setBigInt64(0, upperBoundBig);
+        return dataView.getFloat64(0);
     }
 }

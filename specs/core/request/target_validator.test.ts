@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import {expect} from "@jest/globals";
 import forEach from "mocha-each";
 import {FilterAggregator} from "../../../src/beans/aggregators/filter_aggregator";

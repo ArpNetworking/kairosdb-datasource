@@ -1,21 +1,21 @@
+/// <reference path="../../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
 import angular from "angular";
 import * as dateMath from "app/core/utils/datemath";
 import _ from "lodash";
 import moment from "moment";
 
+import {PanelCtrl} from "app/plugins/sdk";
 import {KairosDBTarget} from "../beans/request/target";
 import * as rangeUtil from "../utils/rangeutil";
 
-export class TimePickerCtrl {
+export class TimePickerCtrl extends PanelCtrl {
   public static tooltipFormat = "MMM D, YYYY HH:mm:ss";
   public static defaults = {
     time_options: ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"],
     refresh_intervals: ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
   };
 
-  public dashboard: any;
   public query: KairosDBTarget;
-  public panel: any;
   public absolute: any;
   public timeRaw: any;
   public editTimeRaw: any;
@@ -30,7 +30,8 @@ export class TimePickerCtrl {
   private $onInit: () => void;
 
   /** @ngInject */
-  constructor(private $scope, private $rootScope, private timeSrv) {
+  constructor($scope, $injector, private $rootScope, private timeSrv) {
+    super($scope, $injector);
     this.$onInit = function() {
       this.$scope.ctrl = this;
 
@@ -84,8 +85,10 @@ export class TimePickerCtrl {
 
     this.rangeString = rangeUtil.describeTimeRange(timeRaw);
     this.absolute = { fromJs: fromMoment.toDate(), toJs: toMoment.toDate() };
-    this.tooltip = this.dashboard.formatDate(fromMoment) + " <br>to<br>";
-    this.tooltip += this.dashboard.formatDate(toMoment);
+    if (this.dashboard.formatDate) {
+      this.tooltip = this.dashboard.formatDate(fromMoment) + " <br>to<br>";
+      this.tooltip += this.dashboard.formatDate(toMoment);
+    }
     this.timeRaw = timeRaw;
     this.isAbsolute = moment.isMoment(this.timeRaw.to);
   }

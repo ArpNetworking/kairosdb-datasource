@@ -1,3 +1,8 @@
+/**
+ * @jest-environment jsdom
+ */
+import "../../mockMatchMedia";
+// tslint:disable-next-line
 import {expect, jest} from "@jest/globals";
 import {KairosDBResponseHandler} from "../../../src/core/response/response_handler";
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";
@@ -55,9 +60,9 @@ describe("KairosDBResponseHandler", () => {
         expect(datapoints.data[0].name).toEqual("result1");
         expect(datapoints.data[0].fields.length).toEqual(2);
         const timeField = datapoints.data[0].fields[0];
-        expect(timeField.values.toArray()).toEqual(expectedTimeValues);
+        expect(timeField.values).toEqual(expectedTimeValues);
         const valuesField = datapoints.data[0].fields[1];
-        expect(valuesField.values.toArray()).toEqual(expectedDataValues);
+        expect(valuesField.values).toEqual(expectedDataValues);
 
     });
 
@@ -140,15 +145,24 @@ describe("KairosDBResponseHandler", () => {
         expect(frame.name).toEqual("result1");
         expect(frame.fields.length).toEqual(2);
         let timeField = frame.fields[0];
-        expect(timeField.values.toArray()).toEqual(expectedTimeValues1);
+        expect(timeField.values).toEqual(expectedTimeValues1);
         let valuesField = frame.fields[1];
-        expect(valuesField.values.toArray()).toEqual(expectedDataValues1);
+        expect(valuesField.values).toEqual(expectedDataValues1);
         frame = datapoints.data[1];
         expect(frame.name).toEqual("result1");
         expect(frame.fields.length).toEqual(2);
         timeField = frame.fields[0];
-        expect(timeField.values.toArray()).toEqual(expectedTimeValues2);
+        expect(timeField.values).toEqual(expectedTimeValues2);
         valuesField = frame.fields[1];
-        expect(valuesField.values.toArray()).toEqual(expectedDataValues2);
+        expect(valuesField.values).toEqual(expectedDataValues2);
+    });
+
+    it("computes bin sizes properly", () => {
+        const buffer = new ArrayBuffer(8);
+        const dataview = new DataView(buffer);
+        let result = responseHandler.computeBinMax(10, 7, dataview);
+        expect(result).toBeCloseTo(10.0625, 7);
+        result = responseHandler.computeBinMax(0, 4, dataview);
+        expect(result).toBeCloseTo(0.0, );
     });
 });
