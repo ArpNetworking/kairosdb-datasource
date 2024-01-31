@@ -189,7 +189,7 @@ const config: Config = {
   //   "\\.pnp\\.[^\\/]+$"
   // ],
   transformIgnorePatterns: [
-    "node_modules/(?!d3-interpolate|d3-color)"
+    "node_modules/(?!d3-interpolate|d3-color|ol)"
   ],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
