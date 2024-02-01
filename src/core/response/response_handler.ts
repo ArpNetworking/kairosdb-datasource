@@ -76,19 +76,8 @@ export class KairosDBResponseHandler {
                         tags[tag_key] = tag_value_map[tag_key];
                     }
                 }
-                const fields: FieldDTO[] = [
-                ];
-                if (!config.featureToggles.newVizTooltips) {
-                    fields.push(
-                        {
-                            name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,
-                            type: FieldType.time,
-                            config: {},
-                            values: times,
-                        }
-                    );
-                } else {
-                    if (histogram) {
+                const fields: FieldDTO[] = [];
+                if (config.featureToggles.newVizTooltips && histogram) {
                         const xMax = [];
                         let diff = 60000;
                         if (result.values.length > 1) {
@@ -109,8 +98,15 @@ export class KairosDBResponseHandler {
 
                             }
                         );
-
-                    }
+                } else {
+                    fields.push(
+                        {
+                            name: histogram ? "x" : TIME_SERIES_TIME_FIELD_NAME,
+                            type: FieldType.time,
+                            config: {},
+                            values: times,
+                        }
+                    );
                 }
                 fields.push(
                     {
