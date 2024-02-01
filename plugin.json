@@ -25,7 +25,7 @@
         "url": "https://github.com/ArpNetworking/kairosdb-datasource/blob/master/LICENSE"
       }
     ],
-    "version": "3.1.4",
+    "version": "3.1.5",
     "updated": "2024-01-31"
   },
   "dependencies": {
