@@ -19,6 +19,7 @@ export const buildTemplatingSrvMock = (variables: Variables): TemplateSrv => {
             let replacedExpression = expression;
             _.forOwn(variables, (values, key) => {
                 const templatedValue = formatterFromTemplateSrv(values, format, variables);
+                replacedExpression = replacedExpression.replace("${" + key + "}", templatedValue);
                 replacedExpression = replacedExpression.replace("$" + key, templatedValue);
                 replacedExpression = replacedExpression.replace("[[" + key + "]]", templatedValue);
             });
