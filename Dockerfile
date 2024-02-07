@@ -33,6 +33,6 @@ RUN grunt
 
 FROM grafana/grafana:10.2.3 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
-#ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"
+ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"
 COPY docker/provisioning /etc/grafana/provisioning
 COPY docker/dashboards  /var/lib/grafana/dashboards

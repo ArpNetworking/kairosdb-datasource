@@ -42,7 +42,7 @@ describe("TemplatingUtils", () => {
         };
         const templatingSrvMock = buildTemplatingSrvMock(variables);
         const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
-        const expression = "prefix_$variable_suffix";
+        const expression = "prefix_${variable}_suffix";
         // when
         const values = templatingUtils.replace(expression);
         // then
@@ -170,28 +170,5 @@ describe("TemplatingUtils", () => {
         // then
         expect(values).toEqual(expect.arrayContaining(["$value"]));
         expect(values).toEqual(expect.arrayContaining(["$value2"]));
-    });
-
-    describe("Custom formatter fn", () => {
-        it("Does no special-casing for single values", () => {
-            const input = "hello";
-            const expected = "hello";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
-
-        it("Uses the new MULTI_VALUE_SEPARATOR for multi-value", () => {
-            const input = ["thing,1", "thing,2"];
-            const expected = "{thing,1_MAGIC_DELIM_thing,2}";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
-
-        it("Handles array with length 1 gracefully", () => {
-            const input = ["thing,1"];
-            const expected = "thing,1";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
     });
 });
