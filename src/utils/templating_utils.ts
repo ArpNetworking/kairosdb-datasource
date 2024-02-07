@@ -13,14 +13,17 @@ export class TemplatingUtils {
 
     public replace(expression: string): string[] {
         const interpolations = [];
-        this.templateSrv.replace(expression, this.scopedVars, null, interpolations);
-        return this.recurseReplace(expression, interpolations);
+        this.templateSrv.replace(expression, this.scopedVars, this.formatter, interpolations);
+        return this.recurseReplace(expression, Array.from(interpolations));
     }
 
     public replaceAll(expressions: string[]): string[] {
         return _.flatten(expressions.map((expression) => this.replace(expression)));
     }
 
+    private formatter(value, _variable, _formatter): string[] {
+        return value;
+    }
     private recurseReplace(expression: string, interpolations: VariableInterpolation[]): string[] {
         if (interpolations.length === 0) {
             return [expression];
