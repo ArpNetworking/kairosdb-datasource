@@ -24,6 +24,7 @@ export class TemplatingUtils {
     private formatter(value, _variable, _formatter): string[] {
         return value;
     }
+
     private recurseReplace(expression: string, interpolations: VariableInterpolation[]): string[] {
         if (interpolations.length === 0) {
             return [expression];
