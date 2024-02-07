@@ -12,18 +12,9 @@ export class TemplatingUtils {
     }
 
     public replace(expression: string): string[] {
-        const scopedVars = this.scopedVars;
         const interpolations = [];
-        const replacedExpression = this.templateSrv.replace(expression, this.scopedVars, null, interpolations);
-        // tslint:disable-next-line:no-console
-        console.log("calling replace on ", expression, "scopedVars", scopedVars);
-        // tslint:disable-next-line:no-console
-        console.log("interpolations", interpolations);
-        // Looks like "thing0" if single value, or "{thing1_MAGIC_DELIM_thing2}" if multivalue
-        const replaced = this.recurseReplace(expression, interpolations);
-        // tslint:disable-next-line:no-console
-        console.log("result: ", replaced);
-        return replaced;
+        this.templateSrv.replace(expression, this.scopedVars, null, interpolations);
+        return this.recurseReplace(expression, interpolations);
     }
 
     public replaceAll(expressions: string[]): string[] {
@@ -36,9 +27,13 @@ export class TemplatingUtils {
         }
         const partialExpressions = [];
         const interpolation = interpolations.pop();
-        for (const value of _.flatten(interpolation.value)) {
-            const replacedExpression = expression.replace(interpolation.match, value);
-            partialExpressions.push(this.recurseReplace(replacedExpression, interpolations));
+        if (interpolation.found && interpolation.value !== undefined) {
+            for (const value of _.flatten(interpolation.value)) {
+                const replacedExpression = expression.replace(interpolation.match, value);
+                partialExpressions.push(this.recurseReplace(replacedExpression, Array.from(interpolations)));
+            }
+        } else {
+            partialExpressions.push(this.recurseReplace(expression, Array.from(interpolations)));
         }
         return _.flatten(partialExpressions);
 

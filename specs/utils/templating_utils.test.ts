@@ -95,7 +95,7 @@ describe("TemplatingUtils", () => {
         };
         const templatingSrvMock = buildTemplatingSrvMock(variables);
         const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
-        const expressions = ["$dc", "sth_$dc", "$dc_sth"];
+        const expressions = ["$dc", "sth_$dc", "${dc}_sth"];
         // when
         const values = templatingUtils.replaceAll(expressions);
         // then
