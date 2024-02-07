@@ -1,7 +1,7 @@
-import {TemplateSrv, VariableInterpolation} from "@grafana/runtime";
-import {TemplateSrv as TemplateSrvMock} from "./utils/templatesrvmock";
+import {TemplateSrv} from "@grafana/runtime";
 import {jest} from "@jest/globals";
 import {SamplingConverter} from "../src/core/request/sampling_converter";
+import {TemplateSrv as TemplateSrvMock} from "./utils/templatesrvmock";
 
 interface Variables {
     [variableLabel: string]: string[];
@@ -10,7 +10,7 @@ type FormatterFn = (value: string | string[], variable: any, _unused?: any) => s
 
 export const buildTemplatingSrvMock = (variables: Variables): TemplateSrv => {
     const deps = {
-        getFilteredVariables: (filter) =>{ return deps.getVariables(); },
+        getFilteredVariables: (filter) => deps.getVariables(),
         getVariables: () => { variables.map((v) => {
             return {
                 name: v,
@@ -18,7 +18,7 @@ export const buildTemplatingSrvMock = (variables: Variables): TemplateSrv => {
                     value: variables[v][0]
                 }
             };
-        })},
+        }); },
         getVariableWithName: (name) => {
             return {
                 current: {
