@@ -3,11 +3,12 @@ import {
     DataFrameType,
     FieldDTO,
     FieldType,
-    TIME_SERIES_TIME_FIELD_NAME,
-    TIME_SERIES_VALUE_FIELD_NAME
+    TIME_SERIES_TIME_FIELD_NAME
 } from "@grafana/data";
 import { config } from "@grafana/runtime";
 import _ from "lodash";
+import {DatapointsQuery} from "../../beans/request/datapoints_query";
+import {TimeUnitUtils} from "../../utils/time_unit_utils";
 import {SeriesNameBuilder} from "./series_name_builder";
 
 export class KairosDBResponseHandler {
@@ -17,7 +18,7 @@ export class KairosDBResponseHandler {
         this.seriesNameBuilder = seriesNameBuilder;
     }
 
-    public convertToDatapoints(data, aliases: string[]) {
+    public convertToDatapoints(data, aliases: string[], originalQuery: DatapointsQuery) {
 
         const buffer = new ArrayBuffer(8);
         const dataview = new DataView(buffer);
@@ -25,6 +26,7 @@ export class KairosDBResponseHandler {
         const dataFrames: DataFrameDTO[] = [];
         queries.forEach((query, index) => {
             const alias = aliases[index];
+            const origQuery = originalQuery.metrics[index];
             for (const result of query.results) {
                 const target = this.seriesNameBuilder.build(result.name, alias, result.group_by);
                 const times = [];
@@ -79,9 +81,22 @@ export class KairosDBResponseHandler {
                 const fields: FieldDTO[] = [];
                 if (config.featureToggles.newVizTooltips && histogram) {
                         const xMax = [];
-                        let diff = 60000;
-                        if (result.values.length > 1) {
+                        let diff = 0;
+                        for (const agg of origQuery.aggregators) {
+                            if (agg?.sampling?.value) {
+                                const unit = TimeUnitUtils.getTimeUnit(agg?.sampling?.unit);
+                                const value = agg?.sampling?.value;
+                                const samplingMs = TimeUnitUtils.timeUnitToMillis(unit) * value;
+                                diff = Math.max(diff, samplingMs);
+                            }
+                        }
+                        if (diff === 0 && result.values.length > 1) {
                             diff = result.values[1][0] - result.values[0][0];
+                        }
+
+                        if (diff === 0) {
+                            // final default is 1 minute
+                            diff = 60000;
                         }
                         for (const t of times) {
                             xMax.push(t + diff);

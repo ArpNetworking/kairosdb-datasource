@@ -104,7 +104,7 @@ export class KairosDBDatasource extends DataSourceApi<any, any, any> {
             return Promise.reject({message: e.message});
         }
         return this.executeRequest(datapointsQuery)
-            .then((response) => this.responseHandler.convertToDatapoints(response.data, aliases));
+            .then((response) => this.responseHandler.convertToDatapoints(response.data, aliases, datapointsQuery.data));
     }
 
     public getMetricTags(metricNameTemplate, filters: any = {}, timeRange?: TimeRange) {

@@ -1,8 +1,10 @@
+import {TimeUnit} from "../aggregators/utils";
+
 export class MetricQuery {
     public name: string;
     public tags: any;
     public limit: number = 0;
-    public aggregators: any[];
+    public aggregators: AggregatorPart[];
     public group_by: any[];
     public start_absolute?: number;
     public end_absolute?: number;
@@ -16,4 +18,13 @@ export class MetricQuery {
         this.start_absolute = start_absolute;
         this.end_absolute = end_absolute;
     }
+}
+
+export interface AggregatorPart {
+    sampling: SamplingPart;
+}
+
+export interface SamplingPart {
+    unit: string;
+    value: number;
 }

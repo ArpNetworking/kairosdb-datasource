@@ -2,6 +2,7 @@ import forEach from "mocha-each";
 import {GroupBysBuilder} from "../../../src/core/request/group_bys_builder";
 import {TemplatingUtils} from "../../../src/utils/templating_utils";
 
+import {expect} from "@jest/globals";
 import _ from "lodash";
 import {GroupByTimeEntry} from "../../../src/directives/group_by/group_by_time_entry";
 import {buildSamplingConverterMock, buildTemplatingSrvMock} from "../../mocks";

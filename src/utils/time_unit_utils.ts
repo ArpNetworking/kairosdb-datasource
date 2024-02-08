@@ -16,7 +16,7 @@ export class TimeUnitUtils {
     }
 
     public static convertTimeUnit(unit: string): string {
-        return TimeUnitUtils.SHORT_UNITS[unit] || TimeUnitUtils.LONG_UNITS[unit];
+        return TimeUnitUtils.SHORT_UNITS[unit] || TimeUnitUtils.LONG_UNITS[unit] || unit;
     }
 
     public static getShortUnit(unit: string): string {
