@@ -1,6 +1,6 @@
+import {expect} from "@jest/globals";
 import {TimeUnit} from "../../../src/beans/aggregators/utils";
 import {SamplingConverter} from "../../../src/core/request/sampling_converter";
-import {SamplingParameterConverter} from "../../../src/core/request/sampling_parameter_converter";
 import {TimeUnitUtils} from "../../../src/utils/time_unit_utils";
 
 describe("SamplingParameterConverter", () => {

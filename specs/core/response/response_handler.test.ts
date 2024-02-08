@@ -3,7 +3,9 @@
  */
 import "../../mockMatchMedia";
 // tslint:disable-next-line
-import {expect, jest} from "@jest/globals";
+import {expect} from "@jest/globals";
+import {DatapointsQuery} from "../../../src/beans/request/datapoints_query";
+import {MetricQuery} from "../../../src/beans/request/metric_query";
 import {KairosDBResponseHandler} from "../../../src/core/response/response_handler";
 import {SeriesNameBuilder} from "../../../src/core/response/series_name_builder";
 
@@ -53,8 +55,10 @@ describe("KairosDBResponseHandler", () => {
         const aliases = ["result1"];
         const expectedTimeValues = [1, 234, 500];
         const expectedDataValues = [1512405294, 1512405294, null];
+        const metricsQuery = [new MetricQuery("name", ["GROUPby1", "GROUPby2"], [], [], 0, 0)];
+        const queries = new DatapointsQuery({unix: () => 0}, {unix: () => 0}, metricsQuery);
         // when
-        const datapoints = responseHandler.convertToDatapoints(data, aliases);
+        const datapoints = responseHandler.convertToDatapoints(data, aliases, queries);
         // then
         expect(datapoints.data.length).toEqual(1);
         expect(datapoints.data[0].name).toEqual("result1");
@@ -136,8 +140,10 @@ describe("KairosDBResponseHandler", () => {
         const expectedDataValues1 = [1512405294, 1512405294];
         const expectedTimeValues2 = [14, 2343];
         const expectedDataValues2 = [1512413381, 1512427385];
+        const metricsQuery = [new MetricQuery("name", ["GROUPby1", "GROUPby2"], [], [], 0, 0)];
+        const queries = new DatapointsQuery({unix: () => 0}, {unix: () => 0}, metricsQuery);
         // when
-        const datapoints = responseHandler.convertToDatapoints(data, aliases);
+        const datapoints = responseHandler.convertToDatapoints(data, aliases, queries);
         // then
 
         expect(datapoints.data.length).toEqual(2);
