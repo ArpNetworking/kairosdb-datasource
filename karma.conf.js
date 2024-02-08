@@ -48,7 +48,6 @@ module.exports = function(config) {
                 map: {
                     css: "node_modules/systemjs-plugin-css/css.js",
                     "typescript": "node_modules/typescript/",
-                    "app/core/utils/kbn": "node_modules/grafana-sdk-mocks/app/core/utils/kbn.js"
                 },
                 packages: {
                     "typescript": {

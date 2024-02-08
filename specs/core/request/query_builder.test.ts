@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import {expect} from "@jest/globals";
 import moment from "moment";
 import {KairosDBQueryBuilder} from "../../../src/core/request/query_builder";
 import {buildTemplatingSrvMock} from "../../mocks";

@@ -1,3 +1,4 @@
+import {expect} from "@jest/globals";
 import {TemplatingUtils} from "../../src/utils/templating_utils";
 import {buildTemplatingSrvMock} from "../mocks";
 
@@ -41,7 +42,7 @@ describe("TemplatingUtils", () => {
         };
         const templatingSrvMock = buildTemplatingSrvMock(variables);
         const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
-        const expression = "prefix_$variable_suffix";
+        const expression = "prefix_${variable}_suffix";
         // when
         const values = templatingUtils.replace(expression);
         // then
@@ -49,6 +50,21 @@ describe("TemplatingUtils", () => {
         expect(values[0]).toBe("prefix_value1_suffix");
         expect(values[1]).toBe("prefix_value2_suffix");
         expect(values[2]).toBe("prefix_value3_suffix");
+    });
+
+    it("should unpack single variable packed into a word", () => {
+        // given
+        const variables = {
+            variable: ["value1", "value2", "value3"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expression = "begin${variable}end";
+        // when
+        const values = templatingUtils.replace(expression);
+        expect(values).toEqual(expect.arrayContaining(["beginvalue1end"]));
+        expect(values).toEqual(expect.arrayContaining(["beginvalue2end"]));
+        expect(values).toEqual(expect.arrayContaining(["beginvalue3end"]));
     });
 
     it("should replace many multivalue variables with cartesian", () => {
@@ -79,7 +95,7 @@ describe("TemplatingUtils", () => {
         };
         const templatingSrvMock = buildTemplatingSrvMock(variables);
         const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
-        const expressions = ["$dc", "sth_$dc", "$dc_sth"];
+        const expressions = ["$dc", "sth_$dc", "${dc}_sth"];
         // when
         const values = templatingUtils.replaceAll(expressions);
         // then
@@ -111,26 +127,48 @@ describe("TemplatingUtils", () => {
         expect(values).toEqual(expect.not.arrayContaining(["1"]));
     });
 
-    describe("Custom formatter fn", () => {
-        it("Does no special-casing for single values", () => {
-            const input = "hello";
-            const expected = "hello";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
+    it("should handle variable-values containing '{' and '}'", () => {
+        // given
+        const variables = {
+            var_with_curly: ["/path/{id}/new", "/path/{id}/edit"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["$var_with_curly"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["/path/{id}/new"]));
+        expect(values).toEqual(expect.arrayContaining(["/path/{id}/edit"]));
+    });
 
-        it("Uses the new MULTI_VALUE_SEPARATOR for multi-value", () => {
-            const input = ["thing,1", "thing,2"];
-            const expected = "{thing,1_MAGIC_DELIM_thing,2}";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
+    it("should handle variable-values containing '{' and '}' in expressions", () => {
+        // given
+        const variables = {
+            var_with_curly: ["/path/{id}/new", "/path/{id}/edit"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["path_$var_with_curly"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["path_/path/{id}/new"]));
+        expect(values).toEqual(expect.arrayContaining(["path_/path/{id}/edit"]));
+    });
 
-        it("Handles array with length 1 gracefully", () => {
-            const input = ["thing,1"];
-            const expected = "thing,1";
-            const actual = TemplatingUtils.customFormatterFn(input);
-            expect(expected).toBe(actual);
-        });
+    it("should handle variable-values containing '$'", () => {
+        // given
+        const variables = {
+            var_with_dollar: ["$value", "$value2"]
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["$var_with_dollar"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["$value"]));
+        expect(values).toEqual(expect.arrayContaining(["$value2"]));
     });
 });

@@ -1,7 +1,7 @@
 {
   "name": "grafana-kairosdb-datasource",
   "private": true,
-  "version": "3.0.0",
+  "version": "3.1.5",
   "description": "",
   "repository": {
     "type": "git",
@@ -56,6 +56,7 @@
   "dependencies": {
     "@grafana/data": "^10.3.1",
     "@grafana/runtime": "^10.3.1",
+    "@grafana/schema": "^10.3.1",
     "angular": "^1.8.3",
     "lodash": "^4.17.21",
     "moment": "^2.29.4"

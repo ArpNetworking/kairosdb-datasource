@@ -63,7 +63,7 @@ describe("TemplatingFunctionsController", () => {
 
     it("should convert single filter argument with prefix and suffix to single entry filter object", () => {
         // given
-        const functionQuery = "tag_values(metric_name,tag_name,filter1=prefix_$variable1_suffix)";
+        const functionQuery = "tag_values(metric_name,tag_name,filter1=prefix_${variable1}_suffix)";
         const expectedFunction = tagValuesFunction;
         const expectedFilters = _.map(variables.variable1, (value) => "prefix_" + value + "_suffix");
         // when
