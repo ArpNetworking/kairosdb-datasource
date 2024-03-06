@@ -4,7 +4,7 @@ import {SamplingConverter} from "../src/core/request/sampling_converter";
 import {TemplateSrv as TemplateSrvMock} from "./utils/templatesrvmock";
 
 interface Variables {
-    [variableLabel: string]: string[];
+    [variableLabel: string]: string[] | string;
 }
 type FormatterFn = (value: string | string[], variable: any, _unused?: any) => string;
 
