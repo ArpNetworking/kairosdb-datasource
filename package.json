@@ -1,7 +1,7 @@
 {
   "name": "grafana-kairosdb-datasource",
   "private": true,
-  "version": "3.1.6",
+  "version": "3.1.7",
   "description": "",
   "repository": {
     "type": "git",
