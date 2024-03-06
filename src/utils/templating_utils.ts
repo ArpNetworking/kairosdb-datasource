@@ -14,7 +14,7 @@ export class TemplatingUtils {
     public replace(expression: string): string[] {
         const interpolations = [];
         this.templateSrv.replace(expression, this.scopedVars, this.formatter, interpolations);
-        return this.recurseReplace(expression, Array.from(interpolations));
+        return this.recurseReplace(expression, Array.from(interpolations), {});
     }
 
     public replaceAll(expressions: string[]): string[] {
@@ -25,19 +25,26 @@ export class TemplatingUtils {
         return value;
     }
 
-    private recurseReplace(expression: string, interpolations: VariableInterpolation[]): string[] {
+    private recurseReplace(expression: string, interpolations: VariableInterpolation[], bound: any): string[] {
         if (interpolations.length === 0) {
             return [expression];
         }
         const partialExpressions = [];
         const interpolation = interpolations.pop();
         if (interpolation.found && interpolation.value !== undefined) {
-            for (const value of _.flatten(interpolation.value)) {
-                const replacedExpression = expression.replace(interpolation.match, value);
-                partialExpressions.push(this.recurseReplace(replacedExpression, Array.from(interpolations)));
+            if (bound[interpolation.variableName] === undefined) {
+                for (const value of _.flatten(interpolation.value)) {
+                    bound[interpolation.variableName] = value;
+                    const replacedExpression = expression.replace(interpolation.match, value);
+                    partialExpressions.push(this.recurseReplace(replacedExpression, Array.from(interpolations), bound));
+                }
+                delete bound[interpolation.variableName];
+            } else {
+                const replacedExpression = expression.replace(interpolation.match, bound[interpolation.variableName]);
+                partialExpressions.push(this.recurseReplace(replacedExpression, Array.from(interpolations), bound));
             }
         } else {
-            partialExpressions.push(this.recurseReplace(expression, Array.from(interpolations)));
+            partialExpressions.push(this.recurseReplace(expression, Array.from(interpolations), bound));
         }
         return _.flatten(partialExpressions);
 

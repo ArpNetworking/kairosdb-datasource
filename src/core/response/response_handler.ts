@@ -125,7 +125,7 @@ export class KairosDBResponseHandler {
                 }
                 fields.push(
                     {
-                        name: histogram ? "yMin" : target,
+                        name: histogram ? "yMin" : "Value",
                         type: FieldType.number,
                         config: {},
                         values,
