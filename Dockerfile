@@ -31,7 +31,7 @@ COPY src /root/src
 COPY specs /root/specs
 RUN grunt
 
-FROM grafana/grafana:10.2.3 as prod
+FROM grafana/grafana:10.4.0 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
 ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"
 COPY docker/provisioning /etc/grafana/provisioning

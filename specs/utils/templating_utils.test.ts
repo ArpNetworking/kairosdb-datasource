@@ -127,6 +127,20 @@ describe("TemplatingUtils", () => {
         expect(values).toEqual(expect.not.arrayContaining(["1"]));
     });
 
+    it("replaceAll should handle single variable", () => {
+        // given
+        const variables = {
+            host: "host.name"
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["$host"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values).toEqual(expect.arrayContaining(["host.name"]));
+    });
+
     it("should handle variable-values containing '{' and '}'", () => {
         // given
         const variables = {

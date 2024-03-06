@@ -33,7 +33,11 @@ export class TemplatingUtils {
         const interpolation = interpolations.pop();
         if (interpolation.found && interpolation.value !== undefined) {
             if (bound[interpolation.variableName] === undefined) {
-                for (const value of _.flatten(interpolation.value)) {
+                let rawValue: any = interpolation.value;
+                if (!Array.isArray(rawValue)) {
+                    rawValue = [rawValue];
+                }
+                for (const value of _.flatten(rawValue)) {
                     bound[interpolation.variableName] = value;
                     const replacedExpression = expression.replace(interpolation.match, value);
                     partialExpressions.push(this.recurseReplace(replacedExpression, Array.from(interpolations), bound));
