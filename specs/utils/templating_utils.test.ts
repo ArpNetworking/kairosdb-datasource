@@ -171,4 +171,20 @@ describe("TemplatingUtils", () => {
         expect(values).toEqual(expect.arrayContaining(["$value"]));
         expect(values).toEqual(expect.arrayContaining(["$value2"]));
     });
+
+    it("should be consistent in variable use", () => {
+        // given
+        const variables = {
+            foo: ["value1", "value2"],
+        };
+        const templatingSrvMock = buildTemplatingSrvMock(variables);
+        const templatingUtils = new TemplatingUtils(templatingSrvMock, {});
+        const expressions = ["${foo}_${foo}"];
+        // when
+        const values = templatingUtils.replaceAll(expressions);
+        // then
+        expect(values.length).toBe(2);
+        expect(values).toEqual(expect.arrayContaining(["value1_value1"]));
+        expect(values).toEqual(expect.arrayContaining(["value2_value2"]));
+    });
 });
