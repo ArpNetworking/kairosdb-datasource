@@ -5,6 +5,9 @@ pipeline {
       activeDeadlineSeconds 3600
     }
   }
+  options {
+    ansiColor('xterm')
+  }
   stages {
     stage('Init') {
       steps {
@@ -16,6 +19,7 @@ pipeline {
 	    repo = m.group(5)
 	  }
 	}
+        discoverReferenceBuild()
       }
     }
     stage('Build') {
