@@ -2,11 +2,11 @@ apiVersion: 1
 deleteDatasources: []
 
 datasources:
-  - name: KairosDB (New)
-    type: arpnetworking-kairosdb-datasource
+  - name: KairosDB (Old)
+    type: grafana-kairosdb-datasource
     orgId: 1
     url: https://kairosdb.arpnetworking.com
-    isDefault: true
+    isDefault: false
     version: 1
     editable: false
     jsonData:

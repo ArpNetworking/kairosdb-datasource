@@ -1,0 +1,20 @@
+FROM node:20-alpine as build
+
+WORKDIR /root/
+
+# Copy package files
+COPY package.json /root/
+RUN npm install
+
+# Copy configuration and source files  
+COPY tsconfig.json jest.config.js jest-setup.js /root/
+COPY LICENSE CHANGELOG.md /root/
+COPY .config /root/.config
+COPY src /root/src
+
+# Build the plugin
+RUN npm run build
+
+FROM grafana/grafana:12.1.0 as prod
+COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb-react
+ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"

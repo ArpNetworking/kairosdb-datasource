@@ -24,9 +24,10 @@ RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/`c
 
 ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
 WORKDIR /root/
-COPY package.json package-lock.json /root/
+COPY package.json /root/
+COPY package-lock.json* /root/
 RUN npm install
-COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js /root/
+COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js babel.config.js jest.config.ts /root/
 COPY src /root/src
 COPY specs /root/specs
 RUN grunt
@@ -34,5 +35,3 @@ RUN grunt
 FROM grafana/grafana:10.4.0 as prod
 COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
 ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"
-COPY docker/provisioning /etc/grafana/provisioning
-COPY docker/dashboards  /var/lib/grafana/dashboards

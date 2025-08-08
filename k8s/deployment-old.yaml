@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-kairosdb
+  name: grafana-kairosdb-old
   labels:
-    app: grafana-kairosdb
+    app: grafana-kairosdb-old
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana-kairosdb
+      app: grafana-kairosdb-old
   template:
     metadata:
       labels:
-        app: grafana-kairosdb
+        app: grafana-kairosdb-old
     spec:
       containers:
       - name: grafana
-        image: kairosdb-plugin-dev
+        image: kairosdb-plugin-old
         ports:
         - containerPort: 3000
         env:
@@ -33,7 +33,7 @@ spec:
           mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
           subPath: dashboards.yaml
           readOnly: true
-        - name: datasources-config
+        - name: datasources-config-old
           mountPath: /etc/grafana/provisioning/datasources/kairosdb.yaml
           subPath: kairosdb.yaml
           readOnly: true
@@ -44,9 +44,9 @@ spec:
       - name: dashboards-config
         configMap:
           name: grafana-dashboards-config
-      - name: datasources-config
+      - name: datasources-config-old
         configMap:
-          name: grafana-datasources-config
+          name: grafana-datasources-config-old
       - name: dashboards
         configMap:
           name: grafana-dashboards
@@ -54,11 +54,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana-kairosdb-service
+  name: grafana-kairosdb-old-service
 spec:
   selector:
-    app: grafana-kairosdb
+    app: grafana-kairosdb-old
   ports:
   - port: 3000
     targetPort: 3000
-  type: LoadBalancer
+  type: ClusterIP
