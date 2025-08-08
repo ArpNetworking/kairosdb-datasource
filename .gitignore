@@ -3,3 +3,4 @@ dist
 test-results
 .idea
 .tscache
+coverage/
