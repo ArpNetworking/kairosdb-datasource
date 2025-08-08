@@ -14,6 +14,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `grunt tslint` - Run TSLint on source files
 - TSLint configuration in `tslint.json` with max line length of 140 characters
 
+### Development Environment
+- `tilt up` - Start development environment with live reload using Tilt
+- `docker-compose up` - Alternative using Docker Compose (legacy)
+- Tilt provides automatic rebuilds on source changes and Kubernetes deployment
+- Grafana runs on http://localhost:3000 with anonymous admin access enabled
+
 ### Build Process
 The Grunt build process:
 1. Cleans dist directory

@@ -1,6 +1,6 @@
 FROM ubuntu as build
 RUN apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -y curl gnupg-agent zip && \
+	DEBIAN_FRONTEND=noninteractive apt install -y curl gnupg-agent gnupg2 zip && \
 	rm -rf /var/lib/apt/lists/*
 RUN curl -q -o- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
