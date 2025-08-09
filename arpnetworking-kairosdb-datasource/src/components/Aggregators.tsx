@@ -1,7 +1,6 @@
 import React from 'react';
-import { Button, FieldSet, Stack } from '@grafana/ui';
+import { Button, FieldSet, Stack, Dropdown, Menu } from '@grafana/ui';
 import { Aggregator } from '../types';
-import { AggregatorEditor } from './AggregatorEditor';
 import { AggregatorItem } from './AggregatorItem';
 import { AVAILABLE_AGGREGATORS } from '../aggregators';
 
@@ -11,6 +10,7 @@ interface Props {
   availableAggregators?: Aggregator[];
 }
 
+
 export function Aggregators({ aggregators = [], onChange, availableAggregators = AVAILABLE_AGGREGATORS }: Props) {
   console.log('[Aggregators] Render called with:', {
     aggregatorsCount: aggregators.length,
@@ -19,10 +19,10 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     availableAggregatorsCount: availableAggregators.length
   });
   
-  const [isEditorOpen, setIsEditorOpen] = React.useState(false);
-
   const handleAdd = (aggregator: Aggregator) => {
     if (!aggregator || !aggregator.name) return;
+    
+    console.log('[Aggregators] Adding aggregator:', aggregator.name);
     
     // Clone the aggregator to avoid reference issues
     const newAggregator: Aggregator = {
@@ -31,7 +31,6 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
       autoValueSwitch: aggregator.autoValueSwitch ? { ...aggregator.autoValueSwitch } : undefined
     };
     onChange([...aggregators, newAggregator]);
-    setIsEditorOpen(false);
   };
 
   const handleRemove = (index: number) => {
@@ -84,32 +83,29 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     <FieldSet label="Aggregators">
       <Stack direction="column" gap={2}>
         <Stack direction="row" gap={1} alignItems="center">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              console.log('[Aggregators] Add Aggregator button clicked');
-              console.log('[Aggregators] Available aggregators:', availableAggregators);
-              setIsEditorOpen(true);
-            }}
-            icon="plus"
+          <Dropdown
+            overlay={() => (
+              <Menu>
+                {availableAggregators.map((aggregator) => (
+                  <Menu.Item
+                    key={aggregator.name}
+                    label={aggregator.name}
+                    onClick={() => handleAdd(aggregator)}
+                  />
+                ))}
+              </Menu>
+            )}
           >
-            Add Aggregator
-          </Button>
+            <Button variant="secondary" size="sm" icon="plus">
+              Add Aggregator
+            </Button>
+          </Dropdown>
           {aggregators.length > 0 && (
             <span style={{ fontSize: '12px', color: 'rgba(204, 204, 220, 0.7)' }}>
               {aggregators.length} aggregator{aggregators.length !== 1 ? 's' : ''}
             </span>
           )}
         </Stack>
-
-        {isEditorOpen && availableAggregators && (
-          <AggregatorEditor
-            availableAggregators={availableAggregators}
-            onAdd={handleAdd}
-            onCancel={() => setIsEditorOpen(false)}
-          />
-        )}
 
         <Stack direction="column" gap={1}>
           {aggregators.filter(aggregator => aggregator && aggregator.name).map((aggregator, index) => (

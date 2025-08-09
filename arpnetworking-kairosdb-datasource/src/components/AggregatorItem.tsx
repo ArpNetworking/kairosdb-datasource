@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Stack, Input, Select, Switch, InlineField, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator, AggregatorParameter } from '../types';
@@ -26,7 +26,6 @@ export function AggregatorItem({
   onParameterChange,
   onAutoValueChange
 }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleParameterChange = (param: AggregatorParameter, value: any) => {
     onParameterChange(param.name, value);
@@ -42,29 +41,24 @@ export function AggregatorItem({
     const key = `${aggregator.name || 'unknown'}-${param.name}`;
     const paramValue = param.value || '';
     
-    // Skip dependent parameters when auto is enabled (they'll show as "auto")
-    if (isAutoEnabled && isDependentParameter(param)) {
-      return (
-        <InlineField key={key} label={param.name} labelWidth={12}>
-          <Input
-            width={20}
-            value="auto"
-            disabled={true}
-          />
-        </InlineField>
-      );
-    }
+    // For dependent parameters when auto is enabled, show "auto" and disable
+    const isParamDisabled = isAutoEnabled && isDependentParameter(param);
     
     switch (param.type) {
       case 'enum':
         const enumOptions = getEnumOptions(param.name);
         return (
-          <InlineField key={key} label={param.name} labelWidth={12}>
+          <InlineField key={key} label={param.name} labelWidth={8} transparent>
             <Select
-              width={20}
-              value={paramValue ? { label: paramValue, value: paramValue } : null}
+              width={14}
+              value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
               options={enumOptions}
-              onChange={(option) => handleParameterChange(param, option?.value)}
+              isDisabled={isParamDisabled}
+              onChange={(option) => {
+                if (!isParamDisabled) {
+                  handleParameterChange(param, option?.value);
+                }
+              }}
             />
           </InlineField>
         );
@@ -81,35 +75,62 @@ export function AggregatorItem({
           { label: 'years', value: 'years' }
         ];
         return (
-          <InlineField key={key} label={param.name} labelWidth={12}>
+          <InlineField key={key} label={param.name} labelWidth={6} transparent>
             <Select
-              width={20}
-              value={paramValue ? { label: paramValue, value: paramValue } : null}
+              width={14}
+              value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
               options={unitOptions}
-              onChange={(option) => handleParameterChange(param, option?.value)}
+              isDisabled={isParamDisabled}
+              onChange={(option) => {
+                if (!isParamDisabled) {
+                  handleParameterChange(param, option?.value);
+                }
+              }}
             />
           </InlineField>
         );
         
       case 'sampling':
         return (
-          <InlineField key={key} label={param.name} labelWidth={12}>
+          <InlineField key={key} label={param.name} labelWidth={8} transparent>
             <Input
-              width={20}
-              type="number"
-              value={paramValue || ''}
-              onChange={(e) => handleParameterChange(param, parseFloat(e.currentTarget.value) || 0)}
+              width={12}
+              type={isParamDisabled ? "text" : "number"}
+              value={isParamDisabled ? 'auto' : (paramValue || '')}
+              disabled={isParamDisabled}
+              readOnly={isParamDisabled}
+              style={isParamDisabled ? { 
+                backgroundColor: 'rgba(128, 128, 128, 0.1)', 
+                color: 'rgba(204, 204, 220, 0.6)',
+                cursor: 'not-allowed'
+              } : undefined}
+              onChange={(e) => {
+                if (!isParamDisabled) {
+                  handleParameterChange(param, parseFloat(e.currentTarget.value) || 0);
+                }
+              }}
             />
           </InlineField>
         );
         
       default:
         return (
-          <InlineField key={key} label={param.name} labelWidth={12}>
+          <InlineField key={key} label={param.name} labelWidth={8} transparent>
             <Input
-              width={20}
-              value={paramValue || ''}
-              onChange={(e) => handleParameterChange(param, e.currentTarget.value)}
+              width={14}
+              value={isParamDisabled ? 'auto' : (paramValue || '')}
+              disabled={isParamDisabled}
+              readOnly={isParamDisabled}
+              style={isParamDisabled ? { 
+                backgroundColor: 'rgba(128, 128, 128, 0.1)', 
+                color: 'rgba(204, 204, 220, 0.6)',
+                cursor: 'not-allowed'
+              } : undefined}
+              onChange={(e) => {
+                if (!isParamDisabled) {
+                  handleParameterChange(param, e.currentTarget.value);
+                }
+              }}
             />
           </InlineField>
         );
@@ -119,76 +140,59 @@ export function AggregatorItem({
   return (
     <Card>
       <Card.Description>
-        <Stack direction="column" gap={1}>
-          <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
-            <Stack direction="row" gap={1} alignItems="center">
-              <strong style={{ fontSize: '14px' }}>{aggregator.name || 'Unknown'}</strong>
-              
-              {/* Single Auto toggle for the whole aggregator */}
-              {aggregator.autoValueSwitch && (
-                <InlineField label="Auto" labelWidth={6}>
-                  <Switch
-                    value={isAutoEnabled}
-                    onChange={(event) => {
-                      const enabled = event.currentTarget.checked;
-                      console.log('[AggregatorItem] Auto toggle clicked, new value:', enabled);
-                      onAutoValueChange(enabled);
-                    }}
-                  />
-                </InlineField>
-              )}
-              
-              {(aggregator.parameters || []).length > 0 && (
-                <Button
-                  variant="secondary"
-                  size="xs"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  icon={isExpanded ? 'angle-up' : 'angle-down'}
-                >
-                  {(aggregator.parameters || []).length} param{(aggregator.parameters || []).length !== 1 ? 's' : ''}
-                </Button>
-              )}
-            </Stack>
+        <Stack direction="row" gap={2} alignItems="center" justifyContent="space-between">
+          {/* Left side: Aggregator name and auto toggle */}
+          <Stack direction="row" gap={2} alignItems="center">
+            <strong style={{ fontSize: '14px', minWidth: '60px' }}>{aggregator.name || 'Unknown'}</strong>
             
-            <Stack direction="row" gap={0}>
-              <Button
-                variant="secondary"
-                size="xs"
-                onClick={onMoveUp}
-                disabled={isFirst}
-                icon="arrow-up"
-                tooltip="Move up"
-              />
-              <Button
-                variant="secondary"
-                size="xs"
-                onClick={onMoveDown}
-                disabled={isLast}
-                icon="arrow-down"
-                tooltip="Move down"
-              />
-              <Button
-                variant="destructive"
-                size="xs"
-                onClick={onRemove}
-                icon="trash-alt"
-                tooltip="Remove aggregator"
-              />
-            </Stack>
+            {/* Single Auto toggle for the whole aggregator */}
+            {aggregator.autoValueSwitch && (
+              <InlineField label="Auto" labelWidth={6} transparent>
+                <Switch
+                  value={isAutoEnabled}
+                  onChange={(event) => {
+                    const enabled = event.currentTarget.checked;
+                    console.log('[AggregatorItem] Auto toggle clicked, new value:', enabled);
+                    onAutoValueChange(enabled);
+                  }}
+                />
+              </InlineField>
+            )}
           </Stack>
           
-          {isExpanded && (aggregator.parameters || []).length > 0 && (
-            <div style={{ 
-              marginTop: '8px',
-              padding: '8px',
-              backgroundColor: 'rgba(128, 128, 128, 0.05)',
-              borderRadius: '4px'
-            }}>
-              <Stack direction="column" gap={1}>
-                {(aggregator.parameters || []).map(renderParameter)}
-              </Stack>
-            </div>
-          )}
+          {/* Middle: Parameters inline */}
+          <div style={{ flex: 1 }}>
+            <Stack direction="row" gap={1} alignItems="center">
+              {(aggregator.parameters || []).map(renderParameter)}
+            </Stack>
+          </div>
+          
+          {/* Right side: Action buttons */}
+          <Stack direction="row" gap={0}>
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={onMoveUp}
+              disabled={isFirst}
+              icon="arrow-up"
+              tooltip="Move up"
+            />
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={onMoveDown}
+              disabled={isLast}
+              icon="arrow-down"
+              tooltip="Move down"
+            />
+            <Button
+              variant="destructive"
+              size="xs"
+              onClick={onRemove}
+              icon="trash-alt"
+              tooltip="Remove aggregator"
+            />
+          </Stack>
         </Stack>
       </Card.Description>
     </Card>
