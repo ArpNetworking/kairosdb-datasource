@@ -150,7 +150,10 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       }
 
       // Build KairosDB query request - expand multi-value variables in metric names
+      // Also track which target each metric belongs to for response mapping
       const metrics: KairosDBDatapointsRequest['metrics'] = [];
+      const metricToTargetMap: { [metricIndex: number]: any } = {};
+      let currentMetricIndex = 0;
       
       validTargets.forEach(target => {
         const query = target.query!;
@@ -164,6 +167,10 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         
         // Create a separate metric object for each expanded metric name
         metricNames.forEach(metricName => {
+          // Track which target this metric belongs to
+          metricToTargetMap[currentMetricIndex] = target;
+          console.log('[DataSource] Mapping metric index', currentMetricIndex, 'to target', target.refId);
+          currentMetricIndex++;
           const metric: KairosDBDatapointsRequest['metrics'][0] = {
             name: metricName
           };
@@ -351,14 +358,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       // Convert KairosDB response to Grafana data frames
       const dataFrames: any[] = [];
       
-      // Track which target each result belongs to since we may have multiple metrics per target
-      let metricIndex = 0;
+      // Track which metric we're processing for mapping back to targets
+      let responseMetricIndex = 0;
       
       data.queries.forEach((query, queryIndex: number) => {
-        // Find the corresponding target for this result
-        // Since we expanded metrics, we need to map back to the original target
-        const targetForQuery = this.findTargetForQueryResult(validTargets, metricIndex, query, options.scopedVars);
+        // Get the target that corresponds to this metric using our pre-built mapping
+        const targetForQuery = metricToTargetMap[responseMetricIndex];
+        if (!targetForQuery) {
+          console.warn('[DataSource] No target found for metric index:', responseMetricIndex);
+          return;
+        }
         const targetQuery = targetForQuery.query!;
+        console.log('[DataSource] Processing query', queryIndex, 'for target', targetForQuery.refId, 'metric index', responseMetricIndex);
         
         if (!query.results || query.results.length === 0) {
           console.log('[DataSource] No results for query:', queryIndex);
@@ -370,12 +381,47 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           const alias = targetQuery.alias || metricName;
           const tags = result.tags || {};
           
-          // Create series name including tags
-          let seriesName = alias;
+          // Create $_tag_group_{tagName} variables for alias interpolation
+          const tagGroupVars: { [key: string]: any } = {};
+          const groupByTags = targetQuery.groupBy?.tags || [];
+          
+          // For each tag that we're grouping by, create a $_tag_group_{tagName} variable
+          groupByTags.forEach((tagName: string) => {
+            if (tags[tagName] && tags[tagName].length > 0) {
+              // Use the first tag value (KairosDB group by typically results in single values per series)
+              tagGroupVars[`_tag_group_${tagName}`] = {
+                text: tags[tagName][0],
+                value: tags[tagName][0]
+              };
+            }
+          });
+          
+          // Create scoped vars combining original scopedVars with tag group variables
+          const seriesScopedVars = {
+            ...options.scopedVars,
+            ...tagGroupVars
+          };
+          
+          console.log('[DataSource] Created tag group vars for series:', tagGroupVars);
+          
+          // Interpolate alias with tag group variables
+          const templateSrv = getTemplateSrv();
+          let interpolatedAlias = alias;
+          try {
+            interpolatedAlias = templateSrv.replace(alias, seriesScopedVars);
+          } catch (error) {
+            console.warn('[DataSource] Error interpolating alias with tag group vars:', error);
+            interpolatedAlias = alias;
+          }
+          
+          // Create series name - use interpolated alias or fall back to metric name with tags
+          let seriesName = interpolatedAlias;
           const tagKeys = Object.keys(tags);
-          if (tagKeys.length > 0) {
+          
+          // If alias wasn't changed and we have tags, include them in the series name
+          if (seriesName === alias && tagKeys.length > 0) {
             const tagParts = tagKeys.map(key => `${key}=${tags[key].join(',')}`);
-            seriesName = `${alias}{${tagParts.join(', ')}}`;
+            seriesName = `${interpolatedAlias}{${tagParts.join(', ')}}`;
           }
 
           if (!result.values || result.values.length === 0) {
@@ -461,8 +507,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           dataFrames.push(frame);
         });
         
-        // Increment metric index for next query result
-        metricIndex += query.results ? query.results.length : 0;
+        // Increment metric index for next query (each query corresponds to one metric we sent)
+        responseMetricIndex++;
       });
 
       console.log('[DataSource] Returning query result with', dataFrames.length, 'data frames');
@@ -1075,33 +1121,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     return expandedNames;
   }
 
-  /**
-   * Find the target that corresponds to a query result
-   * Since we expand multi-value variables into multiple metrics, we need to map results back to targets
-   */
-  private findTargetForQueryResult(validTargets: any[], metricIndex: number, queryResult: any, scopedVars?: ScopedVars): any {
-    // For now, we'll use a simple approach: map each query result back to the first target
-    // This works because all expanded metrics from a single target should have the same refId
-    // In the future, we could enhance this to be more sophisticated if needed
-    
-    let currentMetricCount = 0;
-    
-    for (const target of validTargets) {
-      const metricNames = this.expandMetricNames(target.query?.metricName || '', target.refId, scopedVars);
-      const targetMetricCount = metricNames.length;
-      
-      if (metricIndex < currentMetricCount + targetMetricCount) {
-        console.log('[DataSource] Found target for metric index', metricIndex, ':', target.refId);
-        return target;
-      }
-      
-      currentMetricCount += targetMetricCount;
-    }
-    
-    // Fallback to first target if we can't find a match
-    console.warn('[DataSource] Could not find target for metric index', metricIndex, ', using first target');
-    return validTargets[0] || { refId: 'Unknown', query: {} };
-  }
 
   /**
    * Checks whether we can connect to the KairosDB API.
