@@ -24,14 +24,17 @@ import {
 } from './types';
 import { lastValueFrom } from 'rxjs';
 import { ParameterObjectBuilder } from './utils/parameterUtils';
+import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtils';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
   initialized: boolean = false;
+  private variableQueryExecutor: VariableQueryExecutor;
 
   constructor(instanceSettings: DataSourceInstanceSettings<KairosDBDataSourceOptions>) {
     super(instanceSettings);
     this.baseUrl = instanceSettings.url!;
+    this.variableQueryExecutor = new VariableQueryExecutor(this);
     console.log('[DataSource] Constructor called with:', {
       id: instanceSettings.id,
       uid: instanceSettings.uid,
@@ -362,10 +365,17 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       
       // Filter by query if provided
       if (query && query.length > 0) {
+        console.log('[DataSource] Filtering metrics with query pattern:', query);
+        console.log('[DataSource] Sample metrics before filtering:', metrics.slice(0, 10));
+        
         metrics = metrics.filter((metric: string) => 
           metric.toLowerCase().includes(query.toLowerCase())
         );
-        console.log('[DataSource] Filtered metrics by query:', metrics);
+        
+        console.log('[DataSource] Filtered metrics by query (showing first 10):', metrics.slice(0, 10));
+        console.log('[DataSource] Total filtered metrics count:', metrics.length);
+      } else {
+        console.log('[DataSource] No query pattern provided, returning all metrics');
       }
 
       console.log('[DataSource] getMetricNames returning:', metrics);
@@ -435,23 +445,40 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
   /**
    * Variable support for templating
+   * Supports three query types:
+   * - metrics(pattern): Get metric names containing pattern
+   * - tag_names(metric): Get tag names for a metric
+   * - tag_values(metric, tag_name [, filter1=value1, ...]): Get tag values with optional filters
    */
   async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars }): Promise<MetricFindValue[]> {
     try {
-      console.log('KairosDB metricFindQuery called with:', { query, options });
+      console.log('[DataSource] metricFindQuery called with:', { query, options });
       
-      // This would implement variable queries for KairosDB
-      // For now, return mock metric names
-      const metrics = await this.getMetricNames(query);
-      const result = metrics.map(metric => ({
-        text: metric,
-        value: metric
-      }));
+      // Parse the query to determine type and parameters
+      const parsedQuery = VariableQueryParser.parse(query);
       
-      console.log('metricFindQuery returning:', result.length, 'values');
-      return result;
+      if (parsedQuery) {
+        console.log('[DataSource] Parsed variable query:', parsedQuery);
+        
+        // Execute the parsed query
+        const result = await this.variableQueryExecutor.execute(parsedQuery, options?.scopedVars);
+        
+        console.log('[DataSource] metricFindQuery returning:', result.length, 'values:', result);
+        return result;
+      } else {
+        // Fallback: if query doesn't match any function patterns, treat as simple metric name filter
+        console.log('[DataSource] Query did not match any function patterns, using as metric name filter');
+        const metrics = await this.getMetricNames(query);
+        const result = metrics.map(metric => ({
+          text: metric,
+          value: metric
+        }));
+        
+        console.log('[DataSource] metricFindQuery (fallback) returning:', result.length, 'values:', result);
+        return result;
+      }
     } catch (error) {
-      console.error('Error in metricFindQuery:', error);
+      console.error('[DataSource] Error in metricFindQuery:', error);
       return [];
     }
   }
