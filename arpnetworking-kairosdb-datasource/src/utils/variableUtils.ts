@@ -215,7 +215,10 @@ export class VariableQueryExecutor {
     try {
       // Use Grafana's built-in template service for variable interpolation
       const templateSrv = getTemplateSrv();
-      return templateSrv.replace(value, scopedVars);
+      if (templateSrv && templateSrv.replace) {
+        return templateSrv.replace(value, scopedVars);
+      }
+      throw new Error('Template service not available');
     } catch (error) {
       console.warn('[VariableQueryExecutor] Error interpolating variables, falling back to custom implementation:', error);
       

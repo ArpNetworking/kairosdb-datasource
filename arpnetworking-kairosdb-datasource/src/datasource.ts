@@ -318,7 +318,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       };
 
 
-      const response = await getBackendSrv().fetch({
+      const response = getBackendSrv().fetch({
         url: `${this.baseUrl}/api/v1/datapoints/query`,
         method: 'POST',
         data: requestBody
