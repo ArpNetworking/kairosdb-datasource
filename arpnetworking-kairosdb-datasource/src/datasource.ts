@@ -146,18 +146,24 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
         // Add group by if specified
         if (query.groupBy) {
+          console.log('[DataSource] Processing groupBy:', JSON.stringify(query.groupBy, null, 2));
           metric.group_by = [];
 
           // Group by tags
           if (query.groupBy.tags && query.groupBy.tags.length > 0) {
+            console.log('[DataSource] Adding tag groupBy:', query.groupBy.tags);
             metric.group_by.push({
               name: 'tag',
               tags: query.groupBy.tags
             });
           }
 
-          // Group by time
-          if (query.groupBy.time) {
+          // Group by time - only if it has meaningful content (not empty array)
+          if (query.groupBy.time && 
+              !Array.isArray(query.groupBy.time) && 
+              query.groupBy.time.value && 
+              query.groupBy.time.unit) {
+            console.log('[DataSource] Adding time groupBy:', query.groupBy.time);
             const timeGroupBy: {
               name: string;
               range_size: { value: number; unit: string };
@@ -177,13 +183,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             metric.group_by.push(timeGroupBy);
           }
 
-          // Group by value
-          if (query.groupBy.value) {
+          // Group by value - only if it has meaningful content (not empty array)
+          if (query.groupBy.value && 
+              !Array.isArray(query.groupBy.value) && 
+              query.groupBy.value.range_size) {
+            console.log('[DataSource] Adding value groupBy:', query.groupBy.value);
             metric.group_by.push({
               name: 'value',
               range_size: query.groupBy.value.range_size
             });
           }
+          
+          console.log('[DataSource] Final metric.group_by:', JSON.stringify(metric.group_by, null, 2));
         }
 
         return metric;
