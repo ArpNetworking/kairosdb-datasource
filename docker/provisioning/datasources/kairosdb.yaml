@@ -3,6 +3,7 @@ deleteDatasources: []
 
 datasources:
   - name: KairosDB (New)
+    uid: P60BA5072AB4AC9E4
     type: arpnetworking-kairosdb-datasource
     orgId: 1
     url: https://kairosdb.arpnetworking.com

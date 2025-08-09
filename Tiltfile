@@ -21,21 +21,33 @@ docker_build(
     ]
 )
 
-# Build the NEW React-based plugin
+# Build the NEW React-based plugin following Grafana's recommended development pattern
 docker_build(
     'kairosdb-plugin-new',
-    './arpnetworking-kairosdb-datasource',
+    '.',
     dockerfile='./arpnetworking-kairosdb-datasource/Dockerfile.new',
-    # Watch for changes in new plugin files
+    build_args={
+        'grafana_version': '12.1.0',
+        'grafana_image': 'grafana',
+        'development': 'true',
+        'anonymous_auth_enabled': 'true'
+    },
+    # Live update for fast development iteration
     live_update=[
-        # Sync source code changes for new plugin
-        sync('./arpnetworking-kairosdb-datasource/src', '/root/src'),
-        sync('./arpnetworking-kairosdb-datasource/package.json', '/root/package.json'),
-        sync('./arpnetworking-kairosdb-datasource/tsconfig.json', '/root/tsconfig.json'),
-        
-        # Rebuild the new plugin when source changes
-        run('cd /root && npm run build', trigger=['./arpnetworking-kairosdb-datasource/src'])
-    ]
+        # Sync built plugin files to Grafana plugin directory
+        sync('./arpnetworking-kairosdb-datasource/dist', '/var/lib/grafana/plugins/arpnetworking-kairosdb-datasource'),
+        # Sync provisioning config
+        sync('./docker/provisioning', '/etc/grafana/provisioning')
+    ],
+    only = ['./arpnetworking-kairosdb-datasource/dist', './arpnetworking-kairosdb-datasource/entrypoint-dev.sh']
+)
+
+# Build plugin when source changes (this rebuilds dist/ which triggers live_update)
+local_resource(
+  'build-plugin',
+  cmd='cd arpnetworking-kairosdb-datasource && npm run build',
+  deps=['./arpnetworking-kairosdb-datasource/src'],
+  labels=['build']
 )
 
 # Deploy separate Kubernetes manifests for old and new plugins

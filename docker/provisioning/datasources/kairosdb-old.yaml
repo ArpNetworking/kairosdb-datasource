@@ -3,6 +3,7 @@ deleteDatasources: []
 
 datasources:
   - name: KairosDB (Old)
+    uid: P60BA5072AB4AC9E4
     type: grafana-kairosdb-datasource
     orgId: 1
     url: https://kairosdb.arpnetworking.com
