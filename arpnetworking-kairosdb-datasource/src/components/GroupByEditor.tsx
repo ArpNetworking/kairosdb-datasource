@@ -27,24 +27,18 @@ export function GroupByEditor({
   };
 
   const handleValueChange = (value: GroupBy['value']) => {
-    console.log('[GroupByEditor] handleValueChange called with:', value);
-    console.log('[GroupByEditor] Current groupBy:', groupBy);
     const newGroupBy = {
       ...groupBy,
       value
     };
-    console.log('[GroupByEditor] Setting new groupBy:', newGroupBy);
     onChange(newGroupBy);
   };
 
   const handleTimeChange = (time: GroupBy['time']) => {
-    console.log('[GroupByEditor] handleTimeChange called with:', time);
-    console.log('[GroupByEditor] Current groupBy:', groupBy);
     const newGroupBy = {
       ...groupBy,
       time
     };
-    console.log('[GroupByEditor] Setting new groupBy:', newGroupBy);
     onChange(newGroupBy);
   };
 

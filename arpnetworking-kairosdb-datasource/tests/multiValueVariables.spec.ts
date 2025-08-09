@@ -36,7 +36,8 @@ describe('Multi-Value Template Variables', () => {
         metric: { text: 'cpu.usage', value: 'cpu.usage' }
       };
       const result = (datasource as any).expandMetricNames('$metric', 'A', scopedVars);
-      expect(result).toEqual(['cpu.usage']);
+      expect(result.names).toEqual(['cpu.usage']);
+      expect(result.variableValues).toHaveLength(1);
     });
 
     test('should expand multi-value variables into separate metric names', () => {
@@ -44,11 +45,13 @@ describe('Multi-Value Template Variables', () => {
         location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] }
       };
       const result = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
-      expect(result).toEqual([
+      expect(result.names).toEqual([
         'homeseer/Attic/gauge/Temperature',
         'homeseer/Bedroom/gauge/Temperature', 
         'homeseer/Office/gauge/Temperature'
       ]);
+      expect(result.variableValues).toHaveLength(3);
+      expect(result.variableValues[0].location.value).toBe('Attic');
     });
 
     test('should handle multiple variables with one multi-value', () => {
@@ -57,10 +60,11 @@ describe('Multi-Value Template Variables', () => {
         location: { text: 'server1,server2', value: ['server1', 'server2'] }
       };
       const result = (datasource as any).expandMetricNames('$prefix/$location/cpu', 'A', scopedVars);
-      expect(result).toEqual([
+      expect(result.names).toEqual([
         'system/server1/cpu',
         'system/server2/cpu'
       ]);
+      expect(result.variableValues).toHaveLength(2);
     });
 
     test('should handle single selection from multi-value variable', () => {
@@ -68,65 +72,23 @@ describe('Multi-Value Template Variables', () => {
         location: { text: 'Attic', value: 'Attic' } // Single selection
       };
       const result = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
-      expect(result).toEqual(['homeseer/Attic/gauge/Temperature']);
+      expect(result.names).toEqual(['homeseer/Attic/gauge/Temperature']);
     });
 
     test('should return original metric name when no variables', () => {
       const result = (datasource as any).expandMetricNames('static.metric.name', 'A');
-      expect(result).toEqual(['static.metric.name']);
+      expect(result.names).toEqual(['static.metric.name']);
     });
 
     test('should return empty array for empty metric name', () => {
       const result = (datasource as any).expandMetricNames('', 'A');
-      expect(result).toEqual([]);
+      expect(result.names).toEqual([]);
+      expect(result.variableValues).toEqual([]);
     });
   });
 
-  describe('findTargetForQueryResult', () => {
-    test('should find correct target for single metric', () => {
-      const validTargets = [
-        { refId: 'A', query: { metricName: '$metric1' } },
-        { refId: 'B', query: { metricName: '$metric2' } }
-      ];
-      const scopedVars: ScopedVars = {
-        metric1: { text: 'cpu.usage', value: 'cpu.usage' },
-        metric2: { text: 'memory.usage', value: 'memory.usage' }
-      };
-
-      const result = (datasource as any).findTargetForQueryResult(validTargets, 0, {}, scopedVars);
-      expect(result.refId).toBe('A');
-
-      const result2 = (datasource as any).findTargetForQueryResult(validTargets, 1, {}, scopedVars);
-      expect(result2.refId).toBe('B');
-    });
-
-    test('should find correct target for multi-value metric', () => {
-      const validTargets = [
-        { refId: 'A', query: { metricName: 'homeseer/$location/gauge/Temperature' } }, // Will expand to 3 metrics
-        { refId: 'B', query: { metricName: 'network.bytes' } } // 1 metric
-      ];
-      const scopedVars: ScopedVars = {
-        location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] }
-      };
-
-      // First three results should map to target A
-      expect((datasource as any).findTargetForQueryResult(validTargets, 0, {}, scopedVars).refId).toBe('A');
-      expect((datasource as any).findTargetForQueryResult(validTargets, 1, {}, scopedVars).refId).toBe('A');
-      expect((datasource as any).findTargetForQueryResult(validTargets, 2, {}, scopedVars).refId).toBe('A');
-      
-      // Fourth result should map to target B
-      expect((datasource as any).findTargetForQueryResult(validTargets, 3, {}, scopedVars).refId).toBe('B');
-    });
-
-    test('should fallback to first target for invalid index', () => {
-      const validTargets = [
-        { refId: 'A', query: { metricName: 'cpu.usage' } }
-      ];
-
-      const result = (datasource as any).findTargetForQueryResult(validTargets, 10, {});
-      expect(result.refId).toBe('A');
-    });
-  });
+  // Note: findTargetForQueryResult tests removed as the method was replaced 
+  // with a pre-built mapping approach for better multi-value variable support
 
   describe('Integration Test - Multi-value Variable Processing', () => {
     test('should create separate metrics for multi-value template variables', () => {
@@ -136,9 +98,9 @@ describe('Multi-Value Template Variables', () => {
       };
 
       // Test the expandMetricNames method directly with the template pattern
-      const expandedNames = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
-      expect(expandedNames).toHaveLength(3);
-      expect(expandedNames).toEqual([
+      const expandedResult = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
+      expect(expandedResult.names).toHaveLength(3);
+      expect(expandedResult.names).toEqual([
         'homeseer/Attic/gauge/Temperature',
         'homeseer/Bedroom/gauge/Temperature', 
         'homeseer/Office/gauge/Temperature'
@@ -150,12 +112,12 @@ describe('Multi-Value Template Variables', () => {
         servers: { text: 'server1,server2', value: ['server1', 'server2'] }
       };
       
-      const expandedNames = (datasource as any).expandMetricNames('system/$servers/cpu', 'A', scopedVars);
-      expect(expandedNames).toEqual(['system/server1/cpu', 'system/server2/cpu']);
+      const expandedResult = (datasource as any).expandMetricNames('system/$servers/cpu', 'A', scopedVars);
+      expect(expandedResult.names).toEqual(['system/server1/cpu', 'system/server2/cpu']);
       
       // This tests that each expanded metric should get the same tags, aggregators, etc.
       // The actual logic is in the query method which builds the KairosDB request
-      expect(expandedNames).toHaveLength(2);
+      expect(expandedResult.names).toHaveLength(2);
     });
   });
 
@@ -167,7 +129,7 @@ describe('Multi-Value Template Variables', () => {
 
       // Test direct expansion with template pattern (the new correct approach)
       const expanded = (datasource as any).expandMetricNames('system/$metrics/usage', 'A', scopedVars);
-      expect(expanded).toEqual(['system/cpu.usage/usage', 'system/memory.usage/usage']);
+      expect(expanded.names).toEqual(['system/cpu.usage/usage', 'system/memory.usage/usage']);
     });
 
     test('should handle single selection from multi-value variable', () => {
@@ -179,7 +141,7 @@ describe('Multi-Value Template Variables', () => {
       expect(interpolated).toBe('cpu.usage');
 
       const expanded = (datasource as any).expandMetricNames(interpolated, 'A');
-      expect(expanded).toEqual(['cpu.usage']);
+      expect(expanded.names).toEqual(['cpu.usage']);
     });
 
     test('should handle All selection (*) in multi-value variables', () => {
@@ -188,7 +150,7 @@ describe('Multi-Value Template Variables', () => {
       };
 
       const expanded = (datasource as any).expandMetricNames('$metrics', 'A', scopedVars);
-      expect(expanded).toEqual(['*']);
+      expect(expanded.names).toEqual(['*']);
     });
   });
 
@@ -203,8 +165,8 @@ describe('Multi-Value Template Variables', () => {
 
       const expanded = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
       
-      expect(expanded).toHaveLength(5);
-      expect(expanded).toEqual([
+      expect(expanded.names).toHaveLength(5);
+      expect(expanded.names).toEqual([
         'homeseer/Attic/gauge/Temperature',
         'homeseer/Bedroom/gauge/Temperature', 
         'homeseer/Garage/gauge/Temperature',
@@ -224,13 +186,13 @@ describe('Multi-Value Template Variables', () => {
 
       // Simulate what happens in the query method
       const originalMetricName = 'homeseer/$location/gauge/Temperature';
-      const expandedNames = (datasource as any).expandMetricNames(originalMetricName, 'A', scopedVars);
+      const expandedResult = (datasource as any).expandMetricNames(originalMetricName, 'A', scopedVars);
 
       // Verify we get 5 separate metric names
-      expect(expandedNames).toHaveLength(5);
+      expect(expandedResult.names).toHaveLength(5);
       
       // Verify each metric name is properly formatted (no comma-separated values)
-      expect(expandedNames).toEqual([
+      expect(expandedResult.names).toEqual([
         'homeseer/Attic/gauge/Temperature',
         'homeseer/Bedroom/gauge/Temperature', 
         'homeseer/Garage/gauge/Temperature',
@@ -239,7 +201,7 @@ describe('Multi-Value Template Variables', () => {
       ]);
 
       // Verify none of the metric names contain commas (which was the original problem)
-      expandedNames.forEach(name => {
+      expandedResult.names.forEach(name => {
         expect(name).not.toMatch(/homeseer\/.*,.*\/gauge\/Temperature/);
         expect(name).toMatch(/^homeseer\/[^\/,]+\/gauge\/Temperature$/);
       });
@@ -254,8 +216,8 @@ describe('Multi-Value Template Variables', () => {
 
       const expanded = (datasource as any).expandMetricNames('$datacenter/$server/system/$metric', 'A', scopedVars);
       
-      expect(expanded).toHaveLength(3);
-      expect(expanded).toEqual([
+      expect(expanded.names).toHaveLength(3);
+      expect(expanded.names).toEqual([
         'us-east-1/web01/system/cpu_usage',
         'us-east-1/web02/system/cpu_usage',
         'us-east-1/db01/system/cpu_usage'
@@ -271,10 +233,10 @@ describe('Multi-Value Template Variables', () => {
         }
       };
 
-      const expandedNames = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
+      const expandedResult = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
       
       // Simulate what would appear in KairosDB metrics array
-      const mockMetrics = expandedNames.map(name => ({
+      const mockMetrics = expandedResult.names.map(name => ({
         name: name,
         tags: {},
         aggregators: [{ name: 'avg', sampling: { value: 1, unit: 'HOURS' } }],

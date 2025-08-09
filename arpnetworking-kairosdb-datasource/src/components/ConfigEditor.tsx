@@ -6,11 +6,6 @@ import { KairosDBDataSourceOptions, KairosDBSecureJsonData } from '../types';
 interface Props extends DataSourcePluginOptionsEditorProps<KairosDBDataSourceOptions, KairosDBSecureJsonData> {}
 
 export function ConfigEditor(props: Props) {
-  console.log('[ConfigEditor] Render called with props:', {
-    options: props.options,
-    hasOnOptionsChange: typeof props.onOptionsChange === 'function'
-  });
-  
   const { onOptionsChange, options } = props;
   const { jsonData } = options;
 

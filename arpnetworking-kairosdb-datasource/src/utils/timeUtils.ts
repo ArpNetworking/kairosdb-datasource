@@ -54,7 +54,6 @@ export class TimeUnitUtils {
     const value = this.extractFloatValue(interval);
     const unit = this.getTimeUnit(unitStr);
     
-    console.log('[TimeUnitUtils] intervalToUnitValue - interval:', interval, 'unitStr:', unitStr, 'value:', value, 'unit:', unit);
     
     return [unit, value];
   }

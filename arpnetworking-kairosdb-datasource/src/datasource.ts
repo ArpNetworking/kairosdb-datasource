@@ -51,22 +51,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     
     // Set up periodic cache cleanup every 10 minutes
     setInterval(() => {
-      console.log('[DataSource] Running periodic cache cleanup');
       this.metricNamesCache.cleanup();
       this.apiResponseCache.cleanup();
-      console.log('[DataSource] Cache stats after cleanup:', {
-        metricNames: this.metricNamesCache.getStats(),
-        apiResponses: this.apiResponseCache.getStats()
-      });
     }, 10 * 60 * 1000);
-    console.log('[DataSource] Constructor called with:', {
-      id: instanceSettings.id,
-      uid: instanceSettings.uid,
-      name: instanceSettings.name,
-      type: instanceSettings.type,
-      url: instanceSettings.url,
-      jsonData: instanceSettings.jsonData
-    });
   }
 
   async initialize(): Promise<void> {
@@ -79,35 +66,23 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   }
 
   filterQuery(query: KairosDBQuery): boolean {
-    console.log('[DataSource] filterQuery called with:', JSON.stringify(query, null, 2));
-    
     // Allow the QueryEditor to always render (return true for UI)
     // Only prevent query EXECUTION when there's no metric name
     // The QueryEditor itself should always be shown
-    const hasMetricName = !!(query.query?.metricName);
-    console.log('[DataSource] filterQuery - hasMetricName:', hasMetricName);
-    
-    // For now, always return true to allow QueryEditor rendering
-    // We'll handle query execution validation separately
     return true;
   }
 
   async query(options: DataQueryRequest<KairosDBQuery>): Promise<DataQueryResponse> {
     try {
-      console.log('[DataSource] KairosDB query called with options:', options);
       
       const { range } = options;
       if (!range) {
-        console.warn('[DataSource] No range provided in query options');
         return { data: [] };
       }
 
       const from = range.from.valueOf();
       const to = range.to.valueOf();
 
-      console.log('[DataSource] Query range:', { from, to });
-      console.log('[DataSource] Query targets (before interpolation):', options.targets);
-      console.log('[DataSource] ScopedVars:', options.scopedVars);
 
       // Apply template variable interpolation for non-metric fields using Grafana's built-in service
       // Note: metricName interpolation is handled in expandMetricNames to properly handle multi-value variables
@@ -135,17 +110,14 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         } : target.query
       }));
       
-      console.log('[DataSource] Interpolated targets (after interpolation):', interpolatedTargets);
 
       // Filter out targets without metric names
       const validTargets = interpolatedTargets.filter(target => {
         const hasMetricName = !!(target.query?.metricName);
-        console.log('[DataSource] Target execution filter:', { refId: target.refId, hasMetricName, metricName: target.query?.metricName });
         return hasMetricName;
       });
 
       if (validTargets.length === 0) {
-        console.log('[DataSource] No valid targets to query');
         return { data: [] };
       }
 
@@ -155,21 +127,34 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const metricToTargetMap: { [metricIndex: number]: any } = {};
       let currentMetricIndex = 0;
       
-      validTargets.forEach(target => {
+      validTargets.forEach((target, targetIndex) => {
         const query = target.query!;
         
-        console.log('[DataSource] Processing target:', { refId: target.refId, metricName: query.metricName, scopedVars: options.scopedVars });
+        // FIX: Get the original alias before Grafana's pre-processing
+        // This prevents the bug where Grafana converts $location to {Attic,Bedroom,Office}
+        const originalTarget = options.targets[targetIndex];
+        const originalAlias = originalTarget?.query?.alias || query.alias;
+        
         
         // Expand metric names BEFORE template interpolation to handle multi-value variables properly
-        const metricNames = this.expandMetricNames(query.metricName!, target.refId, options.scopedVars);
-        
-        console.log('[DataSource] Expanded metric names for', target.refId, ':', metricNames);
+        const expansion = this.expandMetricNames(query.metricName!, target.refId, options.scopedVars);
         
         // Create a separate metric object for each expanded metric name
-        metricNames.forEach(metricName => {
-          // Track which target this metric belongs to
-          metricToTargetMap[currentMetricIndex] = target;
-          console.log('[DataSource] Mapping metric index', currentMetricIndex, 'to target', target.refId);
+        expansion.names.forEach((metricName, index) => {
+          // Track which target this metric belongs to AND the variable values used for this expansion
+          // IMPORTANT: Store the original alias before Grafana's pre-processing
+          const targetWithOriginalAlias = {
+            ...target,
+            query: {
+              ...target.query!,
+              alias: originalAlias // Use original alias instead of processed one
+            }
+          };
+          
+          metricToTargetMap[currentMetricIndex] = {
+            target: targetWithOriginalAlias,
+            variableValues: expansion.variableValues[index]
+          };
           currentMetricIndex++;
           const metric: KairosDBDatapointsRequest['metrics'][0] = {
             name: metricName
@@ -188,7 +173,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         // Add aggregators if any are specified
         if (query.aggregators && query.aggregators.length > 0) {
           metric.aggregators = query.aggregators.map(agg => {
-            console.log('[DataSource] Processing aggregator:', agg.name, 'parameters:', agg.parameters);
             
             const aggregator: { name: string; [key: string]: any } = {
               name: agg.name
@@ -205,7 +189,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               
               // Handle alignment parameter first
               if (alignmentParam && alignmentParam.value !== undefined && alignmentParam.value !== null && alignmentParam.value !== '') {
-                console.log('[DataSource] Processing alignment parameter:', alignmentParam.name, '=', alignmentParam.value);
                 
                 // Map old alignment values to KairosDB API format
                 switch (alignmentParam.value) {
@@ -216,7 +199,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                       const samplingObj: any = {};
                       samplingParams.forEach(param => {
                         if (param.value !== undefined && param.value !== null && param.value !== '') {
-                          console.log('[DataSource] Processing sampling parameter:', param.name, '=', param.value, 'type:', param.type);
                           let processedValue: any = param.value;
                           
                           // Apply auto value logic
@@ -249,7 +231,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                     break;
                     
                   default:
-                    console.warn('[DataSource] Unknown alignment value:', alignmentParam.value);
                     break;
                 }
               }
@@ -257,10 +238,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               // Handle other parameters
               otherParams.forEach(param => {
                 if (param.value !== undefined && param.value !== null && param.value !== '') {
-                  console.log('[DataSource] Processing parameter:', param.name, '=', param.value, 'type:', param.type);
                   
                   const parameterObject = parameterBuilder.build(param);
-                  console.log('[DataSource] Built parameter object:', parameterObject);
                   
                   // Deep merge the parameter object into the aggregator
                   this.deepMerge(aggregator, parameterObject);
@@ -268,19 +247,16 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               });
             }
 
-            console.log('[DataSource] Final aggregator object:', aggregator);
             return aggregator;
           });
         }
 
         // Add group by if specified
         if (query.groupBy) {
-          console.log('[DataSource] Processing groupBy:', JSON.stringify(query.groupBy, null, 2));
           metric.group_by = [];
 
           // Group by tags
           if (query.groupBy.tags && query.groupBy.tags.length > 0) {
-            console.log('[DataSource] Adding tag groupBy:', query.groupBy.tags);
             metric.group_by.push({
               name: 'tag',
               tags: query.groupBy.tags
@@ -292,7 +268,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               !Array.isArray(query.groupBy.time) && 
               query.groupBy.time.value && 
               query.groupBy.time.unit) {
-            console.log('[DataSource] Adding time groupBy:', query.groupBy.time);
             const timeGroupBy: {
               name: string;
               range_size: { value: number; unit: string };
@@ -316,14 +291,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           if (query.groupBy.value && 
               !Array.isArray(query.groupBy.value) && 
               query.groupBy.value.range_size) {
-            console.log('[DataSource] Adding value groupBy:', query.groupBy.value);
             metric.group_by.push({
               name: 'value',
               range_size: query.groupBy.value.range_size
             });
           }
           
-          console.log('[DataSource] Final metric.group_by:', JSON.stringify(metric.group_by, null, 2));
         }
 
           // Add the completed metric to the metrics array
@@ -337,7 +310,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         metrics: metrics
       };
 
-      console.log('[DataSource] Making request to /api/v1/datapoints/query with body:', JSON.stringify(requestBody, null, 2));
 
       const response = await getBackendSrv().fetch({
         url: `${this.baseUrl}/api/v1/datapoints/query`,
@@ -348,10 +320,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const result = await lastValueFrom(response);
       const data = result.data as KairosDBDatapointsResponse;
       
-      console.log('[DataSource] Received datapoints query response:', JSON.stringify(data, null, 2));
 
       if (!data || !data.queries || data.queries.length === 0) {
-        console.warn('[DataSource] No queries in datapoints response');
         return { data: [] };
       }
 
@@ -362,21 +332,20 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       let responseMetricIndex = 0;
       
       data.queries.forEach((query, queryIndex: number) => {
-        // Get the target that corresponds to this metric using our pre-built mapping
-        const targetForQuery = metricToTargetMap[responseMetricIndex];
-        if (!targetForQuery) {
-          console.warn('[DataSource] No target found for metric index:', responseMetricIndex);
-          return;
-        }
-        const targetQuery = targetForQuery.query!;
-        console.log('[DataSource] Processing query', queryIndex, 'for target', targetForQuery.refId, 'metric index', responseMetricIndex);
-        
         if (!query.results || query.results.length === 0) {
-          console.log('[DataSource] No results for query:', queryIndex);
           return;
         }
 
         query.results.forEach((result, resultIndex: number) => {
+          // Get the target that corresponds to this specific result using our pre-built mapping
+          const mappingInfo = metricToTargetMap[responseMetricIndex];
+          if (!mappingInfo) {
+            responseMetricIndex++;
+            return;
+          }
+          const targetForQuery = mappingInfo.target;
+          const metricVariableValues = mappingInfo.variableValues;
+          const targetQuery = targetForQuery.query!;
           const metricName = result.name;
           const alias = targetQuery.alias || metricName;
           const tags = result.tags || {};
@@ -396,21 +365,19 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             }
           });
           
-          // Create scoped vars combining original scopedVars with tag group variables
+          // Create scoped vars combining metric-specific variable values with tag group variables
           const seriesScopedVars = {
-            ...options.scopedVars,
+            ...metricVariableValues, // Use the specific variable values for this expanded metric
             ...tagGroupVars
           };
           
-          console.log('[DataSource] Created tag group vars for series:', tagGroupVars);
-          
-          // Interpolate alias with tag group variables
+          // Interpolate alias with both multi-value variables and tag group variables
           const templateSrv = getTemplateSrv();
           let interpolatedAlias = alias;
           try {
             interpolatedAlias = templateSrv.replace(alias, seriesScopedVars);
           } catch (error) {
-            console.warn('[DataSource] Error interpolating alias with tag group vars:', error);
+            console.error('Template error:', error);
             interpolatedAlias = alias;
           }
           
@@ -427,7 +394,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           }
 
           if (!result.values || result.values.length === 0) {
-            console.log('[DataSource] No values for result:', resultIndex);
             return;
           }
 
@@ -435,16 +401,13 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           const timeValues: number[] = [];
           const dataValues: number[] = [];
 
-          console.log('[DataSource] Processing values for result:', resultIndex, 'Raw values:', result.values.slice(0, 5));
 
           result.values.forEach((point, pointIndex) => {
-            console.log(`[DataSource] Point ${pointIndex}:`, point, 'Type:', typeof point, 'IsArray:', Array.isArray(point));
             
             if (Array.isArray(point) && point.length >= 2) {
               const timestamp = point[0];
               const rawValue = point[1];
               
-              console.log(`[DataSource] Point ${pointIndex} - timestamp:`, timestamp, 'type:', typeof timestamp, 'rawValue:', rawValue, 'type:', typeof rawValue);
               
               // Ensure timestamp is a number
               const numTimestamp = typeof timestamp === 'number' ? timestamp : Number(timestamp);
@@ -458,7 +421,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                 numValue = Number(rawValue);
               } else if (typeof rawValue === 'object' && rawValue !== null) {
                 // KairosDB raw data might be objects - try to extract a numeric value
-                console.log('[DataSource] Complex value object:', rawValue);
                 
                 // Common patterns in KairosDB objects
                 const valueObj = rawValue as any;
@@ -469,28 +431,22 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                 } else if ('long_value' in valueObj) {
                   numValue = Number(valueObj.long_value);
                 } else {
-                  console.warn('[DataSource] Cannot extract numeric value from object:', rawValue);
                   return; // skip this point
                 }
               } else {
-                console.warn('[DataSource] Unknown value type:', typeof rawValue, rawValue);
                 return; // skip this point
               }
               
-              console.log(`[DataSource] Point ${pointIndex} - final numTimestamp:`, numTimestamp, 'numValue:', numValue);
               
               if (!isNaN(numTimestamp) && !isNaN(numValue)) {
                 timeValues.push(numTimestamp);
                 dataValues.push(numValue);
               } else {
-                console.warn('[DataSource] Skipping invalid point after processing:', { timestamp, rawValue, numTimestamp, numValue });
               }
             } else {
-              console.warn('[DataSource] Invalid point format:', point);
             }
           });
 
-          console.log('[DataSource] Final arrays - timeValues:', timeValues.slice(0, 5), 'dataValues:', dataValues.slice(0, 5));
 
           const frame = createDataFrame({
             refId: targetForQuery.refId,
@@ -501,19 +457,13 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             ],
           });
 
-          console.log('[DataSource] Created data frame:', { 
-            refId: targetForQuery.refId, 
-            name: seriesName, 
-            points: timeValues.length 
-          });
           dataFrames.push(frame);
+          
+          // Increment metric index for next result (each result corresponds to one metric we sent)
+          responseMetricIndex++;
         });
-        
-        // Increment metric index for next query (each query corresponds to one metric we sent)
-        responseMetricIndex++;
       });
 
-      console.log('[DataSource] Returning query result with', dataFrames.length, 'data frames');
       return { data: dataFrames };
 
     } catch (error) {
@@ -538,7 +488,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Get available metric names for autocomplete (public interface with caching and debouncing)
    */
   async getMetricNames(query?: string): Promise<string[]> {
-    console.log('[DataSource] getMetricNames called with query:', query);
     
     // Generate cache key including suffix configuration
     const suffixesToIgnore = this.getSuffixesToIgnore();
@@ -547,11 +496,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     // Check cache first
     const cachedResult = this.metricNamesCache.get(cacheKey);
     if (cachedResult) {
-      console.log('[DataSource] Returning cached result for key:', cacheKey, 'count:', cachedResult.length);
       return cachedResult;
     }
     
-    console.log('[DataSource] Cache miss for key:', cacheKey, ', using debounced fetch');
     
     // Use debounced version to reduce server calls
     return this.debouncedGetMetricNames(query);
@@ -561,7 +508,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Internal method that actually fetches metric names from server
    */
   private async getMetricNamesInternal(query?: string): Promise<string[]> {
-    console.log('[DataSource] getMetricNamesInternal called with query:', query);
     
     try {
       const suffixesToIgnore = this.getSuffixesToIgnore();
@@ -570,13 +516,11 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       // Double-check cache in case another call populated it
       const cachedResult = this.metricNamesCache.get(cacheKey);
       if (cachedResult) {
-        console.log('[DataSource] Found cached result during internal fetch:', cachedResult.length, 'metrics');
         return cachedResult;
       }
       
       // Parse the search query to determine mode and actual search term
       const { isPrefixMode, searchTerm } = parseSearchQuery(query);
-      console.log('[DataSource] Parsed search:', { isPrefixMode, searchTerm, originalQuery: query });
       
       // Determine API strategy based on search mode
       const apiCacheKey = generateApiCacheKey(query);
@@ -591,20 +535,16 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         if (isPrefixMode && searchTerm.length >= 2) {
           // Use prefix API for ^prefix searches with sufficient length
           apiUrl = `/api/v1/metricnames?prefix=${encodeURIComponent(searchTerm)}`;
-          console.log('[DataSource] Making PREFIX request to:', apiUrl);
         } else {
           // Use all metrics for contains searches or short prefix searches
           apiUrl = '/api/v1/metricnames';
-          console.log('[DataSource] Making ALL METRICS request to:', apiUrl);
         }
         
         const response = await this.request(apiUrl);
         const data = response.data as KairosDBMetricNamesResponse;
         
-        console.log('[DataSource] Received metric names response:', data?.results?.length || 0, 'metrics');
         
         if (!data || !data.results) {
-          console.warn('[DataSource] No results in metric names response');
           return [];
         }
 
@@ -612,30 +552,22 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         
         // Cache the raw API response
         this.apiResponseCache.set(apiCacheKey, rawMetrics);
-        console.log('[DataSource] Cached API response for key:', apiCacheKey, 'count:', rawMetrics.length);
       } else {
-        console.log('[DataSource] Using cached API response:', apiCacheKey, 'count:', rawMetrics.length);
       }
 
       let filteredMetrics = [...rawMetrics];
       
       // Filter out metrics with configured suffixes
       if (suffixesToIgnore.length > 0) {
-        console.log('[DataSource] Filtering out metrics with suffixes:', suffixesToIgnore);
-        const originalCount = filteredMetrics.length;
         
         filteredMetrics = filteredMetrics.filter((metric: string) => {
           return !suffixesToIgnore.some(suffix => metric.endsWith(suffix));
         });
         
-        console.log('[DataSource] Filtered out', (originalCount - filteredMetrics.length), 'metrics with ignored suffixes');
-        console.log('[DataSource] Remaining metrics count:', filteredMetrics.length);
       }
       
       // Apply additional client-side filtering if needed
       if (searchTerm && searchTerm.length > 0) {
-        console.log('[DataSource] Applying client-side filtering:', { isPrefixMode, searchTerm });
-        console.log('[DataSource] Sample metrics before filtering:', filteredMetrics.slice(0, 10));
         
         if (isPrefixMode) {
           // For prefix mode, filter to metrics that start with the search term
@@ -643,24 +575,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           filteredMetrics = filteredMetrics.filter((metric: string) => 
             metric.toLowerCase().startsWith(searchTerm.toLowerCase())
           );
-          console.log('[DataSource] Applied PREFIX filtering for term:', searchTerm);
         } else {
           // For contains mode, filter to metrics that contain the search term
           filteredMetrics = filteredMetrics.filter((metric: string) => 
             metric.toLowerCase().includes(searchTerm.toLowerCase())
           );
-          console.log('[DataSource] Applied CONTAINS filtering for term:', searchTerm);
         }
         
-        console.log('[DataSource] Filtered metrics by query (showing first 10):', filteredMetrics.slice(0, 10));
-        console.log('[DataSource] Total client-filtered metrics count:', filteredMetrics.length);
       }
 
       // Cache the final result
       this.metricNamesCache.set(cacheKey, filteredMetrics);
-      console.log('[DataSource] Cached final result for key:', cacheKey, 'count:', filteredMetrics.length);
 
-      console.log('[DataSource] getMetricNamesInternal returning:', filteredMetrics.length, 'metrics');
       return filteredMetrics;
     } catch (error) {
       console.error('[DataSource] Error fetching metric names:', error);
@@ -673,11 +599,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Get available tags for a metric
    */
   async getMetricTags(metricName: string): Promise<{ [key: string]: string[] }> {
-    console.log('[DataSource] getMetricTags called with metricName:', metricName);
     
     try {
       if (!metricName) {
-        console.log('[DataSource] No metric name provided, returning empty tags');
         return {};
       }
 
@@ -691,7 +615,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         ]
       };
 
-      console.log('[DataSource] Making request to /api/v1/datapoints/query/tags with body:', requestBody);
       const response = await getBackendSrv().fetch({
         url: `${this.baseUrl}/api/v1/datapoints/query/tags`,
         method: 'POST',
@@ -701,23 +624,19 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const result = await lastValueFrom(response);
       const data = result.data as KairosDBMetricTagsResponse;
       
-      console.log('[DataSource] Received metric tags response:', data);
       
       if (!data || !data.queries || data.queries.length === 0) {
-        console.warn('[DataSource] No queries in metric tags response');
         return {};
       }
 
       const query = data.queries[0];
       if (!query.results || query.results.length === 0) {
-        console.log('[DataSource] No results for metric tags');
         return {};
       }
 
       const metric = query.results[0];
       const tags = metric.tags || {};
       
-      console.log('[DataSource] getMetricTags returning:', tags);
       return tags;
     } catch (error) {
       console.error('[DataSource] Error fetching metric tags:', error);
@@ -734,29 +653,24 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    */
   async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars }): Promise<MetricFindValue[]> {
     try {
-      console.log('[DataSource] metricFindQuery called with:', { query, options });
       
       // Parse the query to determine type and parameters
       const parsedQuery = VariableQueryParser.parse(query);
       
       if (parsedQuery) {
-        console.log('[DataSource] Parsed variable query:', parsedQuery);
         
         // Execute the parsed query
         const result = await this.variableQueryExecutor.execute(parsedQuery, options?.scopedVars);
         
-        console.log('[DataSource] metricFindQuery returning:', result.length, 'values:', result);
         return result;
       } else {
         // Fallback: if query doesn't match any function patterns, treat as simple metric name filter
-        console.log('[DataSource] Query did not match any function patterns, using as metric name filter');
         const metrics = await this.getMetricNames(query);
         const result = metrics.map(metric => ({
           text: metric,
           value: metric
         }));
         
-        console.log('[DataSource] metricFindQuery (fallback) returning:', result.length, 'values:', result);
         return result;
       }
     } catch (error) {
@@ -875,7 +789,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const templateSrv = getTemplateSrv();
       return templateSrv.replace(value, scopedVars);
     } catch (error) {
-      console.warn('[DataSource] Error interpolating variables, falling back to custom implementation:', error);
       
       // Fallback to custom implementation if Grafana's service fails
       if (!scopedVars) {
@@ -945,7 +858,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Clear metric names cache (useful for debugging or forced refresh)
    */
   clearMetricNamesCache(): void {
-    console.log('[DataSource] Clearing both metric names and API response caches');
     this.metricNamesCache.clear();
     this.apiResponseCache.clear();
   }
@@ -1000,17 +912,15 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Expand metric names that contain multi-value template variables
    * This method should be called BEFORE template interpolation to detect multi-value variables
    * and create separate metric names for each value
+   * Returns both the expanded names and the variable values used for each expansion
    */
-  private expandMetricNames(originalMetricName: string, refId: string, scopedVars?: ScopedVars): string[] {
-    console.log('[DataSource] expandMetricNames called with:', { originalMetricName, refId, scopedVars });
+  private expandMetricNames(originalMetricName: string, refId: string, scopedVars?: ScopedVars): { names: string[], variableValues: ScopedVars[] } {
     
     if (!originalMetricName) {
-      console.log('[DataSource] Empty metric name, returning empty array');
-      return [];
+      return { names: [], variableValues: [] };
     }
     
     // Debug: log all scopedVars to understand structure
-    console.log('[DataSource] ScopedVars structure:', JSON.stringify(scopedVars, null, 2));
     
     // Find all variables in the metric name (both $var and ${var} formats)
     const variableMatches = [
@@ -1018,65 +928,81 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       ...originalMetricName.matchAll(/\$(\w+)/g)
     ];
     
-    console.log('[DataSource] Found variable matches:', variableMatches.map(m => ({ fullMatch: m[0], varName: m[1] })));
     
-    const templateSrv = getTemplateSrv();
-    
-    // First, do a normal interpolation to see if we get multi-value format
-    const normallyInterpolated = templateSrv.replace(originalMetricName, scopedVars);
-    console.log('[DataSource] Normal interpolation result:', normallyInterpolated);
-    
-    // Check if the interpolated result contains the multi-value format {value1,value2,value3}
-    const multiValuePattern = /\{([^}]+)\}/g;
-    const multiValueMatch = multiValuePattern.exec(normallyInterpolated);
-    
+    // First, check if we have multi-value variables directly in scopedVars
     let multiValueVariable: { name: string, values: string[] } | null = null;
     
-    if (multiValueMatch) {
-      // Found multi-value format, extract the values
-      const valuesString = multiValueMatch[1];
-      const values = valuesString.split(',').map(v => v.trim());
+    // Look for multi-value variables in scopedVars
+    for (const match of variableMatches) {
+      const varName = match[1];
+      const variable = scopedVars?.[varName];
       
-      if (values.length > 1) {
-        // Find which variable this corresponds to by checking each variable
-        for (const match of variableMatches) {
-          const varName = match[1];
-          const singleVarPattern = new RegExp('\\$\\{?' + varName + '\\}?');
+      if (variable && Array.isArray(variable.value) && variable.value.length > 1) {
+        multiValueVariable = { name: varName, values: variable.value };
+        break;
+      }
+    }
+    
+    // If no multi-value variable found in scopedVars, try template service (if available)
+    const templateSrv = getTemplateSrv();
+    
+    if (!multiValueVariable && templateSrv) {
+      try {
+        // Do a normal interpolation to see if we get multi-value format
+        const normallyInterpolated = templateSrv.replace(originalMetricName, scopedVars);
+        
+        // Check if the interpolated result contains the multi-value format {value1,value2,value3}
+        const multiValuePattern = /\{([^}]+)\}/g;
+        const multiValueMatch = multiValuePattern.exec(normallyInterpolated);
+        
+        if (multiValueMatch) {
+          // Found multi-value format, extract the values
+          const valuesString = multiValueMatch[1];
+          const values = valuesString.split(',').map(v => v.trim());
           
-          if (singleVarPattern.test(originalMetricName)) {
-            multiValueVariable = { name: varName, values };
-            console.log('[DataSource] Found multi-value variable:', { varName, values, originalMetricName, normallyInterpolated });
-            break;
+          if (values.length > 1) {
+            // Find which variable this corresponds to by checking each variable
+            for (const match of variableMatches) {
+              const varName = match[1];
+              const singleVarPattern = new RegExp('\\$\\{?' + varName + '\\}?');
+              
+              if (singleVarPattern.test(originalMetricName)) {
+                multiValueVariable = { name: varName, values };
+                break;
+              }
+            }
           }
         }
+      } catch (error) {
       }
     }
     
     if (!multiValueVariable) {
       // No multi-value variables, interpolate normally and return single metric
-      try {
-        const interpolatedName = templateSrv.replace(originalMetricName, scopedVars);
-        console.log('[DataSource] Single metric name after interpolation:', interpolatedName);
-        return [interpolatedName];
-      } catch (error) {
-        console.warn('[DataSource] Template service error, using fallback:', error);
-        // Fallback to manual interpolation
-        let result = originalMetricName;
-        for (const match of variableMatches) {
-          const varName = match[1];
-          const variable = scopedVars?.[varName];
-          if (variable) {
-            const value = Array.isArray(variable.value) ? variable.value[0] : String(variable.value);
-            result = result.replace(match[0], value);
-          }
+      if (templateSrv) {
+        try {
+          const interpolatedName = templateSrv.replace(originalMetricName, scopedVars);
+          return { names: [interpolatedName], variableValues: [scopedVars || {}] };
+        } catch (error) {
         }
-        console.log('[DataSource] Single metric name after fallback interpolation:', result);
-        return [result];
       }
+      
+      // Fallback to manual interpolation when template service not available or failed
+      let result = originalMetricName;
+      for (const match of variableMatches) {
+        const varName = match[1];
+        const variable = scopedVars?.[varName];
+        if (variable) {
+          const value = Array.isArray(variable.value) ? variable.value[0] : String(variable.value);
+          result = result.replace(match[0], value);
+        }
+      }
+      return { names: [result], variableValues: [scopedVars || {}] };
     }
     
     // Expand the multi-value variable into separate metric names
     const expandedNames: string[] = [];
+    const expandedVariableValues: ScopedVars[] = [];
     
     for (const value of multiValueVariable.values) {
       // Create a temporary scopedVars with this single value for the multi-value variable
@@ -1088,13 +1014,31 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         }
       };
       
-      try {
-        const templateSrv = getTemplateSrv();
-        const interpolatedName = templateSrv.replace(originalMetricName, tempScopedVars);
-        expandedNames.push(interpolatedName);
-      } catch (error) {
-        console.warn('[DataSource] Template service error during expansion, using fallback:', error);
-        // Fallback to manual interpolation
+      if (templateSrv) {
+        try {
+          const interpolatedName = templateSrv.replace(originalMetricName, tempScopedVars);
+          expandedNames.push(interpolatedName);
+          expandedVariableValues.push(tempScopedVars);
+        } catch (error) {
+          // Fallback to manual interpolation
+          let result = originalMetricName;
+          for (const match of variableMatches) {
+            const varName = match[1];
+            if (varName === multiValueVariable.name) {
+              result = result.replace(match[0], value);
+            } else {
+              const variable = tempScopedVars[varName];
+              if (variable) {
+                const varValue = Array.isArray(variable.value) ? variable.value[0] : String(variable.value);
+                result = result.replace(match[0], varValue);
+              }
+            }
+          }
+          expandedNames.push(result);
+          expandedVariableValues.push(tempScopedVars);
+        }
+      } else {
+        // Manual interpolation when template service not available
         let result = originalMetricName;
         for (const match of variableMatches) {
           const varName = match[1];
@@ -1109,18 +1053,11 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           }
         }
         expandedNames.push(result);
+        expandedVariableValues.push(tempScopedVars);
       }
     }
     
-    console.log('[DataSource] Expanded multi-value metric names:', { 
-      original: originalMetricName, 
-      variable: multiValueVariable.name,
-      values: multiValueVariable.values,
-      expanded: expandedNames,
-      count: expandedNames.length 
-    });
-    
-    return expandedNames;
+    return { names: expandedNames, variableValues: expandedVariableValues };
   }
 
   /**
@@ -1150,7 +1087,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       });
     }
     
-    console.log('[DataSource] Relevant tag keys for series naming:', relevantTagKeys, 'from query tags:', Object.keys(targetQuery.tags || {}), 'groupBy tags:', targetQuery.groupBy?.tags);
     
     return relevantTagKeys;
   }

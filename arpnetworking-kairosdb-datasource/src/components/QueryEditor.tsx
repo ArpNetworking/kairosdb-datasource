@@ -12,13 +12,6 @@ type Props = QueryEditorProps<DataSource, KairosDBQuery, KairosDBDataSourceOptio
 
 export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) {
   const [availableTags, setAvailableTags] = React.useState<string[]>([]);
-  
-  console.log('[QueryEditor] Render called with:', {
-    query: JSON.stringify(query, null, 2),
-    hasOnChange: typeof onChange === 'function',
-    hasOnRunQuery: typeof onRunQuery === 'function',
-    hasDatasource: !!datasource
-  });
 
   // Initialize query with defaults if empty - ensure all properties exist
   const currentQuery = {
@@ -35,7 +28,6 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     ...query.query
   };
   
-  console.log('[QueryEditor] Current query after merging:', JSON.stringify(currentQuery, null, 2));
   
   // Ensure we have a valid query object
   React.useEffect(() => {
@@ -67,7 +59,6 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
   }, [currentQuery.metricName, datasource]);
 
   const onMetricNameChange = (metricName: string) => {
-    console.log('[QueryEditor] onMetricNameChange called with:', metricName);
     const newQuery = { 
       ...query, 
       query: {
@@ -75,9 +66,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
         metricName
       }
     };
-    console.log('[QueryEditor] Calling onChange with:', JSON.stringify(newQuery, null, 2));
     onChange(newQuery);
-    console.log('[QueryEditor] Calling onRunQuery');
     onRunQuery();
   };
 
@@ -125,10 +114,8 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
   };
 
   const getCollapsedText = (): string => {
-    console.log('[QueryEditor] getCollapsedText called with currentQuery:', JSON.stringify(currentQuery, null, 2));
     
     if (!currentQuery?.metricName) {
-      console.log('[QueryEditor] No metric name, returning default text');
       return 'SELECT * FROM <metric>';
     }
     

@@ -12,17 +12,10 @@ interface Props {
 
 
 export function Aggregators({ aggregators = [], onChange, availableAggregators = AVAILABLE_AGGREGATORS }: Props) {
-  console.log('[Aggregators] Render called with:', {
-    aggregatorsCount: aggregators.length,
-    aggregators: JSON.stringify(aggregators, null, 2),
-    hasOnChange: typeof onChange === 'function',
-    availableAggregatorsCount: availableAggregators.length
-  });
   
   const handleAdd = (aggregator: Aggregator) => {
     if (!aggregator || !aggregator.name) return;
     
-    console.log('[Aggregators] Adding aggregator:', aggregator.name);
     
     // Clone the aggregator to avoid reference issues
     const newAggregator: Aggregator = {
@@ -75,7 +68,6 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     if (!aggregator || !aggregator.autoValueSwitch) return;
     
     aggregator.autoValueSwitch.enabled = enabled;
-    console.log('[Aggregators] Auto value changed for aggregator', aggregator.name, 'to:', enabled);
     onChange(newAggregators);
   };
 

@@ -230,7 +230,6 @@ export function AggregatorItem({
                   value={isAutoEnabled}
                   onChange={(event) => {
                     const enabled = event.currentTarget.checked;
-                    console.log('[AggregatorItem] Auto toggle clicked, new value:', enabled);
                     onAutoValueChange(enabled);
                   }}
                 />

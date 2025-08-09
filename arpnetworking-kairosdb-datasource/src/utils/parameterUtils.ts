@@ -9,9 +9,7 @@ export class ParameterObjectBuilder {
 
   constructor(defaultInterval: string, aggregator: Aggregator) {
     // Convert Grafana interval (e.g., "1m", "5s") to KairosDB format
-    console.log('[ParameterObjectBuilder] Processing interval:', defaultInterval);
     const [unit, value] = TimeUnitUtils.intervalToUnitValue(defaultInterval);
-    console.log('[ParameterObjectBuilder] Parsed interval - unit:', unit, 'value:', value);
     this.autoIntervalValue = value.toString();
     this.autoIntervalUnit = unit;
     
@@ -19,7 +17,6 @@ export class ParameterObjectBuilder {
     this.autoValueEnabled = aggregator.autoValueSwitch?.enabled || false;
     this.autoValueDependentParameters = aggregator.autoValueSwitch?.dependentParameters || [];
     
-    console.log('[ParameterObjectBuilder] Final values - autoIntervalValue:', this.autoIntervalValue, 'autoIntervalUnit:', this.autoIntervalUnit, 'autoValueEnabled:', this.autoValueEnabled, 'dependentParameters:', this.autoValueDependentParameters);
   }
 
   public build(parameter: AggregatorParameter): any {
@@ -41,17 +38,14 @@ export class ParameterObjectBuilder {
     // Use auto value if auto is enabled and this parameter type is dependent
     const finalValue = this.isOverriddenByAutoValue(parameter) ? autoValue : parameter.value;
       
-    console.log('[ParameterObjectBuilder] buildSamplingParameter - param:', parameter.name, 'originalValue:', parameter.value, 'autoValue:', autoValue, 'finalValue:', finalValue);
     
     // For sampling values that should be numeric, ensure they are numbers
     let processedValue = finalValue;
     if (parameter.name === 'value') {
       processedValue = typeof finalValue === 'string' ? parseFloat(finalValue) : finalValue;
-      console.log('[ParameterObjectBuilder] Converting value to number:', finalValue, '->', processedValue);
     }
     
     parameterObject.sampling[parameter.name] = processedValue;
-    console.log('[ParameterObjectBuilder] Built sampling parameter object:', parameterObject);
     return parameterObject;
   }
 
@@ -80,7 +74,6 @@ export class ParameterObjectBuilder {
 
   public isOverriddenByAutoValue(parameter: AggregatorParameter): boolean {
     const result = this.autoValueEnabled && this.autoValueDependentParameters.includes(parameter.type);
-    console.log('[ParameterObjectBuilder] isOverriddenByAutoValue - param:', parameter.name, 'autoValueEnabled:', this.autoValueEnabled, 'type:', parameter.type, 'isDependentType:', this.autoValueDependentParameters.includes(parameter.type), 'result:', result);
     return result;
   }
 }

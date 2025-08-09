@@ -19,17 +19,14 @@ export class VariableQueryParser {
    * - tag_values(metric, tag_name [, filter1=value1, filter2=value2...])
    */
   static parse(query: string): VariableQuery | null {
-    console.log('[VariableQueryParser] Parsing query:', query, 'type:', typeof query, 'length:', query ? query.length : 'undefined');
     
     // Remove whitespace
     const cleanQuery = query.trim();
-    console.log('[VariableQueryParser] Clean query:', cleanQuery);
     
     // Metrics query: metrics(pattern)
     const metricsMatch = cleanQuery.match(/^metrics\(\s*(.+)\s*\)$/i);
     if (metricsMatch) {
       const pattern = metricsMatch[1].replace(/['"]/g, ''); // Remove quotes
-      console.log('[VariableQueryParser] Parsed metrics query with pattern:', pattern);
       return { type: 'metrics', pattern };
     }
     
@@ -37,7 +34,6 @@ export class VariableQueryParser {
     const tagNamesMatch = cleanQuery.match(/^tag_names\(\s*(.+)\s*\)$/i);
     if (tagNamesMatch) {
       const metric = tagNamesMatch[1].replace(/['"]/g, ''); // Remove quotes
-      console.log('[VariableQueryParser] Parsed tag_names query with metric:', metric);
       return { type: 'tag_names', metric };
     }
     
@@ -61,12 +57,10 @@ export class VariableQueryParser {
           }
         }
         
-        console.log('[VariableQueryParser] Parsed tag_values query:', { metric, tagName, filters });
         return { type: 'tag_values', metric, tagName, filters };
       }
     }
     
-    console.warn('[VariableQueryParser] Could not parse query:', query);
     return null;
   }
   
@@ -113,7 +107,6 @@ export class VariableQueryExecutor {
    * Execute a parsed variable query
    */
   async execute(query: VariableQuery, scopedVars?: ScopedVars): Promise<Array<{ text: string; value: string }>> {
-    console.log('[VariableQueryExecutor] Executing query:', query);
     
     try {
       switch (query.type) {
@@ -145,16 +138,13 @@ export class VariableQueryExecutor {
    * Execute metrics(pattern) query
    */
   private async executeMetricsQuery(pattern: string, scopedVars?: ScopedVars): Promise<Array<{ text: string; value: string }>> {
-    console.log('[VariableQueryExecutor] Executing metrics query with pattern:', pattern);
     
     // Interpolate variables in pattern
     const interpolatedPattern = this.interpolateVariables(pattern, scopedVars);
-    console.log('[VariableQueryExecutor] Interpolated pattern:', interpolatedPattern);
     
     // Get filtered metric names (let the datasource handle filtering)
     const filteredMetrics = await this.datasource.getMetricNames(interpolatedPattern);
     
-    console.log('[VariableQueryExecutor] Found', filteredMetrics.length, 'metrics matching pattern');
     return filteredMetrics.map(metric => ({ text: metric, value: metric }));
   }
   
@@ -162,11 +152,9 @@ export class VariableQueryExecutor {
    * Execute tag_names(metric) query
    */
   private async executeTagNamesQuery(metric: string, scopedVars?: ScopedVars): Promise<Array<{ text: string; value: string }>> {
-    console.log('[VariableQueryExecutor] Executing tag_names query for metric:', metric);
     
     // Interpolate variables in metric name
     const interpolatedMetric = this.interpolateVariables(metric, scopedVars);
-    console.log('[VariableQueryExecutor] Interpolated metric:', interpolatedMetric);
     
     // Get tags for the metric
     const tags = await this.datasource.getMetricTags(interpolatedMetric);
@@ -174,7 +162,6 @@ export class VariableQueryExecutor {
     // Extract tag names (keys)
     const tagNames = Object.keys(tags);
     
-    console.log('[VariableQueryExecutor] Found tag names:', tagNames);
     return tagNames.map(tagName => ({ text: tagName, value: tagName }));
   }
   
@@ -187,7 +174,6 @@ export class VariableQueryExecutor {
     filters: { [key: string]: string }, 
     scopedVars?: ScopedVars
   ): Promise<Array<{ text: string; value: string }>> {
-    console.log('[VariableQueryExecutor] Executing tag_values query:', { metric, tagName, filters });
     
     // Interpolate variables
     const interpolatedMetric = this.interpolateVariables(metric, scopedVars);
@@ -197,12 +183,6 @@ export class VariableQueryExecutor {
     const interpolatedFilters: { [key: string]: string } = {};
     Object.keys(filters).forEach(key => {
       interpolatedFilters[key] = this.interpolateVariables(filters[key], scopedVars);
-    });
-    
-    console.log('[VariableQueryExecutor] Interpolated values:', { 
-      metric: interpolatedMetric, 
-      tagName: interpolatedTagName, 
-      filters: interpolatedFilters 
     });
     
     // For now, get all tags and filter (future enhancement: use KairosDB filtering)
@@ -218,11 +198,9 @@ export class VariableQueryExecutor {
     // Apply filters (this is a simplified implementation)
     // In a full implementation, you'd want to query KairosDB with filters
     if (Object.keys(interpolatedFilters).length > 0) {
-      console.log('[VariableQueryExecutor] Filters detected but not fully implemented in tag values query');
       // For now, return all values - full filtering would require additional KairosDB queries
     }
     
-    console.log('[VariableQueryExecutor] Found tag values:', tagValues);
     return tagValues.map(value => ({ text: value, value: value }));
   }
   
