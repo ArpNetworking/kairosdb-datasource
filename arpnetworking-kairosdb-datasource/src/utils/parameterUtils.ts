@@ -2,9 +2,9 @@ import { AggregatorParameter, Aggregator } from '../types';
 import { TimeUnitUtils } from './timeUtils';
 
 export class ParameterObjectBuilder {
-  private autoIntervalValue: string;
-  private autoIntervalUnit: string;
-  private autoValueEnabled: boolean;
+  public autoIntervalValue: string;
+  public autoIntervalUnit: string;
+  public autoValueEnabled: boolean;
   private autoValueDependentParameters: string[] = [];
 
   constructor(defaultInterval: string, aggregator: Aggregator) {
@@ -28,6 +28,8 @@ export class ParameterObjectBuilder {
         return this.buildSamplingParameter(parameter, this.autoIntervalValue);
       case 'sampling_unit':
         return this.buildSamplingParameter(parameter, this.autoIntervalUnit);
+      case 'alignment':
+        return this.buildAlignmentParameter(parameter);
       default:
         return this.buildDefault(parameter);
     }
@@ -53,6 +55,21 @@ export class ParameterObjectBuilder {
     return parameterObject;
   }
 
+  private buildAlignmentParameter(parameter: AggregatorParameter): any {
+    const parameterObject = {} as any;
+    if (parameter.value !== undefined && parameter.value !== null && parameter.value !== '') {
+      // Handle alignment parameters differently based on their value
+      if (parameter.name === 'sampling' && parameter.value === 'SAMPLING') {
+        // When sampling alignment is "SAMPLING", create a sampling object for value/unit parameters
+        parameterObject.sampling = {};
+      } else {
+        // For other alignment values (PERIOD, START_TIME, NONE), set directly
+        parameterObject[parameter.name] = parameter.value;
+      }
+    }
+    return parameterObject;
+  }
+
   private buildDefault(parameter: AggregatorParameter): any {
     const parameterObject = {} as any;
     if (parameter.value !== undefined && parameter.value !== null && parameter.value !== '') {
@@ -61,7 +78,7 @@ export class ParameterObjectBuilder {
     return parameterObject;
   }
 
-  private isOverriddenByAutoValue(parameter: AggregatorParameter): boolean {
+  public isOverriddenByAutoValue(parameter: AggregatorParameter): boolean {
     const result = this.autoValueEnabled && this.autoValueDependentParameters.includes(parameter.type);
     console.log('[ParameterObjectBuilder] isOverriddenByAutoValue - param:', parameter.name, 'autoValueEnabled:', this.autoValueEnabled, 'type:', parameter.type, 'isDependentType:', this.autoValueDependentParameters.includes(parameter.type), 'result:', result);
     return result;

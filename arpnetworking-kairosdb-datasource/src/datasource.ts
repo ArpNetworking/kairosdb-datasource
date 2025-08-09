@@ -191,7 +191,64 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             if (agg.parameters && agg.parameters.length > 0) {
               const parameterBuilder = new ParameterObjectBuilder(options.interval || '1m', agg);
               
-              agg.parameters.forEach(param => {
+              // Collect parameters by type to handle merging intelligently
+              const alignmentParam = agg.parameters.find(p => p.type === 'alignment');
+              const samplingParams = agg.parameters.filter(p => p.type === 'sampling' || p.type === 'sampling_unit');
+              const otherParams = agg.parameters.filter(p => p.type !== 'alignment' && p.type !== 'sampling' && p.type !== 'sampling_unit');
+              
+              // Handle alignment parameter first
+              if (alignmentParam && alignmentParam.value !== undefined && alignmentParam.value !== null && alignmentParam.value !== '') {
+                console.log('[DataSource] Processing alignment parameter:', alignmentParam.name, '=', alignmentParam.value);
+                
+                // Map old alignment values to KairosDB API format
+                switch (alignmentParam.value) {
+                  case 'SAMPLING':
+                    aggregator.align_sampling = true;
+                    // When alignment is SAMPLING, create sampling object with value/unit
+                    if (samplingParams.length > 0) {
+                      const samplingObj: any = {};
+                      samplingParams.forEach(param => {
+                        if (param.value !== undefined && param.value !== null && param.value !== '') {
+                          console.log('[DataSource] Processing sampling parameter:', param.name, '=', param.value, 'type:', param.type);
+                          let processedValue: any = param.value;
+                          
+                          // Apply auto value logic
+                          if (parameterBuilder.isOverriddenByAutoValue && parameterBuilder.isOverriddenByAutoValue(param)) {
+                            processedValue = param.type === 'sampling' ? parameterBuilder.autoIntervalValue : parameterBuilder.autoIntervalUnit;
+                          }
+                          
+                          // Convert numeric values
+                          if (param.name === 'value') {
+                            processedValue = typeof processedValue === 'string' ? parseFloat(processedValue) : processedValue;
+                          }
+                          
+                          samplingObj[param.name] = processedValue;
+                        }
+                      });
+                      aggregator.sampling = samplingObj;
+                    }
+                    break;
+                    
+                  case 'START_TIME':
+                    aggregator.align_start_time = true;
+                    break;
+                    
+                  case 'PERIOD':
+                    aggregator.align_end_time = true;
+                    break;
+                    
+                  case 'NONE':
+                    // No alignment properties needed
+                    break;
+                    
+                  default:
+                    console.warn('[DataSource] Unknown alignment value:', alignmentParam.value);
+                    break;
+                }
+              }
+              
+              // Handle other parameters
+              otherParams.forEach(param => {
                 if (param.value !== undefined && param.value !== null && param.value !== '') {
                   console.log('[DataSource] Processing parameter:', param.name, '=', param.value, 'type:', param.type);
                   
