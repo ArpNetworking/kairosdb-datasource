@@ -29,6 +29,7 @@ const grafanaESModules = [
   'react-colorful',
   'rxjs',
   'uuid',
+  'yaml', // Fix for e2e tests that use readProvisionedDataSource
 ];
 
 module.exports = {

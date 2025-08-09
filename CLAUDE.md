@@ -5,86 +5,104 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Build and Development
-- `grunt` - Main build command that compiles TypeScript, runs linting, packages modules, and prepares distribution
-- `npm test` - Run Jest tests
+- `npm run build` - Build plugin for development
+- `npm run build:prod` - Build plugin for production
+- `npm run dev` - Watch mode development build with live reload
+- `npm test` - Run Jest unit tests
+- `npm run test:ci` - Run tests in CI mode (no watch)
 - `npm install` - Install dependencies
-- `grunt watch` - Watch for file changes and rebuild automatically
 
 ### Code Quality
-- `grunt tslint` - Run TSLint on source files
-- TSLint configuration in `tslint.json` with max line length of 140 characters
+- `npm run lint` - Run ESLint on source files
+- `npm run lint:fix` - Run ESLint and automatically fix issues
+- `npm run typecheck` - Run TypeScript type checking without emitting files
 
 ### Development Environment
-- `tilt up` - Start development environment with live reload using Tilt
-- `docker-compose up` - Alternative using Docker Compose (legacy)
-- Tilt provides automatic rebuilds on source changes and Kubernetes deployment
+- `npm run server` - Start Grafana development server with Docker Compose
+- `GRAFANA_VERSION=11.3.0 npm run server` - Start specific Grafana version
 - Grafana runs on http://localhost:3000 with anonymous admin access enabled
+- Plugin automatically loads from dist/ directory during development
 
-### Build Process
-The Grunt build process:
-1. Cleans dist directory
-2. Copies source files and static assets
-3. Runs TSLint validation
-4. Compiles TypeScript using SystemJS modules targeting ES5
-5. Packages npm modules
-6. Applies Babel transformations
-7. Cleans up temporary files
+### Testing
+- `npm test` - Unit tests with Jest (watch mode)
+- `npm run e2e` - End-to-end tests with Playwright (requires server running first)
 
 ## Architecture Overview
 
-This is a Grafana datasource plugin for KairosDB, a time series database built on Cassandra.
+This is a Grafana datasource plugin for KairosDB, a time series database built on Cassandra. The plugin has been migrated from Angular to React components using modern Grafana plugin architecture.
 
 ### Core Components
 
 **Main Entry Point**
-- `src/module.ts` - Plugin module registration and Angular directive setup
-- Exports main classes: `KairosDBDatasource`, `KairosDBQueryCtrl`, `KairosDBConfigCtrl`, `KairosDBQueryOptionsCtrl`
+- `src/module.ts` - Plugin registration using `DataSourcePlugin` class
+- Sets up React components: `ConfigEditor`, `QueryEditor`, `VariableQueryEditor`
 
 **Data Source Core**
-- `src/core/datasource.ts` - Main datasource implementation extending Grafana's `DataSourceApi`
-- `src/core/query_ctrl.ts` - Query editor controller for building KairosDB queries
-- `src/core/config_ctrl.ts` - Configuration UI controller
-- `src/core/metric_names_store.ts` - Handles metric name caching and retrieval
+- `src/datasource.ts` - Main datasource implementation extending Grafana's `DataSourceApi`
+- Handles query execution, metric name fetching, and variable interpolation
+- Critical alias processing logic for multi-value template variables
 
-**Request/Response Handling**
-- `src/core/request/` - Query building, validation, and parameter conversion
-  - `query_builder.ts` - Builds KairosDB API queries
-  - `target_validator.ts` - Validates query targets before execution
-  - `parameter_object_builder.ts` - Constructs aggregator parameters
-- `src/core/response/` - Response processing and series naming
-  - `response_handler.ts` - Processes KairosDB API responses
-  - `series_name_builder.ts` - Generates Grafana series names
+**React UI Components**
+- `src/components/` - Modern React components replacing Angular directives
+  - `QueryEditor.tsx` - Main query editor with collapsible sections
+  - `ConfigEditor.tsx` - Datasource configuration form
+  - `VariableQueryEditor.tsx` - Template variable query interface
+  - `MetricNameField.tsx` - AsyncSelect for metric name autocomplete
+  - `Aggregators.tsx` - Aggregator configuration with parameter validation
+  - `TagsEditor.tsx` - Tag filtering interface
+  - `GroupByEditor.tsx` - Time, value, and tag grouping controls
 
-**Data Models**
-- `src/beans/request/` - Query target and metric tag models
-  - `target.ts` - Main query target representation (`KairosDBTarget`)
-  - `metric_tags.ts` - Tag filtering and grouping
-- `src/beans/aggregators/` - KairosDB aggregator implementations
-  - Over 15 different aggregator types (percentile, rate, scale, etc.)
-  - Each with specific parameter validation and building
-
-**UI Directives**
-- `src/directives/` - Angular directives for query editor UI
-  - `aggregators.ts` - Aggregator selection and configuration
-  - `tags_select.ts` - Tag key/value selection
-  - `group_by/` - Time, value, and tag grouping controls
+**Utility Functions**
+- `src/utils/` - Shared utility functions
+  - `variableUtils.ts` - Template variable interpolation helpers
+  - `timeUtils.ts` - Time-related utilities
+  - `cacheUtils.ts` - Caching logic
+  - `parameterUtils.ts` - Aggregator parameter handling
 
 ### Key Features
-- Legacy target conversion for backward compatibility
-- Templating variable support with custom functions
-- Metric name autocomplete with configurable limits
-- Snap-to-interval functionality for time alignment
-- Comprehensive aggregator support with parameter validation
-- Tag-based filtering and grouping
+- **Multi-value Template Variables**: Advanced alias processing handles arrays and comma-separated values
+- **Metric Autocomplete**: AsyncSelect with prefix search (^) and configurable limits
+- **Comprehensive Aggregators**: 15+ KairosDB aggregator types with parameter validation
+- **Flexible Grouping**: Time, value, and tag-based grouping with preview functionality
+- **Tag Filtering**: Dynamic tag key/value selection based on metric selection
+- **Variable Interpolation**: Custom template variable functions and scoped variable support
 
-### Testing
-- Jest configuration with coverage reporting
-- Test files in `specs/` directory mirror `src/` structure
-- Uses `grafana-sdk-mocks` for Grafana API mocking
-- Tests cover datasource functionality, query building, and response handling
+### Critical Implementation Details
 
-### Build Output
-- Compiled plugin goes to `dist/` directory
-- Uses SystemJS module format for Grafana compatibility
-- TypeScript compiled to ES5 target
-- Includes source maps for debugging
+**Alias Processing Pipeline**
+- Grafana pre-processes alias strings before datasource receives them
+- Solution: Intercept original alias values from `options.targets` before transformation
+- Uses composite keys (`metricName|refId`) to handle multiple queries for same metric
+- Tracks refId order to properly distribute results between multiple targets
+
+**Query Response Mapping**
+- Maps KairosDB response results back to original targets using composite keys
+- Handles multiple time series per query (common with groupBy operations)  
+- Preserves variable expansion context for proper alias interpolation
+
+**Template Variable Edge Cases**
+- Defensive handling when `templateSrv` is undefined in test environments
+- Custom fallback implementation for variable interpolation
+- Proper scoped variable context preservation during query execution
+
+### Testing Architecture
+
+**Unit Tests**
+- Jest configuration with jsdom environment
+- Tests located in `tests/` directory  
+- Separate test files for different functionality areas
+- Mock Grafana APIs using custom mocks and defensive coding
+
+**E2E Tests**  
+- Playwright configuration for browser testing
+- Tests actual plugin loading and UI interaction
+- Configured for headless execution (non-interactive mode)
+- Separate Jest and Playwright test configurations to avoid conflicts
+
+### Build Architecture
+- Webpack-based build system replacing legacy Grunt
+- TypeScript compilation targeting modern ES versions
+- React/JSX support with SWC transformer
+- Development server with live reload via Docker Compose
+- Plugin distributed via `dist/` directory with proper Grafana plugin structure
+- Tilt is used to run builds and the development server. It should always be up and running while we're developing

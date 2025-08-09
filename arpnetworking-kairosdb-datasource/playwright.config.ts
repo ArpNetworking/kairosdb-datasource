@@ -15,6 +15,7 @@ const pluginE2eAuth = `${dirname(require.resolve('@grafana/plugin-e2e'))}/auth`;
  */
 export default defineConfig<PluginOptions>({
   testDir: './tests',
+  testMatch: ['**/configEditor.spec.ts', '**/queryEditor.spec.ts'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -22,11 +23,11 @@ export default defineConfig<PluginOptions>({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: process.env.CI ? 'github' : 'list',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.GRAFANA_URL || 'http://localhost:3000',
+    baseURL: process.env.GRAFANA_URL || 'http://localhost:3001',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -46,6 +47,7 @@ export default defineConfig<PluginOptions>({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/admin.json',
+        headless: true,
       },
       dependencies: ['auth'],
     },
