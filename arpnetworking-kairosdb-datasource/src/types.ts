@@ -81,3 +81,104 @@ export interface KairosDBDataSourceOptions extends DataSourceJsonData {
 export interface KairosDBSecureJsonData {
   apiKey?: string;
 }
+
+// KairosDB API Response Types
+
+/**
+ * Response from /api/v1/metricnames endpoint
+ */
+export interface KairosDBMetricNamesResponse {
+  results: string[];
+}
+
+/**
+ * Response from /api/v1/datapoints/query/tags endpoint
+ */
+export interface KairosDBMetricTagsResponse {
+  queries: Array<{
+    results: Array<{
+      name: string;
+      tags: { [key: string]: string[] };
+    }>;
+  }>;
+}
+
+/**
+ * Response from /api/v1/datapoints/query endpoint
+ */
+export interface KairosDBDatapointsResponse {
+  queries: Array<{
+    sample_size: number;
+    results: Array<{
+      name: string;
+      group_by?: Array<{
+        name: string;
+        type: string;
+        tags?: string[];
+        group?: { [key: string]: string };
+      }>;
+      tags: { [key: string]: string[] };
+      values: Array<[number, number]>; // [timestamp, value]
+    }>;
+  }>;
+}
+
+/**
+ * Request body for /api/v1/datapoints/query endpoint
+ */
+export interface KairosDBDatapointsRequest {
+  start_absolute?: number;
+  start_relative?: {
+    value: number;
+    unit: string;
+  };
+  end_absolute?: number;
+  end_relative?: {
+    value: number;
+    unit: string;
+  };
+  metrics: Array<{
+    name: string;
+    tags?: { [key: string]: string[] };
+    aggregators?: Array<{
+      name: string;
+      [key: string]: any; // aggregator-specific parameters
+    }>;
+    group_by?: Array<{
+      name: string;
+      tags?: string[];
+      range_size?: {
+        value: number;
+        unit: string;
+      } | number; // For value group by, range_size is just a number
+      group_count?: number;
+    }>;
+  }>;
+}
+
+/**
+ * Request body for /api/v1/datapoints/query/tags endpoint  
+ */
+export interface KairosDBMetricTagsRequest {
+  start_absolute?: number;
+  start_relative?: {
+    value: number;
+    unit: string;
+  };
+  end_absolute?: number;
+  end_relative?: {
+    value: number;
+    unit: string;
+  };
+  metrics: Array<{
+    name: string;
+    tags?: { [key: string]: string[] };
+  }>;
+}
+
+/**
+ * Response from /api/v1/version endpoint
+ */
+export interface KairosDBVersionResponse {
+  version: string;
+}

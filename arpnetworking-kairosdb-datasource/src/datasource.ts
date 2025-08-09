@@ -11,7 +11,17 @@ import {
   MetricFindValue,
 } from '@grafana/data';
 
-import { KairosDBQuery, KairosDBDataSourceOptions, DEFAULT_QUERY } from './types';
+import { 
+  KairosDBQuery, 
+  KairosDBDataSourceOptions, 
+  DEFAULT_QUERY,
+  KairosDBMetricNamesResponse,
+  KairosDBMetricTagsResponse,
+  KairosDBMetricTagsRequest,
+  KairosDBDatapointsResponse,
+  KairosDBDatapointsRequest,
+  KairosDBVersionResponse
+} from './types';
 import { lastValueFrom } from 'rxjs';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
@@ -56,62 +66,200 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
   async query(options: DataQueryRequest<KairosDBQuery>): Promise<DataQueryResponse> {
     try {
-      console.log('KairosDB query called with options:', options);
+      console.log('[DataSource] KairosDB query called with options:', options);
       
       const { range } = options;
       if (!range) {
-        console.warn('No range provided in query options');
+        console.warn('[DataSource] No range provided in query options');
         return { data: [] };
       }
 
       const from = range.from.valueOf();
       const to = range.to.valueOf();
 
-      console.log('Query range:', { from, to });
-      console.log('Query targets:', options.targets);
+      console.log('[DataSource] Query range:', { from, to });
+      console.log('[DataSource] Query targets:', options.targets);
 
-      // For now, return mock data for each query
-      // This will be replaced with actual KairosDB API calls
-      const data = options.targets
-        .filter(target => {
-          // Only execute queries that have a metric name
-          const hasMetricName = !!(target.query?.metricName);
-          console.log('Target execution filter:', { refId: target.refId, hasMetricName, metricName: target.query?.metricName });
-          return hasMetricName;
-        })
-        .map((target) => {
-          const metricName = target.query?.metricName || 'unknown';
-          const alias = target.query?.alias || metricName;
+      // Filter out targets without metric names
+      const validTargets = options.targets.filter(target => {
+        const hasMetricName = !!(target.query?.metricName);
+        console.log('[DataSource] Target execution filter:', { refId: target.refId, hasMetricName, metricName: target.query?.metricName });
+        return hasMetricName;
+      });
+
+      if (validTargets.length === 0) {
+        console.log('[DataSource] No valid targets to query');
+        return { data: [] };
+      }
+
+      // Build KairosDB query request
+      const metrics: KairosDBDatapointsRequest['metrics'] = validTargets.map(target => {
+        const query = target.query!;
+        const metric: KairosDBDatapointsRequest['metrics'][0] = {
+          name: query.metricName!
+        };
+
+        // Add tags if any are specified
+        if (query.tags && Object.keys(query.tags).length > 0) {
+          metric.tags = {};
+          Object.keys(query.tags).forEach(tagKey => {
+            if (query.tags[tagKey] && query.tags[tagKey].length > 0) {
+              metric.tags![tagKey] = query.tags[tagKey];
+            }
+          });
+        }
+
+        // Add aggregators if any are specified
+        if (query.aggregators && query.aggregators.length > 0) {
+          metric.aggregators = query.aggregators.map(agg => {
+            const aggregator: { name: string; [key: string]: any } = {
+              name: agg.name
+            };
+            
+            // Add parameters if any
+            if (agg.parameters && agg.parameters.length > 0) {
+              agg.parameters.forEach(param => {
+                if (param.value !== undefined && param.value !== null && param.value !== '') {
+                  aggregator[param.name] = param.value;
+                }
+              });
+            }
+
+            return aggregator;
+          });
+        }
+
+        // Add group by if specified
+        if (query.groupBy) {
+          metric.group_by = [];
+
+          // Group by tags
+          if (query.groupBy.tags && query.groupBy.tags.length > 0) {
+            metric.group_by.push({
+              name: 'tag',
+              tags: query.groupBy.tags
+            });
+          }
+
+          // Group by time
+          if (query.groupBy.time) {
+            const timeGroupBy: {
+              name: string;
+              range_size: { value: number; unit: string };
+              group_count?: number;
+            } = {
+              name: 'time',
+              range_size: {
+                value: query.groupBy.time.value,
+                unit: query.groupBy.time.unit
+              }
+            };
+
+            if (query.groupBy.time.range_size) {
+              timeGroupBy.group_count = query.groupBy.time.range_size;
+            }
+
+            metric.group_by.push(timeGroupBy);
+          }
+
+          // Group by value
+          if (query.groupBy.value) {
+            metric.group_by.push({
+              name: 'value',
+              range_size: query.groupBy.value.range_size
+            });
+          }
+        }
+
+        return metric;
+      });
+
+      const requestBody: KairosDBDatapointsRequest = {
+        start_absolute: from,
+        end_absolute: to,
+        metrics: metrics
+      };
+
+      console.log('[DataSource] Making request to /api/v1/datapoints/query with body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await getBackendSrv().fetch({
+        url: `${this.baseUrl}/api/v1/datapoints/query`,
+        method: 'POST',
+        data: requestBody
+      });
+
+      const result = await lastValueFrom(response);
+      const data = result.data as KairosDBDatapointsResponse;
+      
+      console.log('[DataSource] Received datapoints query response:', data);
+
+      if (!data || !data.queries || data.queries.length === 0) {
+        console.warn('[DataSource] No queries in datapoints response');
+        return { data: [] };
+      }
+
+      // Convert KairosDB response to Grafana data frames
+      const dataFrames: any[] = [];
+      
+      data.queries.forEach((query, queryIndex: number) => {
+        const target = validTargets[queryIndex];
+        const targetQuery = target.query!;
+        
+        if (!query.results || query.results.length === 0) {
+          console.log('[DataSource] No results for query:', queryIndex);
+          return;
+        }
+
+        query.results.forEach((result, resultIndex: number) => {
+          const metricName = result.name;
+          const alias = targetQuery.alias || metricName;
+          const tags = result.tags || {};
           
-          console.log('Processing target:', { refId: target.refId, metricName, alias });
-          
-          // Generate more realistic time series data
+          // Create series name including tags
+          let seriesName = alias;
+          const tagKeys = Object.keys(tags);
+          if (tagKeys.length > 0) {
+            const tagParts = tagKeys.map(key => `${key}=${tags[key].join(',')}`);
+            seriesName = `${alias}{${tagParts.join(', ')}}`;
+          }
+
+          if (!result.values || result.values.length === 0) {
+            console.log('[DataSource] No values for result:', resultIndex);
+            return;
+          }
+
+          // Extract time and value arrays
           const timeValues: number[] = [];
           const dataValues: number[] = [];
-          const stepSize = (to - from) / 100; // 100 data points
-          
-          for (let i = 0; i <= 100; i++) {
-            timeValues.push(from + (i * stepSize));
-            dataValues.push(Math.random() * 100 + Math.sin(i / 10) * 20);
-          }
-          
+
+          result.values.forEach((point) => {
+            timeValues.push(point[0]); // timestamp
+            dataValues.push(point[1]); // value
+          });
+
           const frame = createDataFrame({
             refId: target.refId,
-            name: alias,
+            name: seriesName,
             fields: [
               { name: 'Time', values: timeValues, type: FieldType.time },
               { name: 'Value', values: dataValues, type: FieldType.number },
             ],
           });
 
-          console.log('Created data frame:', { refId: target.refId, name: alias, length: timeValues.length });
-          return frame;
+          console.log('[DataSource] Created data frame:', { 
+            refId: target.refId, 
+            name: seriesName, 
+            points: timeValues.length 
+          });
+          dataFrames.push(frame);
         });
+      });
 
-      console.log('Returning query result with', data.length, 'data frames');
-      return { data };
+      console.log('[DataSource] Returning query result with', dataFrames.length, 'data frames');
+      return { data: dataFrames };
+
     } catch (error) {
-      console.error('Error in KairosDB query method:', error);
+      console.error('[DataSource] Error in KairosDB query method:', error);
       return { 
         data: [],
         error: {
@@ -135,33 +283,32 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     console.log('[DataSource] getMetricNames called with query:', query);
     
     try {
-      // This would call the actual KairosDB API
-      // For now, return mock data
-      const mockMetrics = [
-        'server.cpu.usage',
-        'server.memory.used',
-        'server.disk.io',
-        'application.requests.count',
-        'application.response.time',
-        'database.connections.active',
-        'database.query.time',
-        'network.bytes.in',
-        'network.bytes.out',
-        'cache.hit.ratio'
-      ];
-
-      let result = mockMetrics;
-      if (query) {
-        result = mockMetrics.filter(metric => 
-          metric.toLowerCase().includes(query.toLowerCase())
-        );
-        console.log('[DataSource] Filtered metrics by query:', result);
+      console.log('[DataSource] Making request to /api/v1/metricnames');
+      const response = await this.request('/api/v1/metricnames');
+      const data = response.data as KairosDBMetricNamesResponse;
+      
+      console.log('[DataSource] Received metric names response:', data);
+      
+      if (!data || !data.results) {
+        console.warn('[DataSource] No results in metric names response');
+        return [];
       }
 
-      console.log('[DataSource] getMetricNames returning:', result);
-      return result;
+      let metrics = data.results;
+      
+      // Filter by query if provided
+      if (query && query.length > 0) {
+        metrics = metrics.filter((metric: string) => 
+          metric.toLowerCase().includes(query.toLowerCase())
+        );
+        console.log('[DataSource] Filtered metrics by query:', metrics);
+      }
+
+      console.log('[DataSource] getMetricNames returning:', metrics);
+      return metrics;
     } catch (error) {
       console.error('[DataSource] Error fetching metric names:', error);
+      // Return empty array on error instead of throwing
       return [];
     }
   }
@@ -170,18 +317,54 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Get available tags for a metric
    */
   async getMetricTags(metricName: string): Promise<{ [key: string]: string[] }> {
+    console.log('[DataSource] getMetricTags called with metricName:', metricName);
+    
     try {
-      // This would call the actual KairosDB API
-      // For now, return mock data
-      const mockTags = {
-        'host': ['server1', 'server2', 'server3'],
-        'region': ['us-east-1', 'us-west-2', 'eu-west-1'],
-        'environment': ['prod', 'staging', 'dev']
+      if (!metricName) {
+        console.log('[DataSource] No metric name provided, returning empty tags');
+        return {};
+      }
+
+      const requestBody: KairosDBMetricTagsRequest = {
+        start_absolute: Date.now() - (24 * 60 * 60 * 1000), // 24 hours ago
+        end_absolute: Date.now(),
+        metrics: [
+          {
+            name: metricName
+          }
+        ]
       };
 
-      return mockTags;
+      console.log('[DataSource] Making request to /api/v1/datapoints/query/tags with body:', requestBody);
+      const response = await getBackendSrv().fetch({
+        url: `${this.baseUrl}/api/v1/datapoints/query/tags`,
+        method: 'POST',
+        data: requestBody
+      });
+
+      const result = await lastValueFrom(response);
+      const data = result.data as KairosDBMetricTagsResponse;
+      
+      console.log('[DataSource] Received metric tags response:', data);
+      
+      if (!data || !data.queries || data.queries.length === 0) {
+        console.warn('[DataSource] No queries in metric tags response');
+        return {};
+      }
+
+      const query = data.queries[0];
+      if (!query.results || query.results.length === 0) {
+        console.log('[DataSource] No results for metric tags');
+        return {};
+      }
+
+      const metric = query.results[0];
+      const tags = metric.tags || {};
+      
+      console.log('[DataSource] getMetricTags returning:', tags);
+      return tags;
     } catch (error) {
-      console.error('Error fetching metric tags:', error);
+      console.error('[DataSource] Error fetching metric tags:', error);
       return {};
     }
   }
@@ -248,9 +431,10 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     try {
       const response = await this.request('/api/v1/version');
       if (response.status === 200) {
+        const data = response.data as KairosDBVersionResponse;
         return {
           status: 'success',
-          message: 'Successfully connected to KairosDB',
+          message: `Successfully connected to KairosDB version ${data.version}`,
         };
       } else {
         return {
