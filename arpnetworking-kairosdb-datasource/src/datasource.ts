@@ -30,10 +30,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   baseUrl: string;
   initialized: boolean = false;
   private variableQueryExecutor: VariableQueryExecutor;
+  private settings: DataSourceInstanceSettings<KairosDBDataSourceOptions>;
 
   constructor(instanceSettings: DataSourceInstanceSettings<KairosDBDataSourceOptions>) {
     super(instanceSettings);
     this.baseUrl = instanceSettings.url!;
+    this.settings = instanceSettings;
     this.variableQueryExecutor = new VariableQueryExecutor(this);
     console.log('[DataSource] Constructor called with:', {
       id: instanceSettings.id,
@@ -374,6 +376,20 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
       let metrics = data.results;
       
+      // Filter out metrics with configured suffixes
+      const suffixesToIgnore = this.getSuffixesToIgnore();
+      if (suffixesToIgnore.length > 0) {
+        console.log('[DataSource] Filtering out metrics with suffixes:', suffixesToIgnore);
+        const originalCount = metrics.length;
+        
+        metrics = metrics.filter((metric: string) => {
+          return !suffixesToIgnore.some(suffix => metric.endsWith(suffix));
+        });
+        
+        console.log('[DataSource] Filtered out', (originalCount - metrics.length), 'metrics with ignored suffixes');
+        console.log('[DataSource] Remaining metrics count:', metrics.length);
+      }
+      
       // Filter by query if provided
       if (query && query.length > 0) {
         console.log('[DataSource] Filtering metrics with query pattern:', query);
@@ -389,7 +405,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         console.log('[DataSource] No query pattern provided, returning all metrics');
       }
 
-      console.log('[DataSource] getMetricNames returning:', metrics);
+      console.log('[DataSource] getMetricNames returning:', metrics.length, 'metrics');
       return metrics;
     } catch (error) {
       console.error('[DataSource] Error fetching metric names:', error);
@@ -522,6 +538,24 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const variable = scopedVars[varName];
       return variable ? variable.value : match;
     });
+  }
+
+  /**
+   * Get list of metric suffixes to ignore from datasource configuration
+   */
+  private getSuffixesToIgnore(): string[] {
+    const configuredSuffixes = this.settings.jsonData?.metricSuffixesToIgnore;
+    
+    if (!configuredSuffixes) {
+      // Return default suffixes if not configured
+      return ['_1h', '_1d'];
+    }
+    
+    // Parse comma-separated list and trim whitespace
+    return configuredSuffixes
+      .split(',')
+      .map((suffix: string) => suffix.trim())
+      .filter((suffix: string) => suffix.length > 0);
   }
 
   private deepMerge(target: any, source: any): void {

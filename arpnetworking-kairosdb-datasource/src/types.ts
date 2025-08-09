@@ -79,6 +79,7 @@ export interface KairosDBDataSourceOptions extends DataSourceJsonData {
   enforceScalarSetting?: boolean;
   autocompleteMaxMetrics?: string;
   timeout?: string;
+  metricSuffixesToIgnore?: string; // Comma-separated list of suffixes to filter out from metrics
 }
 
 /**

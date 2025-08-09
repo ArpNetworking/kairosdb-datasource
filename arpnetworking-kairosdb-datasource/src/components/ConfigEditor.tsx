@@ -54,6 +54,16 @@ export function ConfigEditor(props: Props) {
     });
   };
 
+  const onMetricSuffixesToIgnoreChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        metricSuffixesToIgnore: event.target.value,
+      },
+    });
+  };
+
   return (
     <FieldSet label="KairosDB Details">
       <InlineField 
@@ -107,6 +117,20 @@ export function ConfigEditor(props: Props) {
           value={jsonData.timeout || '115'}
           placeholder="115"
           width={20}
+        />
+      </InlineField>
+
+      <InlineField 
+        label="Metric Suffixes to Ignore" 
+        labelWidth={20}
+        tooltip="Comma-separated list of metric suffixes to filter out from metric searches (e.g. _1h,_1d). These are typically rollup suffixes that create duplicate metric names."
+      >
+        <Input
+          id="config-editor-metric-suffixes-ignore"
+          onChange={onMetricSuffixesToIgnoreChange}
+          value={jsonData.metricSuffixesToIgnore || '_1h,_1d'}
+          placeholder="_1h,_1d"
+          width={30}
         />
       </InlineField>
     </FieldSet>
