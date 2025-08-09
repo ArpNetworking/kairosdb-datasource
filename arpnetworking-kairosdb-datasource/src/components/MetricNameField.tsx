@@ -1,5 +1,6 @@
 import React from 'react';
-import { InlineField, Input } from '@grafana/ui';
+import { InlineField, AsyncSelect } from '@grafana/ui';
+import { SelectableValue } from '@grafana/data';
 import { DataSource } from '../datasource';
 
 interface Props {
@@ -15,28 +16,56 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
     hasDatasource: !!datasource,
     datasourceType: datasource?.constructor.name
   });
-  
 
-  const [inputValue, setInputValue] = React.useState(metricName);
+  const loadOptions = async (inputValue: string): Promise<Array<SelectableValue<string>>> => {
+    console.log('[MetricNameField] loadOptions called with inputValue:', inputValue);
+    
+    if (!datasource) {
+      console.log('[MetricNameField] No datasource available, returning empty array');
+      return [];
+    }
 
-  // Update local state when prop changes
-  React.useEffect(() => {
-    setInputValue(metricName);
-  }, [metricName]);
+    if (inputValue.length < 1) {
+      console.log('[MetricNameField] Input too short, returning empty array');
+      return [];
+    }
+
+    try {
+      console.log('[MetricNameField] Calling datasource.getMetricNames');
+      const metrics = await datasource.getMetricNames(inputValue);
+      console.log('[MetricNameField] Received metrics:', metrics);
+      
+      const selectableOptions = metrics.map(metric => ({
+        label: metric,
+        value: metric
+      }));
+      console.log('[MetricNameField] Converted to selectable options:', selectableOptions);
+
+      return selectableOptions;
+    } catch (error) {
+      console.error('[MetricNameField] Error loading metric names:', error);
+      return [];
+    }
+  };
+
+  const handleSelectionChange = (option: SelectableValue<string> | null) => {
+    console.log('[MetricNameField] handleSelectionChange called with:', option);
+    const value = option?.value || '';
+    console.log('[MetricNameField] Calling onChange with:', value);
+    onChange(value);
+  };
 
   const handleInputChange = (inputValue: string) => {
     console.log('[MetricNameField] handleInputChange called with:', inputValue);
-    setInputValue(inputValue);
-    // Also update the parent immediately
-    onChange(inputValue);
+    // Don't call onChange here - let AsyncSelect handle typing vs selection
+    // onChange will be called by handleSelectionChange when user selects/types a complete value
   };
 
-
-  const handleBlur = () => {
-    console.log('[MetricNameField] handleBlur - persisting inputValue:', inputValue);
-    // Ensure the current input value is saved on blur
-    onChange(inputValue);
-  };
+  // Convert current string value to SelectableValue for AsyncSelect
+  const currentValue: SelectableValue<string> | undefined = metricName ? {
+    label: metricName,
+    value: metricName
+  } : undefined;
 
   return (
     <InlineField 
@@ -45,20 +74,24 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
       tooltip="Start typing to search for available metrics"
       required
     >
-      <div>
-        {/* Temporarily use a simple Input to debug state management */}
-        <Input
-          id="metric-name-field"
-          width={40}
-          value={inputValue}
-          placeholder="Type metric name..."
-          onChange={(e) => handleInputChange(e.currentTarget.value)}
-          onBlur={handleBlur}
-        />
-        <div style={{ fontSize: '10px', color: 'gray', marginTop: '2px' }}>
-          Debug: inputValue="{inputValue}", metricName="{metricName}"
-        </div>
-      </div>
+      <AsyncSelect
+        width={40}
+        value={currentValue}
+        placeholder="Type to search metrics..."
+        loadOptions={loadOptions}
+        onChange={handleSelectionChange}
+        onInputChange={handleInputChange}
+        allowCustomValue={true}
+        defaultOptions={false}
+        cacheOptions={true}
+        isClearable={true}
+        backspaceRemovesValue={false}
+        noOptionsMessage="No metrics found"
+        loadingMessage="Loading metrics..."
+        onBlur={() => {
+          console.log('[MetricNameField] onBlur triggered');
+        }}
+      />
     </InlineField>
   );
 }

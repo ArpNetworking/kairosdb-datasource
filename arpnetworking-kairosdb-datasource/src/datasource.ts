@@ -23,6 +23,7 @@ import {
   KairosDBVersionResponse
 } from './types';
 import { lastValueFrom } from 'rxjs';
+import { ParameterObjectBuilder } from './utils/parameterUtils';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
@@ -112,19 +113,30 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         // Add aggregators if any are specified
         if (query.aggregators && query.aggregators.length > 0) {
           metric.aggregators = query.aggregators.map(agg => {
+            console.log('[DataSource] Processing aggregator:', agg.name, 'parameters:', agg.parameters);
+            
             const aggregator: { name: string; [key: string]: any } = {
               name: agg.name
             };
             
-            // Add parameters if any
+            // Add parameters if any, using ParameterObjectBuilder for proper auto value handling
             if (agg.parameters && agg.parameters.length > 0) {
+              const parameterBuilder = new ParameterObjectBuilder(options.interval || '1m', agg);
+              
               agg.parameters.forEach(param => {
                 if (param.value !== undefined && param.value !== null && param.value !== '') {
-                  aggregator[param.name] = param.value;
+                  console.log('[DataSource] Processing parameter:', param.name, '=', param.value, 'type:', param.type);
+                  
+                  const parameterObject = parameterBuilder.build(param);
+                  console.log('[DataSource] Built parameter object:', parameterObject);
+                  
+                  // Deep merge the parameter object into the aggregator
+                  this.deepMerge(aggregator, parameterObject);
                 }
               });
             }
 
+            console.log('[DataSource] Final aggregator object:', aggregator);
             return aggregator;
           });
         }
@@ -191,7 +203,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const result = await lastValueFrom(response);
       const data = result.data as KairosDBDatapointsResponse;
       
-      console.log('[DataSource] Received datapoints query response:', data);
+      console.log('[DataSource] Received datapoints query response:', JSON.stringify(data, null, 2));
 
       if (!data || !data.queries || data.queries.length === 0) {
         console.warn('[DataSource] No queries in datapoints response');
@@ -232,10 +244,62 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           const timeValues: number[] = [];
           const dataValues: number[] = [];
 
-          result.values.forEach((point) => {
-            timeValues.push(point[0]); // timestamp
-            dataValues.push(point[1]); // value
+          console.log('[DataSource] Processing values for result:', resultIndex, 'Raw values:', result.values.slice(0, 5));
+
+          result.values.forEach((point, pointIndex) => {
+            console.log(`[DataSource] Point ${pointIndex}:`, point, 'Type:', typeof point, 'IsArray:', Array.isArray(point));
+            
+            if (Array.isArray(point) && point.length >= 2) {
+              const timestamp = point[0];
+              const rawValue = point[1];
+              
+              console.log(`[DataSource] Point ${pointIndex} - timestamp:`, timestamp, 'type:', typeof timestamp, 'rawValue:', rawValue, 'type:', typeof rawValue);
+              
+              // Ensure timestamp is a number
+              const numTimestamp = typeof timestamp === 'number' ? timestamp : Number(timestamp);
+              
+              // Handle different value types - KairosDB can return objects for raw data
+              let numValue: number;
+              
+              if (typeof rawValue === 'number') {
+                numValue = rawValue;
+              } else if (typeof rawValue === 'string') {
+                numValue = Number(rawValue);
+              } else if (typeof rawValue === 'object' && rawValue !== null) {
+                // KairosDB raw data might be objects - try to extract a numeric value
+                console.log('[DataSource] Complex value object:', rawValue);
+                
+                // Common patterns in KairosDB objects
+                const valueObj = rawValue as any;
+                if ('value' in valueObj) {
+                  numValue = Number(valueObj.value);
+                } else if ('double_value' in valueObj) {
+                  numValue = Number(valueObj.double_value);
+                } else if ('long_value' in valueObj) {
+                  numValue = Number(valueObj.long_value);
+                } else {
+                  console.warn('[DataSource] Cannot extract numeric value from object:', rawValue);
+                  return; // skip this point
+                }
+              } else {
+                console.warn('[DataSource] Unknown value type:', typeof rawValue, rawValue);
+                return; // skip this point
+              }
+              
+              console.log(`[DataSource] Point ${pointIndex} - final numTimestamp:`, numTimestamp, 'numValue:', numValue);
+              
+              if (!isNaN(numTimestamp) && !isNaN(numValue)) {
+                timeValues.push(numTimestamp);
+                dataValues.push(numValue);
+              } else {
+                console.warn('[DataSource] Skipping invalid point after processing:', { timestamp, rawValue, numTimestamp, numValue });
+              }
+            } else {
+              console.warn('[DataSource] Invalid point format:', point);
+            }
           });
+
+          console.log('[DataSource] Final arrays - timeValues:', timeValues.slice(0, 5), 'dataValues:', dataValues.slice(0, 5));
 
           const frame = createDataFrame({
             refId: target.refId,
@@ -420,6 +484,24 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const variable = scopedVars[varName];
       return variable ? variable.value : match;
     });
+  }
+
+  private deepMerge(target: any, source: any): void {
+    for (const key in source) {
+      if (source.hasOwnProperty(key)) {
+        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+          // If target doesn't have this key, create it
+          if (!target[key] || typeof target[key] !== 'object') {
+            target[key] = {};
+          }
+          // Recursively merge nested objects
+          this.deepMerge(target[key], source[key]);
+        } else {
+          // Direct assignment for primitive values and arrays
+          target[key] = source[key];
+        }
+      }
+    }
   }
 
   /**

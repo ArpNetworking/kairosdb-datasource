@@ -12,6 +12,7 @@ interface Props {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onParameterChange: (parameterName: string, value: any) => void;
+  onAutoValueChange: (enabled: boolean) => void;
 }
 
 export function AggregatorItem({ 
@@ -22,7 +23,8 @@ export function AggregatorItem({
   onRemove, 
   onMoveUp, 
   onMoveDown,
-  onParameterChange
+  onParameterChange,
+  onAutoValueChange
 }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -30,10 +32,28 @@ export function AggregatorItem({
     onParameterChange(param.name, value);
   };
 
+  const isAutoEnabled = aggregator.autoValueSwitch?.enabled || false;
+  const isDependentParameter = (param: AggregatorParameter) => {
+    return aggregator.autoValueSwitch?.dependentParameters.includes(param.type) || false;
+  };
+
   const renderParameter = (param: AggregatorParameter) => {
     if (!param || !param.name) return null;
     const key = `${aggregator.name || 'unknown'}-${param.name}`;
     const paramValue = param.value || '';
+    
+    // Skip dependent parameters when auto is enabled (they'll show as "auto")
+    if (isAutoEnabled && isDependentParameter(param)) {
+      return (
+        <InlineField key={key} label={param.name} labelWidth={12}>
+          <Input
+            width={20}
+            value="auto"
+            disabled={true}
+          />
+        </InlineField>
+      );
+    }
     
     switch (param.type) {
       case 'enum':
@@ -74,24 +94,12 @@ export function AggregatorItem({
       case 'sampling':
         return (
           <InlineField key={key} label={param.name} labelWidth={12}>
-            <Stack direction="row" gap={1} alignItems="center">
-              <Input
-                width={15}
-                type="number"
-                value={paramValue || ''}
-                onChange={(e) => handleParameterChange(param, parseFloat(e.currentTarget.value) || 0)}
-              />
-              {param.autoValue !== undefined && (
-                <InlineField label="Auto" labelWidth={6}>
-                  <Switch
-                    value={param.autoValue || false}
-                    onChange={(value) => {
-                      onParameterChange(param.name, value ? 'auto' : paramValue);
-                    }}
-                  />
-                </InlineField>
-              )}
-            </Stack>
+            <Input
+              width={20}
+              type="number"
+              value={paramValue || ''}
+              onChange={(e) => handleParameterChange(param, parseFloat(e.currentTarget.value) || 0)}
+            />
           </InlineField>
         );
         
@@ -115,6 +123,21 @@ export function AggregatorItem({
           <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
             <Stack direction="row" gap={1} alignItems="center">
               <strong style={{ fontSize: '14px' }}>{aggregator.name || 'Unknown'}</strong>
+              
+              {/* Single Auto toggle for the whole aggregator */}
+              {aggregator.autoValueSwitch && (
+                <InlineField label="Auto" labelWidth={6}>
+                  <Switch
+                    value={isAutoEnabled}
+                    onChange={(event) => {
+                      const enabled = event.currentTarget.checked;
+                      console.log('[AggregatorItem] Auto toggle clicked, new value:', enabled);
+                      onAutoValueChange(enabled);
+                    }}
+                  />
+                </InlineField>
+              )}
+              
               {(aggregator.parameters || []).length > 0 && (
                 <Button
                   variant="secondary"

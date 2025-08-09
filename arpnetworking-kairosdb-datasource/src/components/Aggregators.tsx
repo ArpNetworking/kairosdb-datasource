@@ -27,7 +27,8 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     // Clone the aggregator to avoid reference issues
     const newAggregator: Aggregator = {
       name: aggregator.name,
-      parameters: (aggregator.parameters || []).map(param => ({ ...param }))
+      parameters: (aggregator.parameters || []).map(param => ({ ...param })),
+      autoValueSwitch: aggregator.autoValueSwitch ? { ...aggregator.autoValueSwitch } : undefined
     };
     onChange([...aggregators, newAggregator]);
     setIsEditorOpen(false);
@@ -63,8 +64,20 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     if (parameter) {
       parameter.value = value;
       parameter.text = value ? value.toString() : '';
-      onChange(newAggregators);
     }
+    onChange(newAggregators);
+  };
+
+  const handleAutoValueChange = (index: number, enabled: boolean) => {
+    if (index < 0 || index >= aggregators.length) return;
+    
+    const newAggregators = [...aggregators];
+    const aggregator = newAggregators[index];
+    if (!aggregator || !aggregator.autoValueSwitch) return;
+    
+    aggregator.autoValueSwitch.enabled = enabled;
+    console.log('[Aggregators] Auto value changed for aggregator', aggregator.name, 'to:', enabled);
+    onChange(newAggregators);
   };
 
   return (
@@ -110,6 +123,7 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
               onMoveUp={() => handleMoveUp(index)}
               onMoveDown={() => handleMoveDown(index)}
               onParameterChange={(paramName, value) => handleParameterChange(index, paramName, value)}
+              onAutoValueChange={(enabled) => handleAutoValueChange(index, enabled)}
             />
           ))}
         </Stack>

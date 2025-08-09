@@ -1,10 +1,11 @@
 // KairosDB Aggregator definitions
-import { Aggregator, AggregatorParameter } from './types';
+import { Aggregator, AggregatorParameter, AutoValueSwitch } from './types';
 
 // Base aggregator class
 export class BaseAggregator implements Aggregator {
   public name: string;
   public parameters: AggregatorParameter[] = [];
+  public autoValueSwitch?: AutoValueSwitch;
 
   constructor(name: string) {
     this.name = name;
@@ -13,6 +14,7 @@ export class BaseAggregator implements Aggregator {
   public clone(): BaseAggregator {
     const cloned = new BaseAggregator(this.name);
     cloned.parameters = this.parameters.map(param => ({ ...param }));
+    cloned.autoValueSwitch = this.autoValueSwitch ? { ...this.autoValueSwitch } : undefined;
     return cloned;
   }
 }
@@ -26,8 +28,7 @@ export class RangeAggregator extends BaseAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1 minute',
-        autoValue: true
+        text: '1'
       },
       {
         name: 'unit',
@@ -36,6 +37,12 @@ export class RangeAggregator extends BaseAggregator {
         text: 'minutes'
       }
     ];
+    
+    // Auto value switch controls sampling parameters
+    this.autoValueSwitch = {
+      enabled: true, // Default to auto mode
+      dependentParameters: ['sampling', 'sampling_unit']
+    };
   }
 }
 
@@ -56,8 +63,7 @@ export class PercentileAggregator extends BaseAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1 minute',
-        autoValue: true
+        text: '1'
       },
       {
         name: 'unit',
@@ -66,6 +72,12 @@ export class PercentileAggregator extends BaseAggregator {
         text: 'minutes'
       }
     ];
+    
+    // Auto value switch controls sampling parameters
+    this.autoValueSwitch = {
+      enabled: true, // Default to auto mode
+      dependentParameters: ['sampling', 'sampling_unit']
+    };
   }
 }
 
@@ -97,8 +109,7 @@ export class SamplerAggregator extends BaseAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1 minute',
-        autoValue: true
+        text: '1'
       },
       {
         name: 'unit',
@@ -107,6 +118,12 @@ export class SamplerAggregator extends BaseAggregator {
         text: 'minutes'
       }
     ];
+    
+    // Auto value switch controls sampling parameters
+    this.autoValueSwitch = {
+      enabled: true, // Default to auto mode
+      dependentParameters: ['sampling', 'sampling_unit']
+    };
   }
 }
 

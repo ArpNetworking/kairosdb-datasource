@@ -32,9 +32,15 @@ export interface GroupByValue {
   range_size: number;
 }
 
+export interface AutoValueSwitch {
+  enabled: boolean;
+  dependentParameters: string[]; // parameter types that are auto-controlled
+}
+
 export interface Aggregator {
   name: string;
   parameters: AggregatorParameter[];
+  autoValueSwitch?: AutoValueSwitch;
 }
 
 export interface AggregatorParameter {
