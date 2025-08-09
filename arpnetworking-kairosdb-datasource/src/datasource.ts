@@ -122,10 +122,11 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       }
 
       // Build KairosDB query request - expand multi-value variables in metric names
-      // Also track which target each metric belongs to for response mapping
+      // Track which target each metric entry corresponds to using query index
       const metrics: KairosDBDatapointsRequest['metrics'] = [];
-      const metricNameToTargetMap: { [compositeKey: string]: any } = {};
-      const metricOrderToRefId: { [metricName: string]: string[] } = {};
+      const queryIndexToTargetMap: { [queryIndex: number]: any } = {};
+      
+      let queryIndex = 0; // Track the current metrics array index
       
       validTargets.forEach((target, targetIndex) => {
         const query = target.query!;
@@ -141,7 +142,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         
         // Create a separate metric object for each expanded metric name
         expansion.names.forEach((metricName, index) => {
-          // Track which target this metric belongs to AND the variable values used for this expansion
+          // Track which target this specific query index corresponds to
           // IMPORTANT: Store the original alias before Grafana's pre-processing
           const targetWithOriginalAlias = {
             ...target,
@@ -151,18 +152,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             }
           };
           
-          // Use composite key to avoid collisions when multiple targets query the same metric
-          const compositeKey = `${metricName}|${target.refId}`;
-          metricNameToTargetMap[compositeKey] = {
+          // Map this query index directly to the target and variable values
+          queryIndexToTargetMap[queryIndex] = {
             target: targetWithOriginalAlias,
-            variableValues: expansion.variableValues[index]
+            variableValues: expansion.variableValues[index],
+            metricName: metricName
           };
-          
-          // Track the order of refIds for each metric name to handle multiple targets for same metric
-          if (!metricOrderToRefId[metricName]) {
-            metricOrderToRefId[metricName] = [];
-          }
-          metricOrderToRefId[metricName].push(target.refId);
           const metric: KairosDBDatapointsRequest['metrics'][0] = {
             name: metricName
           };
@@ -308,6 +303,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
           // Add the completed metric to the metrics array
           metrics.push(metric);
+          
+          // Increment query index for next metric entry
+          queryIndex++;
         });
       });
 
@@ -335,45 +333,23 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       // Convert KairosDB response to Grafana data frames
       const dataFrames: any[] = [];
       
-      // Track which result index we're on for each metric to handle multiple targets
-      const metricResultCount: { [metricName: string]: number } = {};
-      
-      data.queries.forEach((query, queryIndex: number) => {
+      data.queries.forEach((query, responseQueryIndex: number) => {
         if (!query.results || query.results.length === 0) {
           return;
         }
 
+        // Simple 1:1 mapping: queries[i] corresponds directly to metrics[i]
+        const mappingInfo = queryIndexToTargetMap[responseQueryIndex];
+        if (!mappingInfo) {
+          console.warn(`No mapping found for query index: ${responseQueryIndex}`);
+          return;
+        }
+        
+        const targetForQuery = mappingInfo.target;
+        const metricVariableValues = mappingInfo.variableValues;
+
         query.results.forEach((result, resultIndex: number) => {
           const metricName = result.name;
-          
-          // Determine which refId this result corresponds to
-          if (!metricResultCount[metricName]) {
-            metricResultCount[metricName] = 0;
-          }
-          
-          const refIdOrder = metricOrderToRefId[metricName];
-          if (!refIdOrder || refIdOrder.length === 0) {
-            console.warn(`No refId order found for metric: ${metricName}`);
-            return;
-          }
-          
-          // Determine which refId this result belongs to based on result order
-          // When multiple targets have the same metric, KairosDB returns all results for 
-          // first target, then all results for second target, etc.
-          const resultsPerTarget = Math.ceil(query.results.filter(r => r.name === metricName).length / refIdOrder.length);
-          const refIdIndex = Math.floor(metricResultCount[metricName] / resultsPerTarget);
-          const refId = refIdOrder[refIdIndex] || refIdOrder[refIdOrder.length - 1];
-          const compositeKey = `${metricName}|${refId}`;
-          
-          const mappingInfo = metricNameToTargetMap[compositeKey];
-          if (!mappingInfo) {
-            console.warn(`No mapping found for composite key: ${compositeKey}`);
-            return;
-          }
-          
-          metricResultCount[metricName]++;
-          const targetForQuery = mappingInfo.target;
-          const metricVariableValues = mappingInfo.variableValues;
           const targetQuery = targetForQuery.query!;
           const alias = targetQuery.alias || metricName;
           const tags = result.tags || {};
