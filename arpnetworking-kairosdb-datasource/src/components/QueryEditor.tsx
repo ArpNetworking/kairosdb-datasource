@@ -2,7 +2,7 @@ import React, { ChangeEvent } from 'react';
 import { InlineField, Input, Stack, FieldSet, Collapse } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from '../datasource';
-import { KairosDBDataSourceOptions, KairosDBQuery, DEFAULT_QUERY } from '../types';
+import { KairosDBDataSourceOptions, KairosDBQuery } from '../types';
 import { MetricNameField } from './MetricNameField';
 import { Aggregators } from './Aggregators';
 import { TagsEditor } from './TagsEditor';
@@ -11,6 +11,8 @@ import { GroupByEditor } from './GroupByEditor';
 type Props = QueryEditorProps<DataSource, KairosDBQuery, KairosDBDataSourceOptions>;
 
 export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) {
+  const [availableTags, setAvailableTags] = React.useState<string[]>([]);
+  
   console.log('[QueryEditor] Render called with:', {
     query: JSON.stringify(query, null, 2),
     hasOnChange: typeof onChange === 'function',
@@ -44,6 +46,25 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       });
     }
   }, []);  // Remove dependencies to avoid infinite loops
+
+  // Load available tags when metric name changes
+  React.useEffect(() => {
+    const loadAvailableTags = async () => {
+      if (currentQuery.metricName && datasource) {
+        try {
+          const tagData = await datasource.getMetricTags(currentQuery.metricName);
+          setAvailableTags(Object.keys(tagData));
+        } catch (error) {
+          console.error('[QueryEditor] Error loading available tags:', error);
+          setAvailableTags([]);
+        }
+      } else {
+        setAvailableTags([]);
+      }
+    };
+
+    loadAvailableTags();
+  }, [currentQuery.metricName, datasource]);
 
   const onMetricNameChange = (metricName: string) => {
     console.log('[QueryEditor] onMetricNameChange called with:', metricName);
@@ -212,7 +233,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
         <GroupByEditor
           groupBy={currentQuery.groupBy || { time: undefined, tags: [], value: undefined }}
           onChange={onGroupByChange}
-          availableTags={Object.keys(currentQuery.tags || {})}
+          availableTags={availableTags}
           hasMultiValuedTags={Object.values(currentQuery.tags || {}).some(values => Array.isArray(values) && values.length > 1)}
         />
 

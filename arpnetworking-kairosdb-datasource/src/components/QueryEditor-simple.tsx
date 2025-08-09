@@ -5,6 +5,7 @@ import { DataSource } from '../datasource';
 import { KairosDBDataSourceOptions, KairosDBQuery } from '../types';
 import { MetricNameField } from './MetricNameField';
 import { TagsEditor } from './TagsEditor';
+import { Aggregators } from './Aggregators';
 
 type Props = QueryEditorProps<DataSource, KairosDBQuery, KairosDBDataSourceOptions>;
 
@@ -16,11 +17,12 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     hasDatasource: !!datasource
   });
 
-  // Simple query object with tags
+  // Simple query object with tags and aggregators
   const currentQuery = {
     metricName: '',
     alias: '',
     tags: {},
+    aggregators: [],
     ...query.query
   };
   
@@ -64,8 +66,20 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     onRunQuery();
   };
 
+  const onAggregatorsChange = (aggregators: any[]) => {
+    console.log('[QueryEditor-Simple] onAggregatorsChange called with:', aggregators);
+    onChange({
+      ...query,
+      query: {
+        ...currentQuery,
+        aggregators
+      }
+    });
+    onRunQuery();
+  };
+
   return (
-    <FieldSet label="Simple Query Editor (with MetricNameField + TagsEditor)">
+    <FieldSet label="Simple Query Editor (with MetricNameField + TagsEditor + Aggregators)">
       <Stack direction="column" gap={2}>
         <MetricNameField
           metricName={currentQuery.metricName || ''}
@@ -78,6 +92,11 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           tags={currentQuery.tags || {}}
           onChange={onTagsChange}
           datasource={datasource}
+        />
+        
+        <Aggregators
+          aggregators={currentQuery.aggregators || []}
+          onChange={onAggregatorsChange}
         />
         
         <InlineField label="Alias" labelWidth={12}>

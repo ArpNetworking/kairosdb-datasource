@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { InlineField, AsyncSelect, Input } from '@grafana/ui';
-import { SelectableValue } from '@grafana/data';
+import React from 'react';
+import { InlineField, Input } from '@grafana/ui';
 import { DataSource } from '../datasource';
 
 interface Props {
@@ -17,36 +16,6 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
     datasourceType: datasource?.constructor.name
   });
   
-  const [isLoading, setIsLoading] = useState(false);
-
-  const loadOptions = async (inputValue: string): Promise<Array<SelectableValue<string>>> => {
-    console.log('[MetricNameField] loadOptions called with inputValue:', inputValue);
-    
-    if (!datasource || inputValue.length < 1) {
-      console.log('[MetricNameField] No datasource or short input, returning empty array');
-      return [];
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('[MetricNameField] Calling datasource.getMetricNames');
-      const metrics = await datasource.getMetricNames(inputValue);
-      console.log('[MetricNameField] Received metrics:', metrics);
-      
-      const selectableOptions = metrics.map(metric => ({
-        label: metric,
-        value: metric
-      }));
-      console.log('[MetricNameField] Converted to selectable options:', selectableOptions);
-
-      return selectableOptions;
-    } catch (error) {
-      console.error('[MetricNameField] Error loading metric names:', error);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const [inputValue, setInputValue] = React.useState(metricName);
 
@@ -62,13 +31,6 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
     onChange(inputValue);
   };
 
-  const handleSelectionChange = (option: SelectableValue<string> | null) => {
-    console.log('[MetricNameField] handleSelectionChange called with:', option);
-    const value = option?.value || '';
-    console.log('[MetricNameField] Calling onChange with:', value);
-    setInputValue(value);
-    onChange(value);
-  };
 
   const handleBlur = () => {
     console.log('[MetricNameField] handleBlur - persisting inputValue:', inputValue);

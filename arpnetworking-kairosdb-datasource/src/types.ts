@@ -10,7 +10,7 @@ export interface KairosDBTarget {
   metricName?: string;
   alias?: string;
   tags: { [key: string]: string[] };
-  groupBy: GroupBy;
+  groupBy?: GroupBy;
   aggregators: Aggregator[];
   timeRange?: TimeRange;
   overrideScalar?: boolean;

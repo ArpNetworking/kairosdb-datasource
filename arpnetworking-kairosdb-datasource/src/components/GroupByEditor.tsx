@@ -26,23 +26,31 @@ export function GroupByEditor({
     });
   };
 
-  const handleValueChange = (value: GroupByValue['value']) => {
-    onChange({
+  const handleValueChange = (value: GroupBy['value']) => {
+    console.log('[GroupByEditor] handleValueChange called with:', value);
+    console.log('[GroupByEditor] Current groupBy:', groupBy);
+    const newGroupBy = {
       ...groupBy,
       value
-    });
+    };
+    console.log('[GroupByEditor] Setting new groupBy:', newGroupBy);
+    onChange(newGroupBy);
   };
 
   const handleTimeChange = (time: GroupBy['time']) => {
-    onChange({
+    console.log('[GroupByEditor] handleTimeChange called with:', time);
+    console.log('[GroupByEditor] Current groupBy:', groupBy);
+    const newGroupBy = {
       ...groupBy,
       time
-    });
+    };
+    console.log('[GroupByEditor] Setting new groupBy:', newGroupBy);
+    onChange(newGroupBy);
   };
 
-  // Only show GroupBy section if we have multi-valued tags or existing groupBy settings
-  const shouldShow = hasMultiValuedTags || 
-    groupBy.tags?.length > 0 || 
+  // Always show GroupBy section when we have available tags or existing groupBy settings
+  const shouldShow = availableTags.length > 0 || 
+    (groupBy.tags?.length ?? 0) > 0 || 
     groupBy.value?.range_size || 
     groupBy.time?.value;
 
@@ -53,7 +61,7 @@ export function GroupByEditor({
   return (
     <FieldSet label="Group By">
       <Stack direction="column" gap={2}>
-        {hasMultiValuedTags && (
+        {availableTags.length > 0 && (
           <GroupByTags
             tags={groupBy.tags || []}
             availableTags={availableTags}

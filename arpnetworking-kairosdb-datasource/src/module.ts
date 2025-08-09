@@ -1,7 +1,7 @@
 import { DataSourcePlugin } from '@grafana/data';
 import { DataSource } from './datasource';
 import { ConfigEditor } from './components/ConfigEditor';
-import { QueryEditor } from './components/QueryEditor-simple';
+import { QueryEditor } from './components/QueryEditor';
 import { KairosDBQuery, KairosDBDataSourceOptions } from './types';
 
 console.log('[Module] KairosDB plugin module loading...');

@@ -22,12 +22,12 @@ const TIME_UNITS: Array<SelectableValue<string>> = [
 export function GroupByTime({ time, onChange }: Props) {
   const isEnabled = !!time?.value;
 
-  const handleEnabledChange = (enabled: boolean) => {
+  const handleEnabledChange = (event: any) => {
+    // Extract boolean value from Grafana UI Switch component
+    const enabled = event.currentTarget ? event.currentTarget.checked : event;
+    
     if (enabled) {
-      onChange({
-        value: 1,
-        unit: 'minutes'
-      });
+      onChange({ value: 1, unit: 'minutes' });
     } else {
       onChange(undefined);
     }

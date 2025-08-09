@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Card, Stack, Input, Select, Switch, InlineField, Collapse } from '@grafana/ui';
+import { Button, Stack, Input, Select, Switch, InlineField, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator, AggregatorParameter } from '../types';
 
@@ -86,8 +86,6 @@ export function AggregatorItem({
                   <Switch
                     value={param.autoValue || false}
                     onChange={(value) => {
-                      // Update the autoValue property
-                      const updatedParam = { ...param, autoValue: value };
                       onParameterChange(param.name, value ? 'auto' : paramValue);
                     }}
                   />
@@ -112,7 +110,7 @@ export function AggregatorItem({
 
   return (
     <Card>
-      <Card.Body>
+      <Card.Description>
         <Stack direction="column" gap={1}>
           <Stack direction="row" gap={1} alignItems="center" justifyContent="space-between">
             <Stack direction="row" gap={1} alignItems="center">
@@ -169,7 +167,7 @@ export function AggregatorItem({
             </div>
           )}
         </Stack>
-      </Card.Body>
+      </Card.Description>
     </Card>
   );
 }

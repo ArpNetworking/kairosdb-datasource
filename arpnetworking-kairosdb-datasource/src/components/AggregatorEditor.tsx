@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Select, Card, Stack } from '@grafana/ui';
+import { Button, Select, Stack, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator } from '../types';
 
@@ -38,7 +38,7 @@ export function AggregatorEditor({ availableAggregators = [], onAdd, onCancel }:
   return (
     <Card>
       <Card.Heading>Add Aggregator</Card.Heading>
-      <Card.Body>
+      <Card.Description>
         <Stack direction="column" gap={2}>
           <Select
             placeholder="Choose an aggregator..."
@@ -98,7 +98,7 @@ export function AggregatorEditor({ availableAggregators = [], onAdd, onCancel }:
             </Button>
           </Stack>
         </Stack>
-      </Card.Body>
+      </Card.Description>
     </Card>
   );
 }

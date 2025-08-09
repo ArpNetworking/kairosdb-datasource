@@ -10,11 +10,12 @@ interface Props {
 export function GroupByValue({ value, onChange }: Props) {
   const isEnabled = !!value?.range_size;
 
-  const handleEnabledChange = (enabled: boolean) => {
+  const handleEnabledChange = (event: any) => {
+    // Extract boolean value from Grafana UI Switch component
+    const enabled = event.currentTarget ? event.currentTarget.checked : event;
+    
     if (enabled) {
-      onChange({
-        range_size: 100
-      });
+      onChange({ range_size: 100 });
     } else {
       onChange(undefined);
     }

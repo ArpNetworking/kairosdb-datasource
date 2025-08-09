@@ -42,10 +42,10 @@ docker_build(
     only = ['./arpnetworking-kairosdb-datasource/dist', './arpnetworking-kairosdb-datasource/entrypoint-dev.sh']
 )
 
-# Build plugin when source changes (this rebuilds dist/ which triggers live_update)
+# Build plugin in development mode when source changes (this rebuilds dist/ which triggers live_update)
 local_resource(
   'build-plugin',
-  cmd='cd arpnetworking-kairosdb-datasource && npm run build',
+  cmd='cd arpnetworking-kairosdb-datasource && npm run build:dev',
   deps=['./arpnetworking-kairosdb-datasource/src'],
   labels=['build']
 )
