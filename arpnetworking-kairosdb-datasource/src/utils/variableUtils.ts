@@ -233,16 +233,41 @@ export class VariableQueryExecutor {
       return value;
     }
     
-    return value.replace(/\$(\w+)/g, (match, varName) => {
-      const variable = scopedVars[varName];
-      if (variable) {
-        // Handle array values (multi-value variables)
-        if (Array.isArray(variable.value)) {
-          return variable.value.join(',');
-        }
-        return variable.value;
+    // Handle both $variable and ${variable} syntax
+    return value
+      .replace(/\$\{([^}]+)\}/g, (match, varName) => {
+        // Handle ${variable} syntax (with potential format specifiers)
+        const [name, format] = varName.split(':');
+        const variable = scopedVars[name];
+        return variable ? this.formatVariable(variable.value, format) : match;
+      })
+      .replace(/\$(\w+)/g, (match, varName) => {
+        // Handle $variable syntax
+        const variable = scopedVars[varName];
+        return variable ? this.formatVariable(variable.value) : match;
+      });
+  }
+
+  private formatVariable(value: any, format?: string): string {
+    if (value === null || value === undefined) {
+      return 'null';
+    }
+
+    // Handle array values (multi-value variables)
+    if (Array.isArray(value)) {
+      switch (format) {
+        case 'pipe':
+          return value.join('|');
+        case 'regex':
+          return `(${value.join('|')})`;
+        case 'distributed':
+          // For distributed queries, each value should be handled separately
+          return value.join(',');
+        default:
+          return value.join(',');
       }
-      return match;
-    });
+    }
+
+    return String(value);
   }
 }

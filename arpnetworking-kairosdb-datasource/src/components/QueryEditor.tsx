@@ -138,7 +138,29 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     if (aggregators.length > 0) {
       aggregators.slice().reverse().forEach((agg) => {
         if (agg?.name) {
-          str += agg.name + "(";
+          // Build aggregator with parameters
+          let aggStr = agg.name;
+          
+          // Add parameters if any
+          const params = agg.parameters || [];
+          const paramStrings: string[] = [];
+          
+          params.forEach(param => {
+            if (param?.name && param?.value !== undefined && param?.value !== null && param?.value !== '') {
+              // Handle auto values
+              if (agg.autoValueSwitch?.enabled && agg.autoValueSwitch?.dependentParameters?.includes(param.type)) {
+                paramStrings.push(`${param.name}=auto`);
+              } else {
+                paramStrings.push(`${param.name}=${param.value}`);
+              }
+            }
+          });
+          
+          if (paramStrings.length > 0) {
+            aggStr += `[${paramStrings.join(', ')}]`;
+          }
+          
+          str += aggStr + "(";
         }
       });
       str += "*";

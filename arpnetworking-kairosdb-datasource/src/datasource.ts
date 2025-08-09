@@ -108,8 +108,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       console.log('[DataSource] Query range:', { from, to });
       console.log('[DataSource] Query targets:', options.targets);
 
+      // Interpolate variables in all targets
+      const interpolatedTargets = this.interpolateVariablesInQueries(options.targets, options.scopedVars);
+      console.log('[DataSource] Interpolated targets:', interpolatedTargets);
+
       // Filter out targets without metric names
-      const validTargets = options.targets.filter(target => {
+      const validTargets = interpolatedTargets.filter(target => {
         const hasMetricName = !!(target.query?.metricName);
         console.log('[DataSource] Target execution filter:', { refId: target.refId, hasMetricName, metricName: target.query?.metricName });
         return hasMetricName;
@@ -620,23 +624,136 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   interpolateVariablesInQueries(queries: KairosDBQuery[], scopedVars?: ScopedVars): KairosDBQuery[] {
     return queries.map(query => ({
       ...query,
-      query: query.query ? {
-        ...query.query,
-        metricName: this.interpolateVariable(query.query.metricName || '', scopedVars)
-      } : query.query
+      query: query.query ? this.interpolateQueryObject(query.query, scopedVars) : query.query
     }));
   }
 
-  private interpolateVariable(value: string, scopedVars?: ScopedVars): string {
-    // Simple variable interpolation - this would be more sophisticated in a real implementation
+  private interpolateQueryObject(query: any, scopedVars?: ScopedVars): any {
+    if (!query || !scopedVars) {
+      return query;
+    }
+
+    const interpolated = { ...query };
+
+    // Interpolate metric name
+    if (interpolated.metricName) {
+      interpolated.metricName = this.interpolateVariable(interpolated.metricName, scopedVars);
+    }
+
+    // Interpolate alias
+    if (interpolated.alias) {
+      interpolated.alias = this.interpolateVariable(interpolated.alias, scopedVars);
+    }
+
+    // Interpolate tags
+    if (interpolated.tags) {
+      interpolated.tags = this.interpolateTagsObject(interpolated.tags, scopedVars);
+    }
+
+    // Interpolate group by
+    if (interpolated.groupBy) {
+      interpolated.groupBy = this.interpolateGroupByObject(interpolated.groupBy, scopedVars);
+    }
+
+    // Interpolate aggregators
+    if (interpolated.aggregators && Array.isArray(interpolated.aggregators)) {
+      interpolated.aggregators = interpolated.aggregators.map((agg: any) => 
+        this.interpolateAggregatorObject(agg, scopedVars)
+      );
+    }
+
+    return interpolated;
+  }
+
+  private interpolateTagsObject(tags: { [key: string]: string[] }, scopedVars: ScopedVars): { [key: string]: string[] } {
+    const interpolatedTags: { [key: string]: string[] } = {};
+    
+    Object.keys(tags).forEach(tagName => {
+      const tagValues = tags[tagName];
+      if (Array.isArray(tagValues)) {
+        interpolatedTags[tagName] = tagValues.map(value => {
+          const interpolated = this.interpolateVariable(value, scopedVars);
+          // If the interpolated value contains commas, split it (multi-value variable)
+          return interpolated.includes(',') ? interpolated.split(',') : [interpolated];
+        }).flat();
+      } else {
+        interpolatedTags[tagName] = tagValues;
+      }
+    });
+
+    return interpolatedTags;
+  }
+
+  private interpolateGroupByObject(groupBy: any, scopedVars: ScopedVars): any {
+    const interpolated = { ...groupBy };
+
+    // Interpolate group by tags
+    if (interpolated.tags && Array.isArray(interpolated.tags)) {
+      interpolated.tags = interpolated.tags.map((tag: string) => {
+        const interpolatedTag = this.interpolateVariable(tag, scopedVars);
+        // If the interpolated value contains commas, split it (multi-value variable)
+        return interpolatedTag.includes(',') ? interpolatedTag.split(',') : [interpolatedTag];
+      }).flat();
+    }
+
+    return interpolated;
+  }
+
+  private interpolateAggregatorObject(aggregator: any, scopedVars: ScopedVars): any {
+    const interpolated = { ...aggregator };
+
+    // Interpolate aggregator parameters
+    if (interpolated.parameters && Array.isArray(interpolated.parameters)) {
+      interpolated.parameters = interpolated.parameters.map((param: any) => ({
+        ...param,
+        value: this.interpolateVariable(String(param.value || ''), scopedVars)
+      }));
+    }
+
+    return interpolated;
+  }
+
+  interpolateVariable(value: string, scopedVars?: ScopedVars): string {
     if (!value || !scopedVars) {
       return value;
     }
 
-    return value.replace(/\$(\w+)/g, (match, varName) => {
-      const variable = scopedVars[varName];
-      return variable ? variable.value : match;
-    });
+    // Handle both $variable and ${variable} syntax
+    return value
+      .replace(/\$\{([^}]+)\}/g, (match, varName) => {
+        // Handle ${variable} syntax (with potential format specifiers)
+        const [name, format] = varName.split(':');
+        const variable = scopedVars[name];
+        return variable ? this.formatVariable(variable.value, format) : match;
+      })
+      .replace(/\$(\w+)/g, (match, varName) => {
+        // Handle $variable syntax
+        const variable = scopedVars[varName];
+        return variable ? this.formatVariable(variable.value) : match;
+      });
+  }
+
+  private formatVariable(value: any, format?: string): string {
+    if (value === null || value === undefined) {
+      return 'null';
+    }
+
+    // Handle array values (multi-value variables)
+    if (Array.isArray(value)) {
+      switch (format) {
+        case 'pipe':
+          return value.join('|');
+        case 'regex':
+          return `(${value.join('|')})`;
+        case 'distributed':
+          // For distributed queries, each value should be handled separately
+          return value.join(',');
+        default:
+          return value.join(',');
+      }
+    }
+
+    return String(value);
   }
 
   /**
