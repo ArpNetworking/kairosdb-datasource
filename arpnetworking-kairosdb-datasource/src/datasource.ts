@@ -109,13 +109,14 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       console.log('[DataSource] Query targets (before interpolation):', options.targets);
       console.log('[DataSource] ScopedVars:', options.scopedVars);
 
-      // Apply template variable interpolation using Grafana's built-in service
+      // Apply template variable interpolation for non-metric fields using Grafana's built-in service
+      // Note: metricName interpolation is handled in expandMetricNames to properly handle multi-value variables
       const templateSrv = getTemplateSrv();
       const interpolatedTargets = options.targets.map(target => ({
         ...target,
         query: target.query ? {
           ...target.query,
-          metricName: templateSrv.replace(target.query.metricName || '', options.scopedVars),
+          // metricName is handled in expandMetricNames, don't interpolate here
           alias: templateSrv.replace(target.query.alias || '', options.scopedVars),
           tags: this.interpolateTagsWithTemplateSrv(target.query.tags || {}, options.scopedVars),
           groupBy: target.query.groupBy ? {
@@ -148,22 +149,34 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         return { data: [] };
       }
 
-      // Build KairosDB query request
-      const metrics: KairosDBDatapointsRequest['metrics'] = validTargets.map(target => {
+      // Build KairosDB query request - expand multi-value variables in metric names
+      const metrics: KairosDBDatapointsRequest['metrics'] = [];
+      
+      validTargets.forEach(target => {
         const query = target.query!;
-        const metric: KairosDBDatapointsRequest['metrics'][0] = {
-          name: query.metricName!
-        };
+        
+        console.log('[DataSource] Processing target:', { refId: target.refId, metricName: query.metricName, scopedVars: options.scopedVars });
+        
+        // Expand metric names BEFORE template interpolation to handle multi-value variables properly
+        const metricNames = this.expandMetricNames(query.metricName!, target.refId, options.scopedVars);
+        
+        console.log('[DataSource] Expanded metric names for', target.refId, ':', metricNames);
+        
+        // Create a separate metric object for each expanded metric name
+        metricNames.forEach(metricName => {
+          const metric: KairosDBDatapointsRequest['metrics'][0] = {
+            name: metricName
+          };
 
-        // Add tags if any are specified
-        if (query.tags && Object.keys(query.tags).length > 0) {
-          metric.tags = {};
-          Object.keys(query.tags).forEach(tagKey => {
-            if (query.tags[tagKey] && query.tags[tagKey].length > 0) {
-              metric.tags![tagKey] = query.tags[tagKey];
-            }
-          });
-        }
+          // Add tags if any are specified
+          if (query.tags && Object.keys(query.tags).length > 0) {
+            metric.tags = {};
+            Object.keys(query.tags).forEach(tagKey => {
+              if (query.tags[tagKey] && query.tags[tagKey].length > 0) {
+                metric.tags![tagKey] = query.tags[tagKey];
+              }
+            });
+          }
 
         // Add aggregators if any are specified
         if (query.aggregators && query.aggregators.length > 0) {
@@ -249,7 +262,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           console.log('[DataSource] Final metric.group_by:', JSON.stringify(metric.group_by, null, 2));
         }
 
-        return metric;
+          // Add the completed metric to the metrics array
+          metrics.push(metric);
+        });
       });
 
       const requestBody: KairosDBDatapointsRequest = {
@@ -279,9 +294,14 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       // Convert KairosDB response to Grafana data frames
       const dataFrames: any[] = [];
       
+      // Track which target each result belongs to since we may have multiple metrics per target
+      let metricIndex = 0;
+      
       data.queries.forEach((query, queryIndex: number) => {
-        const target = validTargets[queryIndex];
-        const targetQuery = target.query!;
+        // Find the corresponding target for this result
+        // Since we expanded metrics, we need to map back to the original target
+        const targetForQuery = this.findTargetForQueryResult(validTargets, metricIndex, query, options.scopedVars);
+        const targetQuery = targetForQuery.query!;
         
         if (!query.results || query.results.length === 0) {
           console.log('[DataSource] No results for query:', queryIndex);
@@ -368,7 +388,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           console.log('[DataSource] Final arrays - timeValues:', timeValues.slice(0, 5), 'dataValues:', dataValues.slice(0, 5));
 
           const frame = createDataFrame({
-            refId: target.refId,
+            refId: targetForQuery.refId,
             name: seriesName,
             fields: [
               { name: 'Time', values: timeValues, type: FieldType.time },
@@ -377,12 +397,15 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           });
 
           console.log('[DataSource] Created data frame:', { 
-            refId: target.refId, 
+            refId: targetForQuery.refId, 
             name: seriesName, 
             points: timeValues.length 
           });
           dataFrames.push(frame);
         });
+        
+        // Increment metric index for next query result
+        metricIndex += query.results ? query.results.length : 0;
       });
 
       console.log('[DataSource] Returning query result with', dataFrames.length, 'data frames');
@@ -866,6 +889,161 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         }
       }
     }
+  }
+
+  /**
+   * Expand metric names that contain multi-value template variables
+   * This method should be called BEFORE template interpolation to detect multi-value variables
+   * and create separate metric names for each value
+   */
+  private expandMetricNames(originalMetricName: string, refId: string, scopedVars?: ScopedVars): string[] {
+    console.log('[DataSource] expandMetricNames called with:', { originalMetricName, refId, scopedVars });
+    
+    if (!originalMetricName) {
+      console.log('[DataSource] Empty metric name, returning empty array');
+      return [];
+    }
+    
+    // Debug: log all scopedVars to understand structure
+    console.log('[DataSource] ScopedVars structure:', JSON.stringify(scopedVars, null, 2));
+    
+    // Find all variables in the metric name (both $var and ${var} formats)
+    const variableMatches = [
+      ...originalMetricName.matchAll(/\$\{([^}]+)\}/g),
+      ...originalMetricName.matchAll(/\$(\w+)/g)
+    ];
+    
+    console.log('[DataSource] Found variable matches:', variableMatches.map(m => ({ fullMatch: m[0], varName: m[1] })));
+    
+    const templateSrv = getTemplateSrv();
+    
+    // First, do a normal interpolation to see if we get multi-value format
+    const normallyInterpolated = templateSrv.replace(originalMetricName, scopedVars);
+    console.log('[DataSource] Normal interpolation result:', normallyInterpolated);
+    
+    // Check if the interpolated result contains the multi-value format {value1,value2,value3}
+    const multiValuePattern = /\{([^}]+)\}/g;
+    const multiValueMatch = multiValuePattern.exec(normallyInterpolated);
+    
+    let multiValueVariable: { name: string, values: string[] } | null = null;
+    
+    if (multiValueMatch) {
+      // Found multi-value format, extract the values
+      const valuesString = multiValueMatch[1];
+      const values = valuesString.split(',').map(v => v.trim());
+      
+      if (values.length > 1) {
+        // Find which variable this corresponds to by checking each variable
+        for (const match of variableMatches) {
+          const varName = match[1];
+          const singleVarPattern = new RegExp('\\$\\{?' + varName + '\\}?');
+          
+          if (singleVarPattern.test(originalMetricName)) {
+            multiValueVariable = { name: varName, values };
+            console.log('[DataSource] Found multi-value variable:', { varName, values, originalMetricName, normallyInterpolated });
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!multiValueVariable) {
+      // No multi-value variables, interpolate normally and return single metric
+      try {
+        const interpolatedName = templateSrv.replace(originalMetricName, scopedVars);
+        console.log('[DataSource] Single metric name after interpolation:', interpolatedName);
+        return [interpolatedName];
+      } catch (error) {
+        console.warn('[DataSource] Template service error, using fallback:', error);
+        // Fallback to manual interpolation
+        let result = originalMetricName;
+        for (const match of variableMatches) {
+          const varName = match[1];
+          const variable = scopedVars?.[varName];
+          if (variable) {
+            const value = Array.isArray(variable.value) ? variable.value[0] : String(variable.value);
+            result = result.replace(match[0], value);
+          }
+        }
+        console.log('[DataSource] Single metric name after fallback interpolation:', result);
+        return [result];
+      }
+    }
+    
+    // Expand the multi-value variable into separate metric names
+    const expandedNames: string[] = [];
+    
+    for (const value of multiValueVariable.values) {
+      // Create a temporary scopedVars with this single value for the multi-value variable
+      const tempScopedVars = {
+        ...scopedVars,
+        [multiValueVariable.name]: {
+          text: value,
+          value: value
+        }
+      };
+      
+      try {
+        const templateSrv = getTemplateSrv();
+        const interpolatedName = templateSrv.replace(originalMetricName, tempScopedVars);
+        expandedNames.push(interpolatedName);
+      } catch (error) {
+        console.warn('[DataSource] Template service error during expansion, using fallback:', error);
+        // Fallback to manual interpolation
+        let result = originalMetricName;
+        for (const match of variableMatches) {
+          const varName = match[1];
+          if (varName === multiValueVariable.name) {
+            result = result.replace(match[0], value);
+          } else {
+            const variable = tempScopedVars[varName];
+            if (variable) {
+              const varValue = Array.isArray(variable.value) ? variable.value[0] : String(variable.value);
+              result = result.replace(match[0], varValue);
+            }
+          }
+        }
+        expandedNames.push(result);
+      }
+    }
+    
+    console.log('[DataSource] Expanded multi-value metric names:', { 
+      original: originalMetricName, 
+      variable: multiValueVariable.name,
+      values: multiValueVariable.values,
+      expanded: expandedNames,
+      count: expandedNames.length 
+    });
+    
+    return expandedNames;
+  }
+
+  /**
+   * Find the target that corresponds to a query result
+   * Since we expand multi-value variables into multiple metrics, we need to map results back to targets
+   */
+  private findTargetForQueryResult(validTargets: any[], metricIndex: number, queryResult: any, scopedVars?: ScopedVars): any {
+    // For now, we'll use a simple approach: map each query result back to the first target
+    // This works because all expanded metrics from a single target should have the same refId
+    // In the future, we could enhance this to be more sophisticated if needed
+    
+    let currentMetricCount = 0;
+    
+    for (const target of validTargets) {
+      const metricNames = this.expandMetricNames(target.query?.metricName || '', target.refId, scopedVars);
+      const targetMetricCount = metricNames.length;
+      
+      if (metricIndex < currentMetricCount + targetMetricCount) {
+        console.log('[DataSource] Found target for metric index', metricIndex, ':', target.refId);
+        return target;
+      }
+      
+      currentMetricCount += targetMetricCount;
+    }
+    
+    // Fallback to first target if we can't find a match
+    console.warn('[DataSource] Could not find target for metric index', metricIndex, ', using first target');
+    return validTargets[0] || { refId: 'Unknown', query: {} };
   }
 
   /**
