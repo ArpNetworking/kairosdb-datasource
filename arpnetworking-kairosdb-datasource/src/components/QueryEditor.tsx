@@ -211,13 +211,13 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
               datasource={datasource}
             />
             
-            <InlineField label="Alias" labelWidth={12}>
+            <InlineField label="Alias" labelWidth={20}>
               <Input
                 id="query-editor-alias"
                 onChange={onAliasChange}
                 value={currentQuery.alias || ''}
                 placeholder="Optional alias for the series"
-                width={40}
+                width={50}
               />
             </InlineField>
           </Stack>

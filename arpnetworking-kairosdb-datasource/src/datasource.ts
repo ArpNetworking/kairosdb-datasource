@@ -25,18 +25,40 @@ import {
 import { lastValueFrom } from 'rxjs';
 import { ParameterObjectBuilder } from './utils/parameterUtils';
 import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtils';
+import { SimpleCache, debounce, generateCacheKey, generateApiCacheKey, parseSearchQuery } from './utils/cacheUtils';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
   initialized: boolean = false;
   private variableQueryExecutor: VariableQueryExecutor;
   private settings: DataSourceInstanceSettings<KairosDBDataSourceOptions>;
+  private metricNamesCache: SimpleCache<string[]>;
+  private apiResponseCache: SimpleCache<string[]>;
+  private debouncedGetMetricNames: (query?: string) => Promise<string[]>;
 
   constructor(instanceSettings: DataSourceInstanceSettings<KairosDBDataSourceOptions>) {
     super(instanceSettings);
     this.baseUrl = instanceSettings.url!;
     this.settings = instanceSettings;
     this.variableQueryExecutor = new VariableQueryExecutor(this);
+    
+    // Initialize caching with 5 minute TTL
+    this.metricNamesCache = new SimpleCache<string[]>(5 * 60 * 1000); // Final filtered results
+    this.apiResponseCache = new SimpleCache<string[]>(5 * 60 * 1000); // Raw API responses
+    
+    // Create debounced version with 300ms delay
+    this.debouncedGetMetricNames = debounce(this.getMetricNamesInternal.bind(this), 300);
+    
+    // Set up periodic cache cleanup every 10 minutes
+    setInterval(() => {
+      console.log('[DataSource] Running periodic cache cleanup');
+      this.metricNamesCache.cleanup();
+      this.apiResponseCache.cleanup();
+      console.log('[DataSource] Cache stats after cleanup:', {
+        metricNames: this.metricNamesCache.getStats(),
+        apiResponses: this.apiResponseCache.getStats()
+      });
+    }, 10 * 60 * 1000);
     console.log('[DataSource] Constructor called with:', {
       id: instanceSettings.id,
       uid: instanceSettings.uid,
@@ -357,56 +379,133 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   }
 
   /**
-   * Get available metric names for autocomplete
+   * Get available metric names for autocomplete (public interface with caching and debouncing)
    */
   async getMetricNames(query?: string): Promise<string[]> {
     console.log('[DataSource] getMetricNames called with query:', query);
     
+    // Generate cache key including suffix configuration
+    const suffixesToIgnore = this.getSuffixesToIgnore();
+    const cacheKey = generateCacheKey(query, suffixesToIgnore);
+    
+    // Check cache first
+    const cachedResult = this.metricNamesCache.get(cacheKey);
+    if (cachedResult) {
+      console.log('[DataSource] Returning cached result for key:', cacheKey, 'count:', cachedResult.length);
+      return cachedResult;
+    }
+    
+    console.log('[DataSource] Cache miss for key:', cacheKey, ', using debounced fetch');
+    
+    // Use debounced version to reduce server calls
+    return this.debouncedGetMetricNames(query);
+  }
+
+  /**
+   * Internal method that actually fetches metric names from server
+   */
+  private async getMetricNamesInternal(query?: string): Promise<string[]> {
+    console.log('[DataSource] getMetricNamesInternal called with query:', query);
+    
     try {
-      console.log('[DataSource] Making request to /api/v1/metricnames');
-      const response = await this.request('/api/v1/metricnames');
-      const data = response.data as KairosDBMetricNamesResponse;
+      const suffixesToIgnore = this.getSuffixesToIgnore();
+      const cacheKey = generateCacheKey(query, suffixesToIgnore);
       
-      console.log('[DataSource] Received metric names response:', data);
+      // Double-check cache in case another call populated it
+      const cachedResult = this.metricNamesCache.get(cacheKey);
+      if (cachedResult) {
+        console.log('[DataSource] Found cached result during internal fetch:', cachedResult.length, 'metrics');
+        return cachedResult;
+      }
       
-      if (!data || !data.results) {
-        console.warn('[DataSource] No results in metric names response');
-        return [];
+      // Parse the search query to determine mode and actual search term
+      const { isPrefixMode, searchTerm } = parseSearchQuery(query);
+      console.log('[DataSource] Parsed search:', { isPrefixMode, searchTerm, originalQuery: query });
+      
+      // Determine API strategy based on search mode
+      const apiCacheKey = generateApiCacheKey(query);
+      
+      // Check API response cache
+      let rawMetrics = this.apiResponseCache.get(apiCacheKey);
+      
+      if (!rawMetrics) {
+        // Need to make API request
+        let apiUrl: string;
+        
+        if (isPrefixMode && searchTerm.length >= 2) {
+          // Use prefix API for ^prefix searches with sufficient length
+          apiUrl = `/api/v1/metricnames?prefix=${encodeURIComponent(searchTerm)}`;
+          console.log('[DataSource] Making PREFIX request to:', apiUrl);
+        } else {
+          // Use all metrics for contains searches or short prefix searches
+          apiUrl = '/api/v1/metricnames';
+          console.log('[DataSource] Making ALL METRICS request to:', apiUrl);
+        }
+        
+        const response = await this.request(apiUrl);
+        const data = response.data as KairosDBMetricNamesResponse;
+        
+        console.log('[DataSource] Received metric names response:', data?.results?.length || 0, 'metrics');
+        
+        if (!data || !data.results) {
+          console.warn('[DataSource] No results in metric names response');
+          return [];
+        }
+
+        rawMetrics = data.results;
+        
+        // Cache the raw API response
+        this.apiResponseCache.set(apiCacheKey, rawMetrics);
+        console.log('[DataSource] Cached API response for key:', apiCacheKey, 'count:', rawMetrics.length);
+      } else {
+        console.log('[DataSource] Using cached API response:', apiCacheKey, 'count:', rawMetrics.length);
       }
 
-      let metrics = data.results;
+      let filteredMetrics = [...rawMetrics];
       
       // Filter out metrics with configured suffixes
-      const suffixesToIgnore = this.getSuffixesToIgnore();
       if (suffixesToIgnore.length > 0) {
         console.log('[DataSource] Filtering out metrics with suffixes:', suffixesToIgnore);
-        const originalCount = metrics.length;
+        const originalCount = filteredMetrics.length;
         
-        metrics = metrics.filter((metric: string) => {
+        filteredMetrics = filteredMetrics.filter((metric: string) => {
           return !suffixesToIgnore.some(suffix => metric.endsWith(suffix));
         });
         
-        console.log('[DataSource] Filtered out', (originalCount - metrics.length), 'metrics with ignored suffixes');
-        console.log('[DataSource] Remaining metrics count:', metrics.length);
+        console.log('[DataSource] Filtered out', (originalCount - filteredMetrics.length), 'metrics with ignored suffixes');
+        console.log('[DataSource] Remaining metrics count:', filteredMetrics.length);
       }
       
-      // Filter by query if provided
-      if (query && query.length > 0) {
-        console.log('[DataSource] Filtering metrics with query pattern:', query);
-        console.log('[DataSource] Sample metrics before filtering:', metrics.slice(0, 10));
+      // Apply additional client-side filtering if needed
+      if (searchTerm && searchTerm.length > 0) {
+        console.log('[DataSource] Applying client-side filtering:', { isPrefixMode, searchTerm });
+        console.log('[DataSource] Sample metrics before filtering:', filteredMetrics.slice(0, 10));
         
-        metrics = metrics.filter((metric: string) => 
-          metric.toLowerCase().includes(query.toLowerCase())
-        );
+        if (isPrefixMode) {
+          // For prefix mode, filter to metrics that start with the search term
+          // (This is additional filtering if we got all metrics instead of using prefix API)
+          filteredMetrics = filteredMetrics.filter((metric: string) => 
+            metric.toLowerCase().startsWith(searchTerm.toLowerCase())
+          );
+          console.log('[DataSource] Applied PREFIX filtering for term:', searchTerm);
+        } else {
+          // For contains mode, filter to metrics that contain the search term
+          filteredMetrics = filteredMetrics.filter((metric: string) => 
+            metric.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          console.log('[DataSource] Applied CONTAINS filtering for term:', searchTerm);
+        }
         
-        console.log('[DataSource] Filtered metrics by query (showing first 10):', metrics.slice(0, 10));
-        console.log('[DataSource] Total filtered metrics count:', metrics.length);
-      } else {
-        console.log('[DataSource] No query pattern provided, returning all metrics');
+        console.log('[DataSource] Filtered metrics by query (showing first 10):', filteredMetrics.slice(0, 10));
+        console.log('[DataSource] Total client-filtered metrics count:', filteredMetrics.length);
       }
 
-      console.log('[DataSource] getMetricNames returning:', metrics.length, 'metrics');
-      return metrics;
+      // Cache the final result
+      this.metricNamesCache.set(cacheKey, filteredMetrics);
+      console.log('[DataSource] Cached final result for key:', cacheKey, 'count:', filteredMetrics.length);
+
+      console.log('[DataSource] getMetricNamesInternal returning:', filteredMetrics.length, 'metrics');
+      return filteredMetrics;
     } catch (error) {
       console.error('[DataSource] Error fetching metric names:', error);
       // Return empty array on error instead of throwing
@@ -538,6 +637,25 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const variable = scopedVars[varName];
       return variable ? variable.value : match;
     });
+  }
+
+  /**
+   * Clear metric names cache (useful for debugging or forced refresh)
+   */
+  clearMetricNamesCache(): void {
+    console.log('[DataSource] Clearing both metric names and API response caches');
+    this.metricNamesCache.clear();
+    this.apiResponseCache.clear();
+  }
+
+  /**
+   * Get metric names cache statistics
+   */
+  getMetricNamesCacheStats(): { metricNames: { size: number; keys: string[] }, apiResponses: { size: number; keys: string[] } } {
+    return {
+      metricNames: this.metricNamesCache.getStats(),
+      apiResponses: this.apiResponseCache.getStats()
+    };
   }
 
   /**

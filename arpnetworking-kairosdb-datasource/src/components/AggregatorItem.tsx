@@ -88,9 +88,9 @@ export function AggregatorItem({
       case 'enum':
         const enumOptions = getEnumOptions(param.name);
         return (
-          <InlineField key={key} label={param.name} labelWidth={8} transparent>
+          <InlineField key={key} label={param.name} labelWidth={12} transparent>
             <Select
-              width={14}
+              width={18}
               value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
               options={enumOptions}
               isDisabled={isParamDisabled}
@@ -115,9 +115,9 @@ export function AggregatorItem({
           { label: 'years', value: 'years' }
         ];
         return (
-          <InlineField key={key} label={param.name} labelWidth={6} transparent>
+          <InlineField key={key} label={param.name} labelWidth={10} transparent>
             <Select
-              width={14}
+              width={18}
               value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
               options={unitOptions}
               isDisabled={isParamDisabled}
@@ -136,9 +136,9 @@ export function AggregatorItem({
         
         return (
           <div key={key}>
-            <InlineField label={param.name} labelWidth={8} transparent>
+            <InlineField label={param.name} labelWidth={12} transparent>
               <Input
-                width={12}
+                width={16}
                 type={isParamDisabled ? "text" : "number"}
                 value={isParamDisabled ? 'auto' : (paramValue || '')}
                 disabled={isParamDisabled}
@@ -178,9 +178,9 @@ export function AggregatorItem({
         
         return (
           <div key={key}>
-            <InlineField label={param.name} labelWidth={8} transparent>
+            <InlineField label={param.name} labelWidth={12} transparent>
               <Input
-                width={14}
+                width={18}
                 value={isParamDisabled ? 'auto' : (paramValue || '')}
                 disabled={isParamDisabled}
                 readOnly={isParamDisabled}
@@ -225,7 +225,7 @@ export function AggregatorItem({
             
             {/* Single Auto toggle for the whole aggregator */}
             {aggregator.autoValueSwitch && (
-              <InlineField label="Auto" labelWidth={6} transparent>
+              <InlineField label="Auto" labelWidth={8} transparent>
                 <Switch
                   value={isAutoEnabled}
                   onChange={(event) => {

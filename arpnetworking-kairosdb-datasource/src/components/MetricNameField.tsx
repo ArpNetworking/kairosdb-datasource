@@ -25,8 +25,8 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
       return [];
     }
 
-    if (inputValue.length < 1) {
-      console.log('[MetricNameField] Input too short, returning empty array');
+    if (inputValue.length < 2) {
+      console.log('[MetricNameField] Input too short (minimum 2 chars), returning empty array');
       return [];
     }
 
@@ -70,14 +70,14 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
   return (
     <InlineField 
       label="Metric Name" 
-      labelWidth={12}
-      tooltip="Start typing to search for available metrics"
+      labelWidth={20}
+      tooltip="Start typing to search for available metrics. Use ^ prefix (e.g., '^system') for prefix matching, or regular search for 'contains' matching."
       required
     >
       <AsyncSelect
-        width={40}
+        width={50}
         value={currentValue}
-        placeholder="Type to search metrics..."
+        placeholder="Type to search (use ^ for prefix search)..."
         loadOptions={loadOptions}
         onChange={handleSelectionChange}
         onInputChange={handleInputChange}

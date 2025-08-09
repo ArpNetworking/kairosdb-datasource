@@ -67,7 +67,7 @@ export function GroupByTime({ time, onChange }: Props) {
 
   return (
     <Stack direction="column" gap={1}>
-      <InlineField label="Group by Time" labelWidth={15}>
+      <InlineField label="Group by Time" labelWidth={20}>
         <Switch
           value={isEnabled}
           onChange={handleEnabledChange}
@@ -77,10 +77,10 @@ export function GroupByTime({ time, onChange }: Props) {
       {isEnabled && time && (
         <Stack direction="column" gap={1}>
           <Stack direction="row" gap={1} alignItems="center">
-            <InlineField label="Value" labelWidth={8}>
+            <InlineField label="Value" labelWidth={10}>
               <Input
                 type="number"
-                width={10}
+                width={15}
                 value={time.value}
                 onChange={handleValueChange}
                 placeholder="1"
@@ -88,9 +88,9 @@ export function GroupByTime({ time, onChange }: Props) {
               />
             </InlineField>
             
-            <InlineField label="Unit" labelWidth={8}>
+            <InlineField label="Unit" labelWidth={10}>
               <Select
-                width={15}
+                width={20}
                 value={TIME_UNITS.find(unit => unit.value === time.unit)}
                 options={TIME_UNITS}
                 onChange={handleUnitChange}
@@ -100,12 +100,12 @@ export function GroupByTime({ time, onChange }: Props) {
           
           <InlineField 
             label="Range Size" 
-            labelWidth={15}
+            labelWidth={20}
             tooltip="Optional: Number of time periods to group together"
           >
             <Input
               type="number"
-              width={15}
+              width={20}
               value={time.range_size || ''}
               onChange={handleRangeSizeChange}
               placeholder="Optional"

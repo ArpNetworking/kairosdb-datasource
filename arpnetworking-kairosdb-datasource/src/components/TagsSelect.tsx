@@ -58,7 +58,7 @@ export function TagsSelect({ tagName, tagValues = [], selectedValues = [], onCha
             <span style={{ cursor: 'help' }}>{tagName}</span>
           </Tooltip>
         }
-        labelWidth={12}
+        labelWidth={20}
       >
         <div></div>
       </InlineField>

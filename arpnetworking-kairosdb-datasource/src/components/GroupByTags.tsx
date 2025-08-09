@@ -27,11 +27,11 @@ export function GroupByTags({ tags = [], availableTags = [], onChange }: Props) 
   return (
     <InlineField 
       label="Group by Tags" 
-      labelWidth={15}
+      labelWidth={20}
       tooltip="Group results by tag values"
     >
       <MultiSelect
-        width={40}
+        width={50}
         options={options}
         value={selectedOptions}
         onChange={handleChange}

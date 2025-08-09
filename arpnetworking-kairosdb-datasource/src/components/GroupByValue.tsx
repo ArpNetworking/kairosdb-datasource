@@ -33,7 +33,7 @@ export function GroupByValue({ value, onChange }: Props) {
 
   return (
     <Stack direction="row" gap={1} alignItems="center">
-      <InlineField label="Group by Value" labelWidth={15}>
+      <InlineField label="Group by Value" labelWidth={20}>
         <Switch
           value={isEnabled}
           onChange={handleEnabledChange}
@@ -41,10 +41,10 @@ export function GroupByValue({ value, onChange }: Props) {
       </InlineField>
       
       {isEnabled && (
-        <InlineField label="Range Size" labelWidth={12}>
+        <InlineField label="Range Size" labelWidth={15}>
           <Input
             type="number"
-            width={15}
+            width={20}
             value={value?.range_size || 100}
             onChange={handleRangeSizeChange}
             placeholder="100"
