@@ -30,6 +30,12 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
       return [];
     }
 
+    // Don't try to load options for template variables
+    if (inputValue.includes('$') || inputValue.includes('{')) {
+      console.log('[MetricNameField] Template variable detected, returning empty options');
+      return [];
+    }
+
     try {
       console.log('[MetricNameField] Calling datasource.getMetricNames');
       const metrics = await datasource.getMetricNames(inputValue);
@@ -57,8 +63,12 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
 
   const handleInputChange = (inputValue: string) => {
     console.log('[MetricNameField] handleInputChange called with:', inputValue);
-    // Don't call onChange here - let AsyncSelect handle typing vs selection
-    // onChange will be called by handleSelectionChange when user selects/types a complete value
+    // For template variables (starting with $ or containing variables), update immediately
+    if (inputValue.includes('$') || inputValue.includes('{')) {
+      console.log('[MetricNameField] Template variable detected, updating immediately');
+      onChange(inputValue);
+    }
+    // Otherwise, let AsyncSelect handle typing vs selection through handleSelectionChange
   };
 
   // Convert current string value to SelectableValue for AsyncSelect
@@ -71,7 +81,7 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
     <InlineField 
       label="Metric Name" 
       labelWidth={20}
-      tooltip="Start typing to search for available metrics. Use ^ prefix (e.g., '^system') for prefix matching, or regular search for 'contains' matching."
+      tooltip="Start typing to search for available metrics. Use ^ prefix (e.g., '^system') for prefix matching, or template variables (e.g., '$metric_name')."
       required
     >
       <AsyncSelect

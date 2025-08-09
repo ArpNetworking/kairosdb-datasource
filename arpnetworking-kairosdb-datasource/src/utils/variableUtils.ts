@@ -1,4 +1,5 @@
 import { ScopedVars } from '@grafana/data';
+import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from '../datasource';
 
 export interface VariableQuery {
@@ -229,23 +230,36 @@ export class VariableQueryExecutor {
    * Simple variable interpolation (this matches the pattern from datasource.ts)
    */
   private interpolateVariables(value: string, scopedVars?: ScopedVars): string {
-    if (!value || !scopedVars) {
+    if (!value) {
       return value;
     }
     
-    // Handle both $variable and ${variable} syntax
-    return value
-      .replace(/\$\{([^}]+)\}/g, (match, varName) => {
-        // Handle ${variable} syntax (with potential format specifiers)
-        const [name, format] = varName.split(':');
-        const variable = scopedVars[name];
-        return variable ? this.formatVariable(variable.value, format) : match;
-      })
-      .replace(/\$(\w+)/g, (match, varName) => {
-        // Handle $variable syntax
-        const variable = scopedVars[varName];
-        return variable ? this.formatVariable(variable.value) : match;
-      });
+    try {
+      // Use Grafana's built-in template service for variable interpolation
+      const templateSrv = getTemplateSrv();
+      return templateSrv.replace(value, scopedVars);
+    } catch (error) {
+      console.warn('[VariableQueryExecutor] Error interpolating variables, falling back to custom implementation:', error);
+      
+      // Fallback to custom implementation if Grafana's service fails
+      if (!scopedVars) {
+        return value;
+      }
+      
+      // Handle both $variable and ${variable} syntax
+      return value
+        .replace(/\$\{([^}]+)\}/g, (match, varName) => {
+          // Handle ${variable} syntax (with potential format specifiers)
+          const [name, format] = varName.split(':');
+          const variable = scopedVars[name];
+          return variable ? this.formatVariable(variable.value, format) : match;
+        })
+        .replace(/\$(\w+)/g, (match, varName) => {
+          // Handle $variable syntax
+          const variable = scopedVars[varName];
+          return variable ? this.formatVariable(variable.value) : match;
+        });
+    }
   }
 
   private formatVariable(value: any, format?: string): string {

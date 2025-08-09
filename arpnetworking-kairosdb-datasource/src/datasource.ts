@@ -1,4 +1,4 @@
-import { getBackendSrv, isFetchError } from '@grafana/runtime';
+import { getBackendSrv, isFetchError, getTemplateSrv } from '@grafana/runtime';
 import {
   CoreApp,
   DataQueryRequest,
@@ -106,11 +106,35 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const to = range.to.valueOf();
 
       console.log('[DataSource] Query range:', { from, to });
-      console.log('[DataSource] Query targets:', options.targets);
+      console.log('[DataSource] Query targets (before interpolation):', options.targets);
+      console.log('[DataSource] ScopedVars:', options.scopedVars);
 
-      // Interpolate variables in all targets
-      const interpolatedTargets = this.interpolateVariablesInQueries(options.targets, options.scopedVars);
-      console.log('[DataSource] Interpolated targets:', interpolatedTargets);
+      // Apply template variable interpolation using Grafana's built-in service
+      const templateSrv = getTemplateSrv();
+      const interpolatedTargets = options.targets.map(target => ({
+        ...target,
+        query: target.query ? {
+          ...target.query,
+          metricName: templateSrv.replace(target.query.metricName || '', options.scopedVars),
+          alias: templateSrv.replace(target.query.alias || '', options.scopedVars),
+          tags: this.interpolateTagsWithTemplateSrv(target.query.tags || {}, options.scopedVars),
+          groupBy: target.query.groupBy ? {
+            ...target.query.groupBy,
+            tags: target.query.groupBy.tags ? target.query.groupBy.tags.map(tag => 
+              templateSrv.replace(tag, options.scopedVars)
+            ) : []
+          } : target.query.groupBy,
+          aggregators: target.query.aggregators ? target.query.aggregators.map(agg => ({
+            ...agg,
+            parameters: agg.parameters ? agg.parameters.map(param => ({
+              ...param,
+              value: templateSrv.replace(String(param.value || ''), options.scopedVars)
+            })) : agg.parameters
+          })) : target.query.aggregators
+        } : target.query
+      }));
+      
+      console.log('[DataSource] Interpolated targets (after interpolation):', interpolatedTargets);
 
       // Filter out targets without metric names
       const validTargets = interpolatedTargets.filter(target => {
@@ -714,23 +738,56 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   }
 
   interpolateVariable(value: string, scopedVars?: ScopedVars): string {
-    if (!value || !scopedVars) {
+    if (!value) {
       return value;
     }
 
-    // Handle both $variable and ${variable} syntax
-    return value
-      .replace(/\$\{([^}]+)\}/g, (match, varName) => {
-        // Handle ${variable} syntax (with potential format specifiers)
-        const [name, format] = varName.split(':');
-        const variable = scopedVars[name];
-        return variable ? this.formatVariable(variable.value, format) : match;
-      })
-      .replace(/\$(\w+)/g, (match, varName) => {
-        // Handle $variable syntax
-        const variable = scopedVars[varName];
-        return variable ? this.formatVariable(variable.value) : match;
-      });
+    try {
+      // Use Grafana's built-in template service for variable interpolation
+      const templateSrv = getTemplateSrv();
+      return templateSrv.replace(value, scopedVars);
+    } catch (error) {
+      console.warn('[DataSource] Error interpolating variables, falling back to custom implementation:', error);
+      
+      // Fallback to custom implementation if Grafana's service fails
+      if (!scopedVars) {
+        return value;
+      }
+
+      // Handle both $variable and ${variable} syntax
+      return value
+        .replace(/\$\{([^}]+)\}/g, (match, varName) => {
+          // Handle ${variable} syntax (with potential format specifiers)
+          const [name, format] = varName.split(':');
+          const variable = scopedVars[name];
+          return variable ? this.formatVariable(variable.value, format) : match;
+        })
+        .replace(/\$(\w+)/g, (match, varName) => {
+          // Handle $variable syntax
+          const variable = scopedVars[varName];
+          return variable ? this.formatVariable(variable.value) : match;
+        });
+    }
+  }
+
+  private interpolateTagsWithTemplateSrv(tags: { [key: string]: string[] }, scopedVars?: ScopedVars): { [key: string]: string[] } {
+    const templateSrv = getTemplateSrv();
+    const interpolatedTags: { [key: string]: string[] } = {};
+    
+    Object.keys(tags).forEach(tagName => {
+      const tagValues = tags[tagName];
+      if (Array.isArray(tagValues)) {
+        interpolatedTags[tagName] = tagValues.map(value => {
+          const interpolated = templateSrv.replace(value, scopedVars);
+          // If the interpolated value contains commas, split it (multi-value variable)
+          return interpolated.includes(',') ? interpolated.split(',') : [interpolated];
+        }).flat();
+      } else {
+        interpolatedTags[tagName] = tagValues;
+      }
+    });
+
+    return interpolatedTags;
   }
 
   private formatVariable(value: any, format?: string): string {
