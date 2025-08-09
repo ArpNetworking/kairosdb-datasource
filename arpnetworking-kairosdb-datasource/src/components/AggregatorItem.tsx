@@ -31,6 +31,46 @@ export function AggregatorItem({
     onParameterChange(param.name, value);
   };
 
+  const validatePercentileValue = (value: number): string | null => {
+    if (isNaN(value)) {
+      return 'Percentile must be a valid number';
+    }
+    if (value < 0 || value > 1) {
+      return 'Percentile must be between 0 and 1 (inclusive)';
+    }
+    return null;
+  };
+
+  const validateSamplingValue = (value: number): string | null => {
+    if (isNaN(value)) {
+      return 'Value must be a valid number';
+    }
+    if (value <= 0) {
+      return 'Value must be greater than 0';
+    }
+    return null;
+  };
+
+  const isPercentileParameter = (param: AggregatorParameter): boolean => {
+    return aggregator.name === 'percentile' && param.name === 'percentile';
+  };
+
+  const isSamplingParameter = (param: AggregatorParameter): boolean => {
+    return param.type === 'sampling';
+  };
+
+  const getValidationError = (param: AggregatorParameter): string | null => {
+    if (isPercentileParameter(param)) {
+      const numValue = typeof param.value === 'string' ? parseFloat(param.value) : param.value;
+      return validatePercentileValue(numValue);
+    }
+    if (isSamplingParameter(param) && !isAutoEnabled) {
+      const numValue = typeof param.value === 'string' ? parseFloat(param.value) : param.value;
+      return validateSamplingValue(numValue);
+    }
+    return null;
+  };
+
   const isAutoEnabled = aggregator.autoValueSwitch?.enabled || false;
   const isDependentParameter = (param: AggregatorParameter) => {
     return aggregator.autoValueSwitch?.dependentParameters.includes(param.type) || false;
@@ -91,48 +131,86 @@ export function AggregatorItem({
         );
         
       case 'sampling':
+        const samplingValidationError = getValidationError(param);
+        const hasSamplingError = samplingValidationError !== null;
+        
         return (
-          <InlineField key={key} label={param.name} labelWidth={8} transparent>
-            <Input
-              width={12}
-              type={isParamDisabled ? "text" : "number"}
-              value={isParamDisabled ? 'auto' : (paramValue || '')}
-              disabled={isParamDisabled}
-              readOnly={isParamDisabled}
-              style={isParamDisabled ? { 
-                backgroundColor: 'rgba(128, 128, 128, 0.1)', 
-                color: 'rgba(204, 204, 220, 0.6)',
-                cursor: 'not-allowed'
-              } : undefined}
-              onChange={(e) => {
-                if (!isParamDisabled) {
-                  handleParameterChange(param, parseFloat(e.currentTarget.value) || 0);
-                }
-              }}
-            />
-          </InlineField>
+          <div key={key}>
+            <InlineField label={param.name} labelWidth={8} transparent>
+              <Input
+                width={12}
+                type={isParamDisabled ? "text" : "number"}
+                value={isParamDisabled ? 'auto' : (paramValue || '')}
+                disabled={isParamDisabled}
+                readOnly={isParamDisabled}
+                invalid={hasSamplingError && !isParamDisabled}
+                style={isParamDisabled ? { 
+                  backgroundColor: 'rgba(128, 128, 128, 0.1)', 
+                  color: 'rgba(204, 204, 220, 0.6)',
+                  cursor: 'not-allowed'
+                } : (hasSamplingError ? {
+                  borderColor: '#e02f44',
+                  boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)'
+                } : undefined)}
+                onChange={(e) => {
+                  if (!isParamDisabled) {
+                    handleParameterChange(param, parseFloat(e.currentTarget.value) || 0);
+                  }
+                }}
+              />
+            </InlineField>
+            {hasSamplingError && !isParamDisabled && (
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#e02f44', 
+                marginTop: '2px',
+                marginLeft: '8px'
+              }}>
+                {samplingValidationError}
+              </div>
+            )}
+          </div>
         );
         
       default:
+        const validationError = getValidationError(param);
+        const hasError = validationError !== null;
+        
         return (
-          <InlineField key={key} label={param.name} labelWidth={8} transparent>
-            <Input
-              width={14}
-              value={isParamDisabled ? 'auto' : (paramValue || '')}
-              disabled={isParamDisabled}
-              readOnly={isParamDisabled}
-              style={isParamDisabled ? { 
-                backgroundColor: 'rgba(128, 128, 128, 0.1)', 
-                color: 'rgba(204, 204, 220, 0.6)',
-                cursor: 'not-allowed'
-              } : undefined}
-              onChange={(e) => {
-                if (!isParamDisabled) {
-                  handleParameterChange(param, e.currentTarget.value);
-                }
-              }}
-            />
-          </InlineField>
+          <div key={key}>
+            <InlineField label={param.name} labelWidth={8} transparent>
+              <Input
+                width={14}
+                value={isParamDisabled ? 'auto' : (paramValue || '')}
+                disabled={isParamDisabled}
+                readOnly={isParamDisabled}
+                invalid={hasError && !isParamDisabled}
+                style={isParamDisabled ? { 
+                  backgroundColor: 'rgba(128, 128, 128, 0.1)', 
+                  color: 'rgba(204, 204, 220, 0.6)',
+                  cursor: 'not-allowed'
+                } : (hasError ? {
+                  borderColor: '#e02f44',
+                  boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)'
+                } : undefined)}
+                onChange={(e) => {
+                  if (!isParamDisabled) {
+                    handleParameterChange(param, e.currentTarget.value);
+                  }
+                }}
+              />
+            </InlineField>
+            {hasError && !isParamDisabled && (
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#e02f44', 
+                marginTop: '2px',
+                marginLeft: '8px'
+              }}>
+                {validationError}
+              </div>
+            )}
+          </div>
         );
     }
   };
