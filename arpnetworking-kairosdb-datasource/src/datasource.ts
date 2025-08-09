@@ -414,13 +414,15 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             interpolatedAlias = alias;
           }
           
-          // Create series name - use interpolated alias or fall back to metric name with tags
+          // Create series name - use interpolated alias or fall back to metric name with relevant tags
           let seriesName = interpolatedAlias;
-          const tagKeys = Object.keys(tags);
           
-          // If alias wasn't changed and we have tags, include them in the series name
-          if (seriesName === alias && tagKeys.length > 0) {
-            const tagParts = tagKeys.map(key => `${key}=${tags[key].join(',')}`);
+          // Only include tags that were explicitly specified in the query
+          const relevantTagKeys = this.getRelevantTagKeys(targetQuery, tags);
+          
+          // If alias wasn't changed and we have relevant tags, include them in the series name
+          if (seriesName === alias && relevantTagKeys.length > 0) {
+            const tagParts = relevantTagKeys.map(key => `${key}=${tags[key].join(',')}`);
             seriesName = `${interpolatedAlias}{${tagParts.join(', ')}}`;
           }
 
@@ -1121,6 +1123,37 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     return expandedNames;
   }
 
+  /**
+   * Get the tag keys that should be included in series names.
+   * Only includes tags that were explicitly specified in the query's tags section or groupBy.tags
+   */
+  private getRelevantTagKeys(targetQuery: any, resultTags: { [key: string]: string[] }): string[] {
+    const relevantTagKeys: string[] = [];
+    
+    // Include tags that were specified in the query.tags section
+    if (targetQuery.tags && typeof targetQuery.tags === 'object') {
+      Object.keys(targetQuery.tags).forEach(tagKey => {
+        // Only include if this tag key has values in the query AND in the result
+        if (targetQuery.tags[tagKey] && targetQuery.tags[tagKey].length > 0 && resultTags[tagKey]) {
+          relevantTagKeys.push(tagKey);
+        }
+      });
+    }
+    
+    // Include tags that were specified in groupBy.tags
+    if (targetQuery.groupBy && targetQuery.groupBy.tags && Array.isArray(targetQuery.groupBy.tags)) {
+      targetQuery.groupBy.tags.forEach((tagKey: string) => {
+        // Only include if this tag exists in the result and we haven't already added it
+        if (resultTags[tagKey] && !relevantTagKeys.includes(tagKey)) {
+          relevantTagKeys.push(tagKey);
+        }
+      });
+    }
+    
+    console.log('[DataSource] Relevant tag keys for series naming:', relevantTagKeys, 'from query tags:', Object.keys(targetQuery.tags || {}), 'groupBy tags:', targetQuery.groupBy?.tags);
+    
+    return relevantTagKeys;
+  }
 
   /**
    * Checks whether we can connect to the KairosDB API.
