@@ -1105,8 +1105,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       }
     }
 
-    // Create sparse heatmap format with correct field order for Grafana
-    // Sparse format expects: x, yMin, yMax, count (fields[0], fields[1], fields[2], fields[3])
+    // Create sparse heatmap format respecting Grafana's expected field positions:
+    // fields[1] = Y axis display field, fields[3] = value field
     const fields: any[] = [];
     
     // Field 0: x (time) - for time axis
@@ -1117,7 +1117,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       values: times,
     });
 
-    // Field 1: yMin - used by Grafana for Y axis display formatting
+    // Field 1: yMin - used by Grafana for Y axis display formatting (fields[1])
     fields.push({
       name: 'yMin',
       type: FieldType.number,
@@ -1141,7 +1141,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       labels: {},
     });
 
-    // Field 3: count - the cell values (Grafana expects this at index 3)
+    // Field 3: count - the cell values (Grafana expects this at fields[3])
     fields.push({
       name: 'count',
       type: FieldType.number,
@@ -1153,9 +1153,25 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       labels: {},
     });
 
+    // Field 4: xMax - required by tooltip but positioned last to not disturb other indices
+    const xMax: number[] = [];
+    for (const t of times) {
+      xMax.push(t + samplingInterval);
+    }
+    
+    fields.push({
+      name: 'xMax',
+      type: FieldType.time,
+      config: {
+        interval: samplingInterval,  // Required by tooltip utils.ts:85
+      },
+      values: xMax,
+    });
+
     const frameMeta = {
       type: DataFrameType.HeatmapCells
     };
+
 
 
     // Create heatmap-compatible data frame with metadata

@@ -140,8 +140,8 @@ describe('DataSource Histogram Parsing', () => {
     expect(frame.name).toBe('test-series');
     expect(frame.meta?.type).toBe(DataFrameType.HeatmapCells);
     
-    // Should have exactly 4 fields for sparse heatmap: x, yMin, yMax, count
-    expect(frame.fields).toHaveLength(4);
+    // Should have exactly 5 fields for sparse heatmap: x, yMin, yMax, count, xMax
+    expect(frame.fields).toHaveLength(5);
     
     // Find field positions
     const fieldNames = frame.fields.map(f => f.name);
@@ -149,11 +149,13 @@ describe('DataSource Histogram Parsing', () => {
     const yMinIndex = fieldNames.indexOf('yMin');
     const yMaxIndex = fieldNames.indexOf('yMax');
     const countIndex = fieldNames.indexOf('count');
+    const xMaxIndex = fieldNames.indexOf('xMax');
     
     expect(xIndex).toBe(0);      // x should be first
-    expect(yMinIndex).toBe(1);   // yMin should be second  
+    expect(yMinIndex).toBe(1);   // yMin should be second (Grafana uses fields[1] for Y axis)  
     expect(yMaxIndex).toBe(2);   // yMax should be third
-    expect(countIndex).toBe(3);  // count should be fourth
+    expect(countIndex).toBe(3);  // count should be fourth (Grafana uses fields[3] for values)
+    expect(xMaxIndex).toBe(4);   // xMax should be last (for tooltip without disrupting indices)
     
     // Should have 6 data points (bins with count > 0):
     // Time 1640995200000: 0.1->5, 0.5->12, 1.0->8
@@ -167,11 +169,15 @@ describe('DataSource Histogram Parsing', () => {
     expect(frame.fields[yMinIndex].values[0]).toBe(0.1); // yMin
     expect(frame.fields[yMaxIndex].values[0]).toBeGreaterThan(0.1); // yMax (computed)
     expect(frame.fields[countIndex].values[0]).toBe(5); // count
+    expect(frame.fields[xMaxIndex].values[0]).toBe(1640995200000 + 60000); // xMax (time + interval)
     
     // Check that yMax values are all greater than yMin values
     for (let i = 0; i < frame.fields[yMinIndex].values.length; i++) {
       expect(frame.fields[yMaxIndex].values[i]).toBeGreaterThan(frame.fields[yMinIndex].values[i]);
     }
+    
+    // Check that xMax field has proper config for tooltip support
+    expect(frame.fields[xMaxIndex].config.interval).toBe(60000);
     
     // Check time values - should have both timestamps
     expect(frame.fields[xIndex].values).toContain(1640995200000);
