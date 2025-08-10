@@ -78,6 +78,11 @@ export function AggregatorItem({
 
   const renderParameter = (param: AggregatorParameter) => {
     if (!param || !param.name) return null;
+    
+    // Hide alignment parameters from UI - they are internal to KairosDB
+    if (param.type === 'alignment') {
+      return null;
+    }
     const key = `${aggregator.name || 'unknown'}-${param.name}`;
     const paramValue = param.value || '';
     
