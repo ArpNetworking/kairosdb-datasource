@@ -27,6 +27,7 @@ import { ParameterObjectBuilder } from './utils/parameterUtils';
 import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtils';
 import { SimpleCache, debounce, generateCacheKey, generateApiCacheKey, parseSearchQuery } from './utils/cacheUtils';
 import { AVAILABLE_AGGREGATORS } from './aggregators';
+import { MigrationUtils } from './utils/migrationUtils';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
@@ -175,7 +176,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
         // Add aggregators if any are specified
         if (query.aggregators && query.aggregators.length > 0) {
-          metric.aggregators = query.aggregators.map(agg => {
+          // Ensure aggregators are migrated from old format if needed
+          const migratedAggregators = MigrationUtils.needsMigration(query.aggregators) 
+            ? MigrationUtils.migrateAggregators(query.aggregators)
+            : query.aggregators;
+            
+          metric.aggregators = migratedAggregators.map(agg => {
             
             const aggregator: { name: string; [key: string]: any } = {
               name: agg.name
