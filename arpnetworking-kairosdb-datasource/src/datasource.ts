@@ -26,6 +26,7 @@ import { lastValueFrom } from 'rxjs';
 import { ParameterObjectBuilder } from './utils/parameterUtils';
 import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtils';
 import { SimpleCache, debounce, generateCacheKey, generateApiCacheKey, parseSearchQuery } from './utils/cacheUtils';
+import { AVAILABLE_AGGREGATORS } from './aggregators';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
@@ -237,6 +238,37 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                 }
               }
               
+              // For range aggregators, ensure sampling parameters are always included
+              // (even if alignment is not SAMPLING)
+              if (this.requiresSamplingParameters(agg.name) && samplingParams.length > 0) {
+                // Only add sampling object if it doesn't already exist and alignment wasn't SAMPLING
+                if (!aggregator.sampling && alignmentParam?.value !== 'SAMPLING') {
+                  const samplingObj: any = {};
+                  samplingParams.forEach(param => {
+                    if (param.value !== undefined && param.value !== null && param.value !== '') {
+                      let processedValue: any = param.value;
+                      
+                      // Apply auto value logic
+                      if (parameterBuilder.isOverriddenByAutoValue && parameterBuilder.isOverriddenByAutoValue(param)) {
+                        processedValue = param.type === 'sampling' ? parameterBuilder.autoIntervalValue : parameterBuilder.autoIntervalUnit;
+                      }
+                      
+                      // Convert numeric values
+                      if (param.name === 'value') {
+                        processedValue = typeof processedValue === 'string' ? parseFloat(processedValue) : processedValue;
+                      }
+                      
+                      samplingObj[param.name] = processedValue;
+                    }
+                  });
+                  
+                  // Only set sampling object if it has content
+                  if (Object.keys(samplingObj).length > 0) {
+                    aggregator.sampling = samplingObj;
+                  }
+                }
+              }
+              
               // Handle other parameters
               otherParams.forEach(param => {
                 if (param.value !== undefined && param.value !== null && param.value !== '') {
@@ -315,6 +347,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         metrics: metrics
       };
 
+      console.log('[DataSource] Sending KairosDB request:', {
+        url: `${this.baseUrl}/api/v1/datapoints/query`,
+        timeRange: { from, to },
+        metricsCount: metrics.length,
+        metrics: metrics.map(m => ({ name: m.name, tags: m.tags, aggregators: m.aggregators?.map(a => a.name) }))
+      });
 
       const response = getBackendSrv().fetch({
         url: `${this.baseUrl}/api/v1/datapoints/query`,
@@ -469,6 +507,57 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
     } catch (error) {
       console.error('[DataSource] Error in KairosDB query method:', error);
+      
+      // Enhanced error handling for HTTP errors
+      if (error && typeof error === 'object') {
+        const httpError = error as any;
+        
+        if (httpError.status) {
+          console.error(`[DataSource] HTTP ${httpError.status} ${httpError.statusText || ''}`);
+          
+          if (httpError.data) {
+            console.error('[DataSource] Response data:', httpError.data);
+          }
+          
+          // Provide helpful error messages based on status code
+          let userMessage = `KairosDB server error (HTTP ${httpError.status})`;
+          
+          switch (httpError.status) {
+            case 502:
+              userMessage = 'KairosDB server is unreachable (502 Bad Gateway). Please check if KairosDB is running and accessible.';
+              break;
+            case 500:
+              userMessage = 'KairosDB server internal error (500). Check KairosDB server logs for details.';
+              break;
+            case 404:
+              userMessage = 'KairosDB endpoint not found (404). Please verify the datasource URL configuration.';
+              break;
+            case 400:
+              userMessage = 'Invalid query sent to KairosDB (400). Check your query parameters.';
+              if (httpError.data && httpError.data.errors) {
+                userMessage += ` KairosDB errors: ${JSON.stringify(httpError.data.errors)}`;
+              }
+              break;
+            case 503:
+              userMessage = 'KairosDB service temporarily unavailable (503). Please try again later.';
+              break;
+            default:
+              if (httpError.statusText) {
+                userMessage = `KairosDB server error: ${httpError.status} ${httpError.statusText}`;
+              }
+          }
+          
+          return { 
+            data: [],
+            error: {
+              message: userMessage,
+              status: httpError.status
+            }
+          };
+        }
+      }
+      
+      // Fallback for non-HTTP errors
       return { 
         data: [],
         error: {
@@ -477,6 +566,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       };
     }
   }
+
 
   async request(url: string, params?: string) {
     const response = getBackendSrv().fetch({
@@ -891,6 +981,25 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       .filter((suffix: string) => suffix.length > 0);
   }
 
+  /**
+   * Check if an aggregator requires sampling parameters (value and unit)
+   * Range aggregators and percentile always need sampling parameters
+   */
+  private requiresSamplingParameters(aggregatorName: string): boolean {
+    const aggregatorDef = AVAILABLE_AGGREGATORS.find(agg => agg.name === aggregatorName);
+    
+    if (!aggregatorDef) {
+      return false;
+    }
+    
+    // Check if the aggregator has sampling parameters in its definition
+    const hasSamplingParams = aggregatorDef.parameters?.some(param => 
+      param.type === 'sampling' || param.type === 'sampling_unit'
+    );
+    
+    return hasSamplingParams || false;
+  }
+
   private deepMerge(target: any, source: any): void {
     for (const key in source) {
       if (source.hasOwnProperty(key)) {
@@ -1099,6 +1208,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     const defaultErrorMessage = 'Cannot connect to KairosDB';
 
     try {
+      console.log('[DataSource] Testing connection to:', this.baseUrl);
       const response = await this.request('/api/v1/version');
       if (response.status === 200) {
         const data = response.data as KairosDBVersionResponse;
@@ -1113,11 +1223,25 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         };
       }
     } catch (err) {
+      console.error('[DataSource] Test connection failed:', err);
+      
       let message = '';
       if (typeof err === 'string') {
         message = err;
       } else if (isFetchError(err)) {
-        message = 'Fetch error: ' + (err.statusText ? err.statusText : defaultErrorMessage);
+        // Enhanced error handling for specific HTTP status codes
+        if (err.status === 502) {
+          message = 'KairosDB server is unreachable (502 Bad Gateway). Please check if KairosDB is running and accessible.';
+        } else if (err.status === 404) {
+          message = 'KairosDB endpoint not found (404). Please verify the datasource URL configuration.';
+        } else if (err.status === 500) {
+          message = 'KairosDB server internal error (500). Check KairosDB server logs for details.';
+        } else if (err.status === 503) {
+          message = 'KairosDB service temporarily unavailable (503). Please try again later.';
+        } else {
+          message = 'Fetch error: ' + (err.statusText ? err.statusText : defaultErrorMessage);
+        }
+        
         if (err.data && err.data.error && err.data.error.code) {
           message += ': ' + err.data.error.code + '. ' + err.data.error.message;
         }

@@ -7,6 +7,7 @@ import { MetricNameField } from './MetricNameField';
 import { Aggregators } from './Aggregators';
 import { TagsEditor } from './TagsEditor';
 import { GroupByEditor } from './GroupByEditor';
+import { MigrationUtils } from '../utils/migrationUtils';
 
 type Props = QueryEditorProps<DataSource, KairosDBQuery, KairosDBDataSourceOptions>;
 
@@ -14,7 +15,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
   const [availableTags, setAvailableTags] = React.useState<string[]>([]);
 
   // Initialize query with defaults if empty - ensure all properties exist
-  const currentQuery = {
+  const baseQuery = {
     metricName: '',
     alias: '',
     tags: {},
@@ -27,11 +28,25 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     overrideScalar: false,
     ...query.query
   };
+
+  // Migrate aggregators from old format if needed
+  const currentQuery = {
+    ...baseQuery,
+    aggregators: baseQuery.aggregators && MigrationUtils.needsMigration(baseQuery.aggregators)
+      ? MigrationUtils.migrateAggregators(baseQuery.aggregators)
+      : baseQuery.aggregators
+  };
   
   
-  // Ensure we have a valid query object
+  // Ensure we have a valid query object and persist migrated data
   React.useEffect(() => {
     if (!query.query) {
+      onChange({
+        ...query,
+        query: currentQuery
+      });
+    } else if (baseQuery.aggregators && MigrationUtils.needsMigration(baseQuery.aggregators)) {
+      // Persist migrated aggregators back to the dashboard
       onChange({
         ...query,
         query: currentQuery

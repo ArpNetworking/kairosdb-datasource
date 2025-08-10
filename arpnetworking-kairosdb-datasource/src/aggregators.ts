@@ -150,6 +150,7 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
   new RangeAggregator('count'),
   new RangeAggregator('dev'),
   new RangeAggregator('first'),
+  new RangeAggregator('gaps'),
   new RangeAggregator('last'),
   new RangeAggregator('max'),
   new RangeAggregator('min'),
@@ -163,7 +164,7 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
 
 // Scalar aggregators (for enforcement)
 export const SCALAR_AGGREGATOR_NAMES = [
-  'avg', 'count', 'dev', 'diff', 'first', 'last', 'max', 'min', 
+  'avg', 'count', 'dev', 'diff', 'first', 'gaps', 'last', 'max', 'min', 
   'percentile', 'rate', 'sampler', 'scale', 'sum'
 ];
 
