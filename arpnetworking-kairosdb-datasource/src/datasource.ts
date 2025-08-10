@@ -1098,38 +1098,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         
         if (binCount > 0) { // Only include bins with data
           times.push(timestamp);
-          yMins.push(binMin);
-          yMaxs.push(this.computeBinMax(binMin, precision));
-          counts.push(binCount);
+          yMins.push(Number(binMin));
+          yMaxs.push(Number(this.computeBinMax(binMin, precision)));
+          counts.push(Number(binCount));
         }
       }
     }
 
-    // Build fields array - match old plugin structure based on feature toggles
+    // Create dense heatmap format (only one Y field to avoid sparse format)
+    // Dense format expects: x, yMin (single Y field), count 
     const fields: any[] = [];
     
-    // Check if newVizTooltips feature toggle is enabled (like old plugin does)
-    const config = (window as any)?.grafanaBootData?.settings || {};
-    const hasNewVizTooltips = config.featureToggles?.newVizTooltips;
-
-    if (hasNewVizTooltips) {
-      // New viz tooltips enabled: add xMax field first
-      const xMax: number[] = [];
-      for (const t of times) {
-        xMax.push(t + samplingInterval);
-      }
-      
-      fields.push({
-        name: 'xMax',
-        type: FieldType.time,
-        config: {
-          interval: samplingInterval,
-        },
-        values: xMax,
-      });
-    }
-
-    // Add x field (time) - always present
+    // Add x field (time) - always first for dense heatmap
     fields.push({
       name: 'x',
       type: FieldType.time,
@@ -1137,37 +1117,47 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       values: times,
     });
 
-    // Add yMin field (bin minimum values) - called "Value" in old plugin but "yMin" for histograms
+    // Add yMin field as the single Y field for dense format
     fields.push({
       name: 'yMin',
       type: FieldType.number,
-      config: {},
+      config: {
+        unit: 'short',
+        displayName: 'Bin Min'
+      },
       values: yMins,
+      labels: {},
     });
 
-    // Add yMax field (bin maximum values)
-    fields.push({
-      name: 'yMax',
-      type: FieldType.number,
-      config: {},
-      values: yMaxs,
-    });
-
-    // Add count field (bin counts)
+    // Add count field (cell values)
     fields.push({
       name: 'count',
       type: FieldType.number,
-      config: {},
+      config: {
+        unit: 'short',
+        displayName: 'Count'
+      },
       values: counts,
+      labels: {},
     });
 
-    // Create heatmap-compatible data frame 
-    const frame = createDataFrame({
+    // Store yMax in frame metadata for bucket size calculation
+    const frameMeta = {
+      type: DataFrameType.HeatmapCells,
+      custom: {
+        yMax: yMaxs  // Store yMax for any processing that needs it
+      }
+    };
+
+
+    // Create heatmap-compatible data frame with metadata
+    const frame = {
       refId: targetRefId,
       name: seriesName,
       fields: fields,
-      meta: { type: DataFrameType.HeatmapCells }
-    });
+      length: times.length,
+      meta: frameMeta
+    };
 
     dataFrames.push(frame);
     return dataFrames;
