@@ -51,12 +51,29 @@ export function AggregatorItem({
     return null;
   };
 
+  const validatePrecisionValue = (value: number): string | null => {
+    if (isNaN(value)) {
+      return 'Precision must be a valid number';
+    }
+    if (value < 1 || value > 52) {
+      return 'Precision must be between 1 and 52 (inclusive)';
+    }
+    if (!Number.isInteger(value)) {
+      return 'Precision must be an integer';
+    }
+    return null;
+  };
+
   const isPercentileParameter = (param: AggregatorParameter): boolean => {
     return aggregator.name === 'percentile' && param.name === 'percentile';
   };
 
   const isSamplingParameter = (param: AggregatorParameter): boolean => {
     return param.type === 'sampling';
+  };
+
+  const isPrecisionParameter = (param: AggregatorParameter): boolean => {
+    return aggregator.name === 'merge' && param.name === 'precision';
   };
 
   const getValidationError = (param: AggregatorParameter): string | null => {

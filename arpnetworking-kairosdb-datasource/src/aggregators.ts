@@ -153,6 +153,7 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
   new RangeAggregator('gaps'),
   new RangeAggregator('last'),
   new RangeAggregator('max'),
+  new MergeAggregator(),
   new RangeAggregator('min'),
   new RangeAggregator('sum'),
   new BaseAggregator('diff'),
@@ -162,9 +163,44 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
   new ScaleAggregator(),
 ].sort((a, b) => a.name.localeCompare(b.name));
 
+// Merge aggregator for histograms
+export class MergeAggregator extends RangeAggregator {
+  static readonly NAME = 'merge';
+  
+  constructor() {
+    super(MergeAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'value',
+        type: 'sampling',
+        value: 1,
+        text: '1'
+      },
+      {
+        name: 'unit',
+        type: 'sampling_unit',
+        value: 'minutes',
+        text: 'minutes'
+      },
+      {
+        name: 'precision',
+        type: 'number',
+        value: 12,
+        text: '12'
+      }
+    ];
+    
+    // Auto value switch controls sampling parameters (not precision)
+    this.autoValueSwitch = {
+      enabled: true, // Default to auto mode
+      dependentParameters: ['sampling', 'sampling_unit']
+    };
+  }
+}
+
 // Scalar aggregators (for enforcement)
 export const SCALAR_AGGREGATOR_NAMES = [
-  'avg', 'count', 'dev', 'diff', 'first', 'gaps', 'last', 'max', 'min', 
+  'avg', 'count', 'dev', 'diff', 'first', 'gaps', 'last', 'max', 'merge', 'min', 
   'percentile', 'rate', 'sampler', 'scale', 'sum'
 ];
 
