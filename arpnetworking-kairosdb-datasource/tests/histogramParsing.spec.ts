@@ -147,10 +147,10 @@ describe('DataSource Histogram Parsing', () => {
     // Should have 6 data points (3 bins per timestamp)
     expect(frame.fields[0].values).toHaveLength(6);
     
-    // Check some values
+    // Check some values - bins are sorted in ascending order (0.1, 0.5, 1.0)
     expect(frame.fields[0].values[0]).toBe(1640995200000); // xMin
     expect(frame.fields[1].values[0]).toBe(1640995260000); // xMax  
-    expect(frame.fields[2].values[0]).toBe(0.1); // yMin
-    expect(frame.fields[4].values[0]).toBe(5); // count
+    expect(frame.fields[2].values[0]).toBe(0.1); // yMin (lowest bin first)
+    expect(frame.fields[4].values[0]).toBe(5); // count (count for 0.1 bin)
   });
 });

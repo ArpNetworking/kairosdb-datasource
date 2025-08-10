@@ -1084,12 +1084,12 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       
       // Sort bins by numeric value (sparse representation)
       const sortedBinKeys = Object.keys(bins)
-        .map(k => parseFloat(k))
-        .sort((a, b) => a - b);
+        .sort((a, b) => parseFloat(a) - parseFloat(b));
 
       // Convert each bin to heatmap cell
-      for (const binMin of sortedBinKeys) {
-        const binCount = bins[binMin.toString()];
+      for (const binKeyString of sortedBinKeys) {
+        const binMin = parseFloat(binKeyString);
+        const binCount = bins[binKeyString];
         
         times.push(timestamp);
         xMaxs.push(timestamp + samplingInterval);
