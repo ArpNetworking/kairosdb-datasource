@@ -50,24 +50,13 @@ describe('Multiple Queries Debug', () => {
       },
     ];
 
-    console.log('=== TARGET CONFIGURATION ===');
-    targets.forEach((target) => {
-      console.log(`Target ${target.refId}:`);
-      console.log(`  Metric: ${target.query.metricName}`);
-      console.log(`  Alias: ${target.query.alias}`);
-      console.log(`  Aggregators: ${target.query.aggregators.map((a) => a.name).join(', ')}`);
-      console.log(`  GroupBy: ${target.query.groupBy.tags.join(', ')}`);
-    });
-
-    // Step 1: Test metric expansion (this should work fine since no multi-value variables)
-    console.log('\n=== METRIC EXPANSION ===');
+    // Test metric expansion (this should work fine since no multi-value variables)
     targets.forEach((target) => {
       const expansion = (datasource as any).expandMetricNames(target.query.metricName, target.refId, scopedVars);
-      console.log(`Target ${target.refId} expansion:`, expansion.names);
+      expect(expansion.names).toEqual(['cpu.usage']);
     });
 
-    // Step 2: Simulate building the composite keys
-    console.log('\n=== COMPOSITE KEY MAPPING ===');
+    // Test building the composite keys
     const metricNameToTargetMap: { [compositeKey: string]: any } = {};
     const metricOrderToRefId: { [metricName: string]: string[] } = {};
 
@@ -85,16 +74,12 @@ describe('Multiple Queries Debug', () => {
           metricOrderToRefId[metricName] = [];
         }
         metricOrderToRefId[metricName].push(target.refId);
-
-        console.log(`Created mapping: ${compositeKey} -> alias: "${target.query.alias}"`);
       });
     });
 
-    console.log('\nmetricOrderToRefId:', metricOrderToRefId);
+    expect(metricOrderToRefId['cpu.usage']).toEqual(['A', 'B']);
 
-    // Step 3: Simulate what KairosDB response would look like
-    // The key question: do avg and max aggregators make the results distinguishable?
-    console.log('\n=== SIMULATED KAIROS RESPONSE ===');
+    // Test what KairosDB response would look like
 
     // Case 1: If KairosDB returns results in same order as metrics were sent
     const simulatedResponse = {
@@ -113,13 +98,10 @@ describe('Multiple Queries Debug', () => {
       ],
     };
 
-    console.log('Simulated results:');
-    simulatedResponse.queries[0].results.forEach((result, index) => {
-      console.log(`  Result ${index}: ${result.name}, host=${result.tags.host[0]}, value=${result.values[0][1]}`);
-    });
+    // Verify simulated results structure
+    expect(simulatedResponse.queries[0].results).toHaveLength(4);
 
-    // Step 4: Test the mapping logic
-    console.log('\n=== MAPPING RESULTS ===');
+    // Test the mapping logic
     const metricResultCount: { [metricName: string]: number } = {};
 
     simulatedResponse.queries[0].results.forEach((result, resultIndex) => {
@@ -138,13 +120,10 @@ describe('Multiple Queries Debug', () => {
 
       const mappingInfo = metricNameToTargetMap[compositeKey];
 
-      console.log(`Result ${resultIndex}:`);
-      console.log(`  Metric: ${metricName}, Host: ${result.tags.host[0]}`);
-      console.log(`  Calculated refId: ${refId} (refIdIndex: ${refIdIndex})`);
-      console.log(`  Composite key: ${compositeKey}`);
-      console.log(`  Found mapping: ${!!mappingInfo}`);
+      // Verify mapping exists and is correct
+      expect(mappingInfo).toBeDefined();
       if (mappingInfo) {
-        console.log(`  Target alias: "${mappingInfo.target.query.alias}"`);
+        expect(['$_tag_group_host avg', '$_tag_group_host max']).toContain(mappingInfo.target.query.alias);
       }
 
       metricResultCount[metricName]++;

@@ -49,23 +49,7 @@ describe('Literal String Alias Issue', () => {
       { location: { text: 'Office', value: 'Office' } },
     ];
 
-    console.log('=== PROBLEM: Literal String Alias ===');
-    individualScopedVars.forEach((vars, index) => {
-      const result = templateSrv.replace(literalAlias, vars);
-      console.log(`Metric ${index} (${vars.location.value}): "${result}"`);
-    });
-
-    console.log('\n=== SOLUTION: Variable Alias ===');
-    individualScopedVars.forEach((vars, index) => {
-      const result = templateSrv.replace(variableAlias, vars);
-      console.log(`Metric ${index} (${vars.location.value}): "${result}"`);
-    });
-
-    console.log('\n=== SOLUTION: Curly Variable Alias ===');
-    individualScopedVars.forEach((vars, index) => {
-      const result = templateSrv.replace(curlyVariableAlias, vars);
-      console.log(`Metric ${index} (${vars.location.value}): "${result}"`);
-    });
+    // Test the actual behavior without verbose logging
 
     // Test the actual results
     const literalResults = individualScopedVars.map((vars) => templateSrv.replace(literalAlias, vars));
@@ -116,10 +100,6 @@ describe('Literal String Alias Issue', () => {
     const result1 = templateSrv.replace(alias, scopedVarsAttic);
     const result2 = templateSrv.replace(alias, scopedVarsBedroom);
 
-    console.log('Debug log recreation:');
-    console.log('  Attic result:', result1);
-    console.log('  Bedroom result:', result2);
-
     // Both return the same literal string because there are no variables to replace
     expect(result1).toBe('{Attic,Bedroom,Garage,Living Room,Office}');
     expect(result2).toBe('{Attic,Bedroom,Garage,Living Room,Office}');
@@ -128,10 +108,6 @@ describe('Literal String Alias Issue', () => {
     const fixedAlias = '$location';
     const fixedResult1 = templateSrv.replace(fixedAlias, scopedVarsAttic);
     const fixedResult2 = templateSrv.replace(fixedAlias, scopedVarsBedroom);
-
-    console.log('Fixed results:');
-    console.log('  Attic result:', fixedResult1);
-    console.log('  Bedroom result:', fixedResult2);
 
     expect(fixedResult1).toBe('Attic');
     expect(fixedResult2).toBe('Bedroom');

@@ -30,10 +30,7 @@ describe('Alias Variable Edge Cases', () => {
 
     const expansion = (datasource as any).expandMetricNames('$datacenter/$location/$environment/cpu', 'A', scopedVars);
 
-    console.log('Mixed variables expansion:', {
-      names: expansion.names.slice(0, 2), // Show first 2 for brevity
-      variableValues: expansion.variableValues.slice(0, 2),
-    });
+    // Verify mixed variables expansion works correctly
 
     // Should expand only the multi-value variable
     expect(expansion.names).toHaveLength(3); // 3 locations
@@ -250,10 +247,9 @@ describe('Alias Variable Edge Cases', () => {
       const interpolatedAlias = templateReplace(alias, metricVariableValues);
       processedAliases.push(interpolatedAlias);
 
-      console.log(`Processing result ${index}:`);
-      console.log(`  Result name: ${result.name}`);
-      console.log(`  Variable values:`, metricVariableValues);
-      console.log(`  Interpolated alias: ${interpolatedAlias}`);
+      // Process result with variable interpolation
+      expect(interpolatedAlias).toBeDefined();
+      expect(metricVariableValues).toBeDefined();
     });
 
     expect(processedAliases).toEqual(['server1 CPU Usage', 'server2 CPU Usage']);

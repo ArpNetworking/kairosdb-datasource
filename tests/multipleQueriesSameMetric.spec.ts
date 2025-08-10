@@ -35,8 +35,8 @@ describe('Multiple Queries Same Metric Issue', () => {
       variableValues: {},
     };
 
-    console.log('After Query A mapping:');
-    console.log('  cpu.usage ->', metricNameToTargetMap['cpu.usage'].target.query.alias);
+    // Verify initial mapping
+    expect(metricNameToTargetMap['cpu.usage'].target.query.alias).toBe('$_tag_group_host avg');
 
     // Step 2: Second target OVERWRITES the mapping
     const targetB = {
@@ -54,8 +54,8 @@ describe('Multiple Queries Same Metric Issue', () => {
       variableValues: {},
     };
 
-    console.log('After Query B mapping (OVERWROTE Query A):');
-    console.log('  cpu.usage ->', metricNameToTargetMap['cpu.usage'].target.query.alias);
+    // Verify overwrite occurred (this is the problem)
+    expect(metricNameToTargetMap['cpu.usage'].target.query.alias).toBe('$_tag_group_host max');
 
     // Step 3: Simulate response processing
     const responseResults = [
@@ -79,13 +79,15 @@ describe('Multiple Queries Same Metric Issue', () => {
       };
     });
 
-    console.log('Processed results (showing the problem):');
+    // Verify the problem: all results get the wrong alias
     processedResults.forEach((item, index) => {
       const isCorrect = item.aliasFromMapping === item.expectedAlias;
-      const status = isCorrect ? '✓' : '✗';
-      console.log(`  ${status} Result ${index}: refId=${item.resultRefId}, host=${item.resultHost}`);
-      console.log(`      Got alias: "${item.aliasFromMapping}"`);
-      console.log(`      Expected:  "${item.expectedAlias}"`);
+      if (index < 2) {
+        // First two results should be 'avg' but get 'max' (problem)
+        expect(isCorrect).toBe(false);
+        expect(item.aliasFromMapping).toBe('$_tag_group_host max');
+        expect(item.expectedAlias).toBe('$_tag_group_host avg');
+      }
     });
 
     // Show that all results got the wrong alias (Query B's alias)
@@ -137,9 +139,9 @@ describe('Multiple Queries Same Metric Issue', () => {
       variableValues: {},
     };
 
-    console.log('With composite keys (no collision):');
-    console.log(`  ${keyA} -> ${metricNameToTargetMap[keyA].target.query.alias}`);
-    console.log(`  ${keyB} -> ${metricNameToTargetMap[keyB].target.query.alias}`);
+    // Verify composite keys prevent collision
+    expect(metricNameToTargetMap[keyA].target.query.alias).toBe('$_tag_group_host avg');
+    expect(metricNameToTargetMap[keyB].target.query.alias).toBe('$_tag_group_host max');
 
     // Simulate response processing with composite keys
     const responseResults = [
@@ -160,12 +162,7 @@ describe('Multiple Queries Same Metric Issue', () => {
       };
     });
 
-    console.log('With composite key solution:');
-    processedResults.forEach((item, index) => {
-      console.log(`  ✓ Result ${index}: refId=${item.resultRefId}, host=${item.resultHost}`);
-      console.log(`      Key: ${item.compositeKey}`);
-      console.log(`      Alias: "${item.aliasFromMapping}"`);
-    });
+    // Verify composite key solution works correctly
 
     // Verify all mappings are found and correct
     expect(processedResults.every((item) => item.aliasFromMapping !== 'NOT FOUND')).toBe(true);
