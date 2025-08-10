@@ -30,7 +30,6 @@ pipeline {
           sh '''
             # Source nvm and install/use Node version from .nvmrc
             . $NVM_DIR/nvm.sh
-            nvm install
             nvm use
             
             # Build and test
