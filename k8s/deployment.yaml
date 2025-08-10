@@ -1,31 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-kairosdb-old
+  name: grafana-kairosdb
   labels:
-    app: grafana-kairosdb-old
+    app: grafana-kairosdb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana-kairosdb-old
+      app: grafana-kairosdb
   template:
     metadata:
       labels:
-        app: grafana-kairosdb-old
+        app: grafana-kairosdb
     spec:
       containers:
       - name: grafana
-        image: kairosdb-plugin-old
+        image: kairosdb-plugin
         ports:
         - containerPort: 3000
         env:
         - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
-          value: "grafana-kairosdb-datasource"
+          value: "kairosdb"
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
           value: "Admin"
+        - name: GF_DEFAULT_APP_MODE
+          value: "development"
         - name: GF_FEATURE_TOGGLES_ENABLE
           value: "newVizTooltips"
         volumeMounts:
@@ -33,7 +35,7 @@ spec:
           mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
           subPath: dashboards.yaml
           readOnly: true
-        - name: datasources-config-old
+        - name: datasources-config
           mountPath: /etc/grafana/provisioning/datasources/kairosdb.yaml
           subPath: kairosdb.yaml
           readOnly: true
@@ -44,9 +46,9 @@ spec:
       - name: dashboards-config
         configMap:
           name: grafana-dashboards-config
-      - name: datasources-config-old
+      - name: datasources-config
         configMap:
-          name: grafana-datasources-config-old
+          name: grafana-datasources-config
       - name: dashboards
         configMap:
           name: grafana-dashboards
@@ -54,10 +56,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana-kairosdb-old-service
+  name: grafana-kairosdb-service
 spec:
   selector:
-    app: grafana-kairosdb-old
+    app: grafana-kairosdb
   ports:
   - port: 3000
     targetPort: 3000
