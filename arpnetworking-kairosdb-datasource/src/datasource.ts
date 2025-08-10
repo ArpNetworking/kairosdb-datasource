@@ -356,12 +356,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         metrics: metrics
       };
 
-      console.log('[DataSource] Sending KairosDB request:', {
-        url: `${this.baseUrl}/api/v1/datapoints/query`,
-        timeRange: { from, to },
-        metricsCount: metrics.length,
-        metrics: metrics.map(m => ({ name: m.name, tags: m.tags, aggregators: m.aggregators?.map(a => a.name) }))
-      });
 
       const response = getBackendSrv().fetch({
         url: `${this.baseUrl}/api/v1/datapoints/query`,
@@ -1499,7 +1493,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     const defaultErrorMessage = 'Cannot connect to KairosDB';
 
     try {
-      console.log('[DataSource] Testing connection to:', this.baseUrl);
       const response = await this.request('/api/v1/version');
       if (response.status === 200) {
         const data = response.data as KairosDBVersionResponse;
