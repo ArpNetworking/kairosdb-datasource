@@ -1,6 +1,6 @@
 {
   "name": "kairosdb",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env development",
     "build:prod": "webpack -c ./.config/webpack/webpack.config.ts --env production",
@@ -66,7 +66,7 @@
     "webpack-virtual-modules": "^0.6.2"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "dependencies": {
     "@emotion/css": "^11.13.5",

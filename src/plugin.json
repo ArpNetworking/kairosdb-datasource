@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
   "name": "Kairosdb",
-  "id": "arpnetworking-kairosdb-datasource",
+  "id": "grafana-kairosdb-datasource",
   "metrics": true,
   "info": {
     "description": "",
