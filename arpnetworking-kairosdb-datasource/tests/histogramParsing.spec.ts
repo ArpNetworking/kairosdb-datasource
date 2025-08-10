@@ -140,18 +140,20 @@ describe('DataSource Histogram Parsing', () => {
     expect(frame.name).toBe('test-series');
     expect(frame.meta?.type).toBe(DataFrameType.HeatmapCells);
     
-    // Should have exactly 3 fields for dense heatmap: x, yMin, count
-    expect(frame.fields).toHaveLength(3);
+    // Should have exactly 4 fields for sparse heatmap: x, yMin, yMax, count
+    expect(frame.fields).toHaveLength(4);
     
     // Find field positions
     const fieldNames = frame.fields.map(f => f.name);
     const xIndex = fieldNames.indexOf('x');
     const yMinIndex = fieldNames.indexOf('yMin');
+    const yMaxIndex = fieldNames.indexOf('yMax');
     const countIndex = fieldNames.indexOf('count');
     
     expect(xIndex).toBe(0);      // x should be first
     expect(yMinIndex).toBe(1);   // yMin should be second  
-    expect(countIndex).toBe(2);  // count should be third
+    expect(yMaxIndex).toBe(2);   // yMax should be third
+    expect(countIndex).toBe(3);  // count should be fourth
     
     // Should have 6 data points (bins with count > 0):
     // Time 1640995200000: 0.1->5, 0.5->12, 1.0->8
@@ -163,7 +165,13 @@ describe('DataSource Histogram Parsing', () => {
     // Check first few values using field positions
     expect(frame.fields[xIndex].values[0]).toBe(1640995200000); // x (time)
     expect(frame.fields[yMinIndex].values[0]).toBe(0.1); // yMin
+    expect(frame.fields[yMaxIndex].values[0]).toBeGreaterThan(0.1); // yMax (computed)
     expect(frame.fields[countIndex].values[0]).toBe(5); // count
+    
+    // Check that yMax values are all greater than yMin values
+    for (let i = 0; i < frame.fields[yMinIndex].values.length; i++) {
+      expect(frame.fields[yMaxIndex].values[i]).toBeGreaterThan(frame.fields[yMinIndex].values[i]);
+    }
     
     // Check time values - should have both timestamps
     expect(frame.fields[xIndex].values).toContain(1640995200000);
@@ -174,9 +182,5 @@ describe('DataSource Histogram Parsing', () => {
     expect(frame.fields[yMinIndex].values).toContain(0.5);
     expect(frame.fields[yMinIndex].values).toContain(1.0);
     expect(frame.fields[yMinIndex].values).toContain(2.0);
-    
-    // Check that yMax is stored in metadata for processing
-    expect(frame.meta?.custom?.yMax).toBeDefined();
-    expect(Array.isArray(frame.meta?.custom?.yMax)).toBe(true);
   });
 });

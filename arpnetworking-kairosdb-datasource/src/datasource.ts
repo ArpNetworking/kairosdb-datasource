@@ -1105,11 +1105,11 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       }
     }
 
-    // Create dense heatmap format (only one Y field to avoid sparse format)
-    // Dense format expects: x, yMin (single Y field), count 
+    // Create sparse heatmap format with correct field order for Grafana
+    // Sparse format expects: x, yMin, yMax, count (fields[0], fields[1], fields[2], fields[3])
     const fields: any[] = [];
     
-    // Add x field (time) - always first for dense heatmap
+    // Field 0: x (time) - for time axis
     fields.push({
       name: 'x',
       type: FieldType.time,
@@ -1117,7 +1117,7 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       values: times,
     });
 
-    // Add yMin field as the single Y field for dense format
+    // Field 1: yMin - used by Grafana for Y axis display formatting
     fields.push({
       name: 'yMin',
       type: FieldType.number,
@@ -1129,7 +1129,19 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       labels: {},
     });
 
-    // Add count field (cell values)
+    // Field 2: yMax - provides bin boundaries for proper sizing
+    fields.push({
+      name: 'yMax',
+      type: FieldType.number,
+      config: {
+        unit: 'short',
+        displayName: 'Bin Max'
+      },
+      values: yMaxs,
+      labels: {},
+    });
+
+    // Field 3: count - the cell values (Grafana expects this at index 3)
     fields.push({
       name: 'count',
       type: FieldType.number,
@@ -1141,12 +1153,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       labels: {},
     });
 
-    // Store yMax in frame metadata for bucket size calculation
     const frameMeta = {
-      type: DataFrameType.HeatmapCells,
-      custom: {
-        yMax: yMaxs  // Store yMax for any processing that needs it
-      }
+      type: DataFrameType.HeatmapCells
     };
 
 
