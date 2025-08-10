@@ -9,6 +9,7 @@ import {
   FieldType,
   ScopedVars,
   MetricFindValue,
+  DataFrameType,
 } from '@grafana/data';
 
 import { 
@@ -31,7 +32,7 @@ import { MigrationUtils } from './utils/migrationUtils';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
-  initialized: boolean = false;
+  initialized = false;
   private variableQueryExecutor: VariableQueryExecutor;
   private settings: DataSourceInstanceSettings<KairosDBDataSourceOptions>;
   private metricNamesCache: SimpleCache<string[]>;
@@ -445,7 +446,27 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             return;
           }
 
-          // Extract time and value arrays
+          // Check if this is histogram data
+          if (this.isHistogramData(result.values[0])) {
+            // Calculate sampling interval for histogram
+            const samplingInterval = this.calculateSamplingInterval(
+              metrics[responseQueryIndex]?.aggregators || [], 
+              []
+            );
+            
+            // Parse histogram data and create heatmap frames
+            const histogramFrames = this.parseHistogramData(
+              result, 
+              seriesName, 
+              targetForQuery.refId, 
+              samplingInterval
+            );
+            
+            dataFrames.push(...histogramFrames);
+            return;
+          }
+
+          // Extract time and value arrays (regular time series data)
           const timeValues: number[] = [];
           const dataValues: number[] = [];
 
@@ -985,6 +1006,147 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       .split(',')
       .map((suffix: string) => suffix.trim())
       .filter((suffix: string) => suffix.length > 0);
+  }
+
+  /**
+   * Check if a KairosDB datapoint contains histogram data
+   */
+  private isHistogramData(datapoint: any): boolean {
+    if (!datapoint || !Array.isArray(datapoint) || datapoint.length < 2) {
+      return false;
+    }
+    
+    const value = datapoint[1];
+    if (!value || typeof value !== 'object') {
+      return false;
+    }
+    
+    return !!(value.bins && 
+              typeof value.bins === 'object' &&
+              value.bins !== null &&
+              typeof value.precision === 'number');
+  }
+
+  /**
+   * Compute the upper bound of a histogram bin based on precision
+   * Ported from old plugin's exponential bin calculation
+   */
+  private computeBinMax(binMin: number, precision: number): number {
+    if (binMin === 0) {
+      return 0.00000001;
+    }
+    
+    const MANTISSA_BITS = 52;
+    const shift = BigInt(MANTISSA_BITS - precision);
+    const buffer = new ArrayBuffer(8);
+    const dataView = new DataView(buffer);
+    
+    dataView.setFloat64(0, binMin);
+    let upperBoundBig = dataView.getBigInt64(0);
+    upperBoundBig >>= shift;
+    upperBoundBig++;
+    upperBoundBig <<= shift;
+    upperBoundBig--;
+    dataView.setBigInt64(0, upperBoundBig);
+    
+    return dataView.getFloat64(0);
+  }
+
+  /**
+   * Parse histogram data into heatmap-compatible data frames
+   */
+  private parseHistogramData(
+    result: any, 
+    seriesName: string, 
+    targetRefId: string, 
+    samplingInterval: number
+  ): any[] {
+    const dataFrames: any[] = [];
+    
+    if (!result.values || result.values.length === 0) {
+      return dataFrames;
+    }
+
+    // Check if this is actually histogram data
+    if (!this.isHistogramData(result.values[0])) {
+      return dataFrames;
+    }
+
+    const times: number[] = [];
+    const xMaxs: number[] = [];
+    const yMins: number[] = [];
+    const yMaxs: number[] = [];
+    const counts: number[] = [];
+
+    for (const datapoint of result.values) {
+      const [timestamp, histogramValue] = datapoint;
+      const { bins, precision } = histogramValue;
+      
+      // Sort bins by numeric value (sparse representation)
+      const sortedBinKeys = Object.keys(bins)
+        .map(k => parseFloat(k))
+        .sort((a, b) => a - b);
+
+      // Convert each bin to heatmap cell
+      for (const binMin of sortedBinKeys) {
+        const binCount = bins[binMin.toString()];
+        
+        times.push(timestamp);
+        xMaxs.push(timestamp + samplingInterval);
+        yMins.push(binMin);
+        yMaxs.push(this.computeBinMax(binMin, precision));
+        counts.push(binCount);
+      }
+    }
+
+    // Create heatmap-compatible data frame
+    const frame = createDataFrame({
+      refId: targetRefId,
+      name: seriesName,
+      fields: [
+        { name: 'xMin', values: times, type: FieldType.time },
+        { name: 'xMax', values: xMaxs, type: FieldType.time },
+        { name: 'yMin', values: yMins, type: FieldType.number },
+        { name: 'yMax', values: yMaxs, type: FieldType.number },
+        { name: 'count', values: counts, type: FieldType.number }
+      ],
+      meta: { type: DataFrameType.HeatmapCells }
+    });
+
+    dataFrames.push(frame);
+    return dataFrames;
+  }
+
+  /**
+   * Calculate sampling interval from aggregators or time range
+   */
+  private calculateSamplingInterval(aggregators: any[], timeValues: number[]): number {
+    // First try to get interval from aggregators
+    for (const agg of aggregators || []) {
+      if (agg?.sampling?.value && agg?.sampling?.unit) {
+        const value = agg.sampling.value;
+        const unit = agg.sampling.unit.toLowerCase();
+        
+        const unitMultipliers: { [key: string]: number } = {
+          'milliseconds': 1,
+          'seconds': 1000,
+          'minutes': 60 * 1000,
+          'hours': 60 * 60 * 1000,
+          'days': 24 * 60 * 60 * 1000
+        };
+        
+        const multiplier = unitMultipliers[unit] || 1000;
+        return value * multiplier;
+      }
+    }
+    
+    // Fallback: calculate from time series data
+    if (timeValues.length > 1) {
+      return timeValues[1] - timeValues[0];
+    }
+    
+    // Final fallback: 1 minute
+    return 60000;
   }
 
   /**

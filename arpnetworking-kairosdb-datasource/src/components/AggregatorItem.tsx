@@ -85,6 +85,10 @@ export function AggregatorItem({
       const numValue = typeof param.value === 'string' ? parseFloat(param.value) : param.value;
       return validateSamplingValue(numValue);
     }
+    if (isPrecisionParameter(param)) {
+      const numValue = typeof param.value === 'string' ? parseFloat(param.value) : param.value;
+      return validatePrecisionValue(numValue);
+    }
     return null;
   };
 
@@ -94,7 +98,7 @@ export function AggregatorItem({
   };
 
   const renderParameter = (param: AggregatorParameter) => {
-    if (!param || !param.name) return null;
+    if (!param || !param.name) {return null;}
     
     // Hide alignment parameters from UI - they are internal to KairosDB
     if (param.type === 'alignment') {

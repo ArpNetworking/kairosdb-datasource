@@ -14,7 +14,7 @@ interface Props {
 export function Aggregators({ aggregators = [], onChange, availableAggregators = AVAILABLE_AGGREGATORS }: Props) {
   
   const handleAdd = (aggregator: Aggregator) => {
-    if (!aggregator || !aggregator.name) return;
+    if (!aggregator || !aggregator.name) {return;}
     
     
     // Clone the aggregator to avoid reference issues
@@ -32,25 +32,25 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
   };
 
   const handleMoveUp = (index: number) => {
-    if (index <= 0) return;
+    if (index <= 0) {return;}
     const newAggregators = [...aggregators];
     [newAggregators[index - 1], newAggregators[index]] = [newAggregators[index], newAggregators[index - 1]];
     onChange(newAggregators);
   };
 
   const handleMoveDown = (index: number) => {
-    if (index >= aggregators.length - 1) return;
+    if (index >= aggregators.length - 1) {return;}
     const newAggregators = [...aggregators];
     [newAggregators[index], newAggregators[index + 1]] = [newAggregators[index + 1], newAggregators[index]];
     onChange(newAggregators);
   };
 
   const handleParameterChange = (index: number, parameterName: string, value: any) => {
-    if (index < 0 || index >= aggregators.length) return;
+    if (index < 0 || index >= aggregators.length) {return;}
     
     const newAggregators = [...aggregators];
     const aggregator = newAggregators[index];
-    if (!aggregator || !aggregator.parameters) return;
+    if (!aggregator || !aggregator.parameters) {return;}
     
     const parameter = aggregator.parameters.find(p => p && p.name === parameterName);
     if (parameter) {
@@ -61,11 +61,11 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
   };
 
   const handleAutoValueChange = (index: number, enabled: boolean) => {
-    if (index < 0 || index >= aggregators.length) return;
+    if (index < 0 || index >= aggregators.length) {return;}
     
     const newAggregators = [...aggregators];
     const aggregator = newAggregators[index];
-    if (!aggregator || !aggregator.autoValueSwitch) return;
+    if (!aggregator || !aggregator.autoValueSwitch) {return;}
     
     aggregator.autoValueSwitch.enabled = enabled;
     onChange(newAggregators);

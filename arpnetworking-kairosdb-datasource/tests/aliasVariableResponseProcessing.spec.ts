@@ -12,7 +12,7 @@ import { getTemplateSrv } from '@grafana/runtime';
 jest.mock('@grafana/runtime', () => ({
   getTemplateSrv: jest.fn(() => ({
     replace: jest.fn((text: string, scopedVars?: ScopedVars) => {
-      if (!scopedVars || !text) return text;
+      if (!scopedVars || !text) {return text;}
       
       // Simulate real Grafana template service behavior
       return text.replace(/\$(\w+)/g, (match, varName) => {

@@ -13,7 +13,7 @@ import { getTemplateSrv } from '@grafana/runtime';
 jest.mock('@grafana/runtime', () => ({
   getTemplateSrv: jest.fn(() => ({
     replace: jest.fn((str: string, scopedVars?: ScopedVars) => {
-      if (!scopedVars || !str) return str;
+      if (!scopedVars || !str) {return str;}
       
       // Simple implementation of template replacement for testing
       let result = str;

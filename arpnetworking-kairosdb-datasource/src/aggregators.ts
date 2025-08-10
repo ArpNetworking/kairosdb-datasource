@@ -144,25 +144,6 @@ export class ScaleAggregator extends BaseAggregator {
   }
 }
 
-// Available aggregators list
-export const AVAILABLE_AGGREGATORS: Aggregator[] = [
-  new RangeAggregator('avg'),
-  new RangeAggregator('count'),
-  new RangeAggregator('dev'),
-  new RangeAggregator('first'),
-  new RangeAggregator('gaps'),
-  new RangeAggregator('last'),
-  new RangeAggregator('max'),
-  new MergeAggregator(),
-  new RangeAggregator('min'),
-  new RangeAggregator('sum'),
-  new BaseAggregator('diff'),
-  new PercentileAggregator(),
-  new RateAggregator(),
-  new SamplerAggregator(),
-  new ScaleAggregator(),
-].sort((a, b) => a.name.localeCompare(b.name));
-
 // Merge aggregator for histograms
 export class MergeAggregator extends RangeAggregator {
   static readonly NAME = 'merge';
@@ -197,6 +178,25 @@ export class MergeAggregator extends RangeAggregator {
     };
   }
 }
+
+// Available aggregators list
+export const AVAILABLE_AGGREGATORS: Aggregator[] = [
+  new RangeAggregator('avg'),
+  new RangeAggregator('count'),
+  new RangeAggregator('dev'),
+  new RangeAggregator('first'),
+  new RangeAggregator('gaps'),
+  new RangeAggregator('last'),
+  new RangeAggregator('max'),
+  new MergeAggregator(),
+  new RangeAggregator('min'),
+  new RangeAggregator('sum'),
+  new BaseAggregator('diff'),
+  new PercentileAggregator(),
+  new RateAggregator(),
+  new SamplerAggregator(),
+  new ScaleAggregator(),
+].sort((a, b) => a.name.localeCompare(b.name));
 
 // Scalar aggregators (for enforcement)
 export const SCALAR_AGGREGATOR_NAMES = [

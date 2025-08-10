@@ -399,7 +399,7 @@ function buildQueryString(state: VariableQueryState): string {
       return state.metric ? `tag_names(${state.metric})` : '';
     
     case 'tag_values':
-      if (!state.metric || !state.tagName) return '';
+      if (!state.metric || !state.tagName) {return '';}
       
       let query = `tag_values(${state.metric}, ${state.tagName}`;
       
