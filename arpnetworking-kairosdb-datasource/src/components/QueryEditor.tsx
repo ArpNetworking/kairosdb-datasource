@@ -95,6 +95,10 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     });
   };
 
+  const onAliasBlur = () => {
+    onRunQuery();
+  };
+
   const onAggregatorsChange = (aggregators: any[]) => {
     onChange({
       ...query,
@@ -239,6 +243,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
               <Input
                 id="query-editor-alias"
                 onChange={onAliasChange}
+                onBlur={onAliasBlur}
                 value={currentQuery.alias || ''}
                 placeholder="Optional alias for the series"
                 width={50}
