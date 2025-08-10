@@ -190,7 +190,9 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             
             // Add parameters if any, using ParameterObjectBuilder for proper auto value handling
             if (agg.parameters && agg.parameters.length > 0) {
-              const parameterBuilder = new ParameterObjectBuilder(options.interval || '1m', agg);
+              // For auto mode, use snap-to-intervals logic instead of raw Grafana interval
+              const autoInterval = this.getSnapToInterval(options.interval || '1m');
+              const parameterBuilder = new ParameterObjectBuilder(autoInterval, agg);
               
               // Collect parameters by type to handle merging intelligently
               const alignmentParam = agg.parameters.find(p => p.type === 'alignment');
@@ -448,10 +450,13 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
           // Check if this is histogram data
           if (this.isHistogramData(result.values[0])) {
+            // Extract time values for interval calculation
+            const timeValues = result.values.map((datapoint: any[]) => datapoint[0]);
+            
             // Calculate sampling interval for histogram
             const samplingInterval = this.calculateSamplingInterval(
               metrics[responseQueryIndex]?.aggregators || [], 
-              []
+              timeValues
             );
             
             // Parse histogram data and create heatmap frames
@@ -1053,7 +1058,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   }
 
   /**
-   * Parse histogram data into heatmap-compatible data frames
+   * Parse histogram data into Grafana heatmap format
+   * Creates x, yMin, yMax, and count fields as expected by heatmap visualization
    */
   private parseHistogramData(
     result: any, 
@@ -1073,7 +1079,6 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     }
 
     const times: number[] = [];
-    const xMaxs: number[] = [];
     const yMins: number[] = [];
     const yMaxs: number[] = [];
     const counts: number[] = [];
@@ -1091,30 +1096,134 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         const binMin = parseFloat(binKeyString);
         const binCount = bins[binKeyString];
         
-        times.push(timestamp);
-        xMaxs.push(timestamp + samplingInterval);
-        yMins.push(binMin);
-        yMaxs.push(this.computeBinMax(binMin, precision));
-        counts.push(binCount);
+        if (binCount > 0) { // Only include bins with data
+          times.push(timestamp);
+          yMins.push(binMin);
+          yMaxs.push(this.computeBinMax(binMin, precision));
+          counts.push(binCount);
+        }
       }
     }
 
-    // Create heatmap-compatible data frame
+    // Build fields array - match old plugin structure based on feature toggles
+    const fields: any[] = [];
+    
+    // Check if newVizTooltips feature toggle is enabled (like old plugin does)
+    const config = (window as any)?.grafanaBootData?.settings || {};
+    const hasNewVizTooltips = config.featureToggles?.newVizTooltips;
+
+    if (hasNewVizTooltips) {
+      // New viz tooltips enabled: add xMax field first
+      const xMax: number[] = [];
+      for (const t of times) {
+        xMax.push(t + samplingInterval);
+      }
+      
+      fields.push({
+        name: 'xMax',
+        type: FieldType.time,
+        config: {
+          interval: samplingInterval,
+        },
+        values: xMax,
+      });
+    }
+
+    // Add x field (time) - always present
+    fields.push({
+      name: 'x',
+      type: FieldType.time,
+      config: {},
+      values: times,
+    });
+
+    // Add yMin field (bin minimum values) - called "Value" in old plugin but "yMin" for histograms
+    fields.push({
+      name: 'yMin',
+      type: FieldType.number,
+      config: {},
+      values: yMins,
+    });
+
+    // Add yMax field (bin maximum values)
+    fields.push({
+      name: 'yMax',
+      type: FieldType.number,
+      config: {},
+      values: yMaxs,
+    });
+
+    // Add count field (bin counts)
+    fields.push({
+      name: 'count',
+      type: FieldType.number,
+      config: {},
+      values: counts,
+    });
+
+    // Create heatmap-compatible data frame 
     const frame = createDataFrame({
       refId: targetRefId,
       name: seriesName,
-      fields: [
-        { name: 'xMin', values: times, type: FieldType.time },
-        { name: 'xMax', values: xMaxs, type: FieldType.time },
-        { name: 'yMin', values: yMins, type: FieldType.number },
-        { name: 'yMax', values: yMaxs, type: FieldType.number },
-        { name: 'count', values: counts, type: FieldType.number }
-      ],
+      fields: fields,
       meta: { type: DataFrameType.HeatmapCells }
     });
 
     dataFrames.push(frame);
     return dataFrames;
+  }
+
+  /**
+   * Get appropriate interval for auto mode by snapping to configured intervals
+   */
+  private getSnapToInterval(grafanaInterval: string): string {
+    const snapToIntervals = this.settings.jsonData.snapToIntervals || '1m,5m,10m,15m,30m,1h,2h,3h,4h,6h,12h,1d,2d,3d,7d';
+    const intervals = snapToIntervals.split(',').map((i: string) => i.trim());
+    
+    // Convert Grafana interval to milliseconds for comparison
+    const grafanaMs = this.intervalToMilliseconds(grafanaInterval);
+    
+    // Convert all snap intervals to milliseconds and sort
+    const intervalMs = intervals.map((interval: string) => ({
+      original: interval,
+      ms: this.intervalToMilliseconds(interval)
+    })).sort((a: any, b: any) => a.ms - b.ms);
+    
+    // Find the first interval that's >= grafanaInterval
+    for (const interval of intervalMs) {
+      if (interval.ms >= grafanaMs) {
+        return interval.original;
+      }
+    }
+    
+    // If no interval is large enough, return the largest one
+    return intervalMs[intervalMs.length - 1].original;
+  }
+
+  /**
+   * Convert interval string like "5m", "1h", "30s" to milliseconds
+   */
+  private intervalToMilliseconds(interval: string): number {
+    const match = interval.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
+    if (!match) {
+      return 60000; // Default to 1 minute
+    }
+    
+    const value = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    
+    const multipliers: { [key: string]: number } = {
+      'ms': 1,
+      's': 1000,
+      'm': 60 * 1000,
+      'h': 60 * 60 * 1000,
+      'd': 24 * 60 * 60 * 1000,
+      'w': 7 * 24 * 60 * 60 * 1000,
+      'M': 30 * 24 * 60 * 60 * 1000, // Approximate month
+      'y': 365 * 24 * 60 * 60 * 1000  // Approximate year
+    };
+    
+    return value * (multipliers[unit] || 1000);
   }
 
   /**

@@ -125,7 +125,7 @@ describe('DataSource Histogram Parsing', () => {
           precision: 12
         }],
         [1640995260000, {
-          bins: { "0.2": 3, "0.8": 15, "2.0": 6 },
+          bins: { "0.1": 2, "0.5": 10, "2.0": 6 },
           precision: 12
         }]
       ]
@@ -140,17 +140,47 @@ describe('DataSource Histogram Parsing', () => {
     expect(frame.name).toBe('test-series');
     expect(frame.meta?.type).toBe(DataFrameType.HeatmapCells);
     
-    // Should have 5 fields: xMin, xMax, yMin, yMax, count
-    expect(frame.fields).toHaveLength(5);
-    expect(frame.fields.map(f => f.name)).toEqual(['xMin', 'xMax', 'yMin', 'yMax', 'count']);
+    // Should have x, yMin, yMax, count fields (and possibly xMax based on feature toggle)
+    expect(frame.fields.length).toBeGreaterThanOrEqual(4);
     
-    // Should have 6 data points (3 bins per timestamp)
-    expect(frame.fields[0].values).toHaveLength(6);
+    // Find field positions (they may vary based on feature toggles)
+    const fieldNames = frame.fields.map(f => f.name);
+    const xIndex = fieldNames.indexOf('x');
+    const yMinIndex = fieldNames.indexOf('yMin');
+    const yMaxIndex = fieldNames.indexOf('yMax');
+    const countIndex = fieldNames.indexOf('count');
     
-    // Check some values - bins are sorted in ascending order (0.1, 0.5, 1.0)
-    expect(frame.fields[0].values[0]).toBe(1640995200000); // xMin
-    expect(frame.fields[1].values[0]).toBe(1640995260000); // xMax  
-    expect(frame.fields[2].values[0]).toBe(0.1); // yMin (lowest bin first)
-    expect(frame.fields[4].values[0]).toBe(5); // count (count for 0.1 bin)
+    expect(xIndex).toBeGreaterThanOrEqual(0);
+    expect(yMinIndex).toBeGreaterThanOrEqual(0);
+    expect(yMaxIndex).toBeGreaterThanOrEqual(0);
+    expect(countIndex).toBeGreaterThanOrEqual(0);
+    
+    // Should have 6 data points (bins with count > 0):
+    // Time 1640995200000: 0.1->5, 0.5->12, 1.0->8
+    // Time 1640995260000: 0.1->2, 0.5->10, 2.0->6
+    for (const field of frame.fields) {
+      expect(field.values).toHaveLength(6);
+    }
+    
+    // Check first few values using dynamic field positions
+    expect(frame.fields[xIndex].values[0]).toBe(1640995200000); // x (time)
+    expect(frame.fields[yMinIndex].values[0]).toBe(0.1); // yMin
+    expect(frame.fields[yMaxIndex].values[0]).toBeGreaterThan(0.1); // yMax (computed)
+    expect(frame.fields[countIndex].values[0]).toBe(5); // count
+    
+    // Check that yMax values are all greater than yMin values
+    for (let i = 0; i < frame.fields[yMinIndex].values.length; i++) {
+      expect(frame.fields[yMaxIndex].values[i]).toBeGreaterThan(frame.fields[yMinIndex].values[i]);
+    }
+    
+    // Check time values - should have both timestamps
+    expect(frame.fields[xIndex].values).toContain(1640995200000);
+    expect(frame.fields[xIndex].values).toContain(1640995260000);
+    
+    // Check bin values - should have all unique bins
+    expect(frame.fields[yMinIndex].values).toContain(0.1);
+    expect(frame.fields[yMinIndex].values).toContain(0.5);
+    expect(frame.fields[yMinIndex].values).toContain(1.0);
+    expect(frame.fields[yMinIndex].values).toContain(2.0);
   });
 });
