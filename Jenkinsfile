@@ -29,7 +29,7 @@ pipeline {
             string(credentialsId: 'jenkins-gpg', variable: 'GPG_PASS')]) {
           sh '''
             # Source nvm and install/use Node version from .nvmrc
-            . ~/.nvm/nvm.sh
+            . $NVM_DIR/nvm.sh
             nvm install
             nvm use
             
