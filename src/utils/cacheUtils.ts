@@ -5,7 +5,8 @@ export class SimpleCache<T> {
   private cache = new Map<string, { value: T; expiry: number }>();
   private defaultTtl: number;
 
-  constructor(defaultTtlMs: number = 5 * 60 * 1000) { // 5 minutes default
+  constructor(defaultTtlMs: number = 5 * 60 * 1000) {
+    // 5 minutes default
     this.defaultTtl = defaultTtlMs;
   }
 
@@ -14,16 +15,16 @@ export class SimpleCache<T> {
    */
   get(key: string): T | null {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return null;
     }
-    
+
     if (Date.now() > item.expiry) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return item.value;
   }
 
@@ -55,7 +56,7 @@ export class SimpleCache<T> {
   getStats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
-      keys: Array.from(this.cache.keys())
+      keys: Array.from(this.cache.keys()),
     };
   }
 
@@ -80,14 +81,14 @@ export function debounce<T extends (...args: any[]) => Promise<any>>(
   waitMs: number
 ): (...args: Parameters<T>) => Promise<Awaited<ReturnType<T>>> {
   let timeoutId: NodeJS.Timeout | null = null;
-  
+
   return (...args: Parameters<T>): Promise<Awaited<ReturnType<T>>> => {
     return new Promise((resolve, reject) => {
       // Clear existing timeout
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       // Set new timeout
       timeoutId = setTimeout(async () => {
         try {
@@ -111,10 +112,10 @@ export function throttle<T extends (...args: any[]) => any>(
   let lastCallTime = 0;
   let timeoutId: NodeJS.Timeout | null = null;
   let lastPromise: Promise<ReturnType<T> | null> | null = null;
-  
+
   return (...args: Parameters<T>): Promise<ReturnType<T> | null> => {
     const now = Date.now();
-    
+
     if (now - lastCallTime >= waitMs) {
       // Can execute immediately
       lastCallTime = now;
@@ -123,18 +124,21 @@ export function throttle<T extends (...args: any[]) => any>(
     } else {
       // Need to throttle
       if (!timeoutId) {
-        timeoutId = setTimeout(async () => {
-          lastCallTime = Date.now();
-          timeoutId = null;
-          try {
-            const result = await func(...args);
-            lastPromise = Promise.resolve(result);
-          } catch (error) {
-            lastPromise = Promise.reject(error);
-          }
-        }, waitMs - (now - lastCallTime));
+        timeoutId = setTimeout(
+          async () => {
+            lastCallTime = Date.now();
+            timeoutId = null;
+            try {
+              const result = await func(...args);
+              lastPromise = Promise.resolve(result);
+            } catch (error) {
+              lastPromise = Promise.reject(error);
+            }
+          },
+          waitMs - (now - lastCallTime)
+        );
       }
-      
+
       return lastPromise || Promise.resolve(null);
     }
   };
@@ -147,14 +151,14 @@ export function parseSearchQuery(query?: string): { isPrefixMode: boolean; searc
   if (!query || query.length === 0) {
     return { isPrefixMode: false, searchTerm: '' };
   }
-  
+
   if (query.startsWith('^')) {
-    return { 
-      isPrefixMode: true, 
-      searchTerm: query.substring(1) // Remove the ^ indicator
+    return {
+      isPrefixMode: true,
+      searchTerm: query.substring(1), // Remove the ^ indicator
     };
   }
-  
+
   return { isPrefixMode: false, searchTerm: query };
 }
 
@@ -163,7 +167,7 @@ export function parseSearchQuery(query?: string): { isPrefixMode: boolean; searc
  */
 export function generateCacheKey(query?: string, suffixes?: string[]): string {
   const suffixesPart = suffixes ? suffixes.join(',') : '';
-  
+
   if (query && query.length > 0) {
     const { isPrefixMode, searchTerm } = parseSearchQuery(query);
     const searchMode = isPrefixMode ? 'prefix' : 'contains';
@@ -182,9 +186,9 @@ export function generateApiCacheKey(query?: string): string {
   if (!query || query.length === 0) {
     return `metricnames:api:all`;
   }
-  
+
   const { isPrefixMode, searchTerm } = parseSearchQuery(query);
-  
+
   if (isPrefixMode && searchTerm.length >= 2) {
     // Use prefix API call for ^prefix searches
     return `metricnames:api:prefix:${searchTerm}`;

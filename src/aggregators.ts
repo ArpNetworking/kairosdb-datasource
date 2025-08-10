@@ -13,7 +13,7 @@ export class BaseAggregator implements Aggregator {
 
   public clone(): BaseAggregator {
     const cloned = new BaseAggregator(this.name);
-    cloned.parameters = this.parameters.map(param => ({ ...param }));
+    cloned.parameters = this.parameters.map((param) => ({ ...param }));
     cloned.autoValueSwitch = this.autoValueSwitch ? { ...this.autoValueSwitch } : undefined;
     return cloned;
   }
@@ -28,20 +28,20 @@ export class RangeAggregator extends BaseAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1'
+        text: '1',
       },
       {
         name: 'unit',
         type: 'sampling_unit',
         value: 'minutes',
-        text: 'minutes'
-      }
+        text: 'minutes',
+      },
     ];
-    
+
     // Auto value switch controls sampling parameters
     this.autoValueSwitch = {
       enabled: true, // Default to auto mode
-      dependentParameters: ['sampling', 'sampling_unit']
+      dependentParameters: ['sampling', 'sampling_unit'],
     };
   }
 }
@@ -49,7 +49,7 @@ export class RangeAggregator extends BaseAggregator {
 // Percentile aggregator
 export class PercentileAggregator extends BaseAggregator {
   static readonly NAME = 'percentile';
-  
+
   constructor() {
     super(PercentileAggregator.NAME);
     this.parameters = [
@@ -57,26 +57,26 @@ export class PercentileAggregator extends BaseAggregator {
         name: 'percentile',
         type: 'any',
         value: 0.95,
-        text: '0.95'
+        text: '0.95',
       },
       {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1'
+        text: '1',
       },
       {
         name: 'unit',
         type: 'sampling_unit',
         value: 'minutes',
-        text: 'minutes'
-      }
+        text: 'minutes',
+      },
     ];
-    
+
     // Auto value switch controls sampling parameters
     this.autoValueSwitch = {
       enabled: true, // Default to auto mode
-      dependentParameters: ['sampling', 'sampling_unit']
+      dependentParameters: ['sampling', 'sampling_unit'],
     };
   }
 }
@@ -84,7 +84,7 @@ export class PercentileAggregator extends BaseAggregator {
 // Rate aggregator
 export class RateAggregator extends BaseAggregator {
   static readonly NAME = 'rate';
-  
+
   constructor() {
     super(RateAggregator.NAME);
     this.parameters = [
@@ -92,8 +92,8 @@ export class RateAggregator extends BaseAggregator {
         name: 'unit',
         type: 'enum',
         value: 'SECONDS',
-        text: 'SECONDS'
-      }
+        text: 'SECONDS',
+      },
     ];
   }
 }
@@ -101,7 +101,7 @@ export class RateAggregator extends BaseAggregator {
 // Sampler aggregator
 export class SamplerAggregator extends BaseAggregator {
   static readonly NAME = 'sampler';
-  
+
   constructor() {
     super(SamplerAggregator.NAME);
     this.parameters = [
@@ -109,20 +109,20 @@ export class SamplerAggregator extends BaseAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1'
+        text: '1',
       },
       {
         name: 'unit',
         type: 'sampling_unit',
         value: 'minutes',
-        text: 'minutes'
-      }
+        text: 'minutes',
+      },
     ];
-    
+
     // Auto value switch controls sampling parameters
     this.autoValueSwitch = {
       enabled: true, // Default to auto mode
-      dependentParameters: ['sampling', 'sampling_unit']
+      dependentParameters: ['sampling', 'sampling_unit'],
     };
   }
 }
@@ -130,7 +130,7 @@ export class SamplerAggregator extends BaseAggregator {
 // Scale aggregator
 export class ScaleAggregator extends BaseAggregator {
   static readonly NAME = 'scale';
-  
+
   constructor() {
     super(ScaleAggregator.NAME);
     this.parameters = [
@@ -138,8 +138,8 @@ export class ScaleAggregator extends BaseAggregator {
         name: 'factor',
         type: 'any',
         value: 1,
-        text: '1'
-      }
+        text: '1',
+      },
     ];
   }
 }
@@ -147,7 +147,7 @@ export class ScaleAggregator extends BaseAggregator {
 // Merge aggregator for histograms
 export class MergeAggregator extends RangeAggregator {
   static readonly NAME = 'merge';
-  
+
   constructor() {
     super(MergeAggregator.NAME);
     this.parameters = [
@@ -155,26 +155,26 @@ export class MergeAggregator extends RangeAggregator {
         name: 'value',
         type: 'sampling',
         value: 1,
-        text: '1'
+        text: '1',
       },
       {
         name: 'unit',
         type: 'sampling_unit',
         value: 'minutes',
-        text: 'minutes'
+        text: 'minutes',
       },
       {
         name: 'precision',
         type: 'number',
         value: 12,
-        text: '12'
-      }
+        text: '12',
+      },
     ];
-    
+
     // Auto value switch controls sampling parameters (not precision)
     this.autoValueSwitch = {
       enabled: true, // Default to auto mode
-      dependentParameters: ['sampling', 'sampling_unit']
+      dependentParameters: ['sampling', 'sampling_unit'],
     };
   }
 }
@@ -200,13 +200,26 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
 
 // Scalar aggregators (for enforcement)
 export const SCALAR_AGGREGATOR_NAMES = [
-  'avg', 'count', 'dev', 'diff', 'first', 'gaps', 'last', 'max', 'merge', 'min', 
-  'percentile', 'rate', 'sampler', 'scale', 'sum'
+  'avg',
+  'count',
+  'dev',
+  'diff',
+  'first',
+  'gaps',
+  'last',
+  'max',
+  'merge',
+  'min',
+  'percentile',
+  'rate',
+  'sampler',
+  'scale',
+  'sum',
 ];
 
 // Factory function to create aggregator from object
 export function createAggregatorFromObject(obj: any): Aggregator {
-  const aggregatorClass = AVAILABLE_AGGREGATORS.find(agg => agg.name === obj.name);
+  const aggregatorClass = AVAILABLE_AGGREGATORS.find((agg) => agg.name === obj.name);
   if (aggregatorClass) {
     const newAgg = Object.create(Object.getPrototypeOf(aggregatorClass));
     newAgg.name = obj.name;

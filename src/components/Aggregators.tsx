@@ -10,18 +10,17 @@ interface Props {
   availableAggregators?: Aggregator[];
 }
 
-
 export function Aggregators({ aggregators = [], onChange, availableAggregators = AVAILABLE_AGGREGATORS }: Props) {
-  
   const handleAdd = (aggregator: Aggregator) => {
-    if (!aggregator || !aggregator.name) {return;}
-    
-    
+    if (!aggregator || !aggregator.name) {
+      return;
+    }
+
     // Clone the aggregator to avoid reference issues
     const newAggregator: Aggregator = {
       name: aggregator.name,
-      parameters: (aggregator.parameters || []).map(param => ({ ...param })),
-      autoValueSwitch: aggregator.autoValueSwitch ? { ...aggregator.autoValueSwitch } : undefined
+      parameters: (aggregator.parameters || []).map((param) => ({ ...param })),
+      autoValueSwitch: aggregator.autoValueSwitch ? { ...aggregator.autoValueSwitch } : undefined,
     };
     onChange([...aggregators, newAggregator]);
   };
@@ -32,27 +31,35 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
   };
 
   const handleMoveUp = (index: number) => {
-    if (index <= 0) {return;}
+    if (index <= 0) {
+      return;
+    }
     const newAggregators = [...aggregators];
     [newAggregators[index - 1], newAggregators[index]] = [newAggregators[index], newAggregators[index - 1]];
     onChange(newAggregators);
   };
 
   const handleMoveDown = (index: number) => {
-    if (index >= aggregators.length - 1) {return;}
+    if (index >= aggregators.length - 1) {
+      return;
+    }
     const newAggregators = [...aggregators];
     [newAggregators[index], newAggregators[index + 1]] = [newAggregators[index + 1], newAggregators[index]];
     onChange(newAggregators);
   };
 
   const handleParameterChange = (index: number, parameterName: string, value: any) => {
-    if (index < 0 || index >= aggregators.length) {return;}
-    
+    if (index < 0 || index >= aggregators.length) {
+      return;
+    }
+
     const newAggregators = [...aggregators];
     const aggregator = newAggregators[index];
-    if (!aggregator || !aggregator.parameters) {return;}
-    
-    const parameter = aggregator.parameters.find(p => p && p.name === parameterName);
+    if (!aggregator || !aggregator.parameters) {
+      return;
+    }
+
+    const parameter = aggregator.parameters.find((p) => p && p.name === parameterName);
     if (parameter) {
       parameter.value = value;
       parameter.text = value ? value.toString() : '';
@@ -61,12 +68,16 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
   };
 
   const handleAutoValueChange = (index: number, enabled: boolean) => {
-    if (index < 0 || index >= aggregators.length) {return;}
-    
+    if (index < 0 || index >= aggregators.length) {
+      return;
+    }
+
     const newAggregators = [...aggregators];
     const aggregator = newAggregators[index];
-    if (!aggregator || !aggregator.autoValueSwitch) {return;}
-    
+    if (!aggregator || !aggregator.autoValueSwitch) {
+      return;
+    }
+
     aggregator.autoValueSwitch.enabled = enabled;
     onChange(newAggregators);
   };
@@ -79,11 +90,7 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
             overlay={() => (
               <Menu>
                 {availableAggregators.map((aggregator) => (
-                  <Menu.Item
-                    key={aggregator.name}
-                    label={aggregator.name}
-                    onClick={() => handleAdd(aggregator)}
-                  />
+                  <Menu.Item key={aggregator.name} label={aggregator.name} onClick={() => handleAdd(aggregator)} />
                 ))}
               </Menu>
             )}
@@ -100,30 +107,34 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
         </Stack>
 
         <Stack direction="column" gap={1}>
-          {aggregators.filter(aggregator => aggregator && aggregator.name).map((aggregator, index) => (
-            <AggregatorItem
-              key={`${aggregator.name}-${index}`}
-              aggregator={aggregator}
-              index={index}
-              isFirst={index === 0}
-              isLast={index === aggregators.length - 1}
-              onRemove={() => handleRemove(index)}
-              onMoveUp={() => handleMoveUp(index)}
-              onMoveDown={() => handleMoveDown(index)}
-              onParameterChange={(paramName, value) => handleParameterChange(index, paramName, value)}
-              onAutoValueChange={(enabled) => handleAutoValueChange(index, enabled)}
-            />
-          ))}
+          {aggregators
+            .filter((aggregator) => aggregator && aggregator.name)
+            .map((aggregator, index) => (
+              <AggregatorItem
+                key={`${aggregator.name}-${index}`}
+                aggregator={aggregator}
+                index={index}
+                isFirst={index === 0}
+                isLast={index === aggregators.length - 1}
+                onRemove={() => handleRemove(index)}
+                onMoveUp={() => handleMoveUp(index)}
+                onMoveDown={() => handleMoveDown(index)}
+                onParameterChange={(paramName, value) => handleParameterChange(index, paramName, value)}
+                onAutoValueChange={(enabled) => handleAutoValueChange(index, enabled)}
+              />
+            ))}
         </Stack>
 
         {aggregators.length === 0 && (
-          <div style={{ 
-            padding: '16px', 
-            textAlign: 'center', 
-            color: 'rgba(204, 204, 220, 0.7)',
-            fontSize: '12px',
-            fontStyle: 'italic'
-          }}>
+          <div
+            style={{
+              padding: '16px',
+              textAlign: 'center',
+              color: 'rgba(204, 204, 220, 0.7)',
+              fontSize: '12px',
+              fontStyle: 'italic',
+            }}
+          >
             No aggregators configured. Add an aggregator to process your metric data.
           </div>
         )}

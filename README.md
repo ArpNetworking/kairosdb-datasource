@@ -5,7 +5,7 @@ A modern React-based Grafana datasource plugin for [KairosDB](https://kairosdb.g
 ## Features
 
 - 📊 **Complete KairosDB Integration**: Query metrics with full aggregator support
-- 📈 **Histogram Visualization**: Native support for KairosDB histogram data as heatmaps  
+- 📈 **Histogram Visualization**: Native support for KairosDB histogram data as heatmaps
 - 🎯 **Advanced Template Variables**: Multi-value variables with proper alias handling
 - 🏷️ **Tag-based Filtering**: Dynamic tag key/value selection and filtering
 - ⏱️ **Flexible Grouping**: Time, value, and tag-based data grouping
@@ -14,11 +14,13 @@ A modern React-based Grafana datasource plugin for [KairosDB](https://kairosdb.g
 ## Installation
 
 ### From Grafana Plugin Repository
+
 1. Open Grafana and navigate to **Administration** → **Plugins**
 2. Search for "KairosDB"
 3. Click **Install** and restart Grafana
 
 ### Manual Installation
+
 ```bash
 # Clone into Grafana plugins directory
 cd /var/lib/grafana/plugins
@@ -34,6 +36,7 @@ sudo systemctl restart grafana-server
 ```
 
 ### Docker Installation
+
 ```bash
 # Using Grafana's plugin installation
 docker run -d \
@@ -54,6 +57,7 @@ docker run -d \
    - **Auth**: Configure if using authentication
 
 ### Advanced Settings
+
 - **Snap to Intervals**: Configure automatic time interval snapping
 - **Max Metrics**: Limit metric name autocomplete results
 - **Request Timeout**: Set query timeout duration
@@ -61,18 +65,22 @@ docker run -d \
 ## Usage
 
 ### Basic Query
+
 1. Select a **Metric Name** (autocomplete available)
 2. Add **Aggregators** for data processing
 3. Configure **Group By** options for data grouping
 4. Set **Tags** for filtering specific time series
 
 ### Template Variables
+
 - **Metrics**: `metrics()` - List all available metrics
-- **Tag Names**: `tag_names(metric_name)` - Get tag keys for a metric  
+- **Tag Names**: `tag_names(metric_name)` - Get tag keys for a metric
 - **Tag Values**: `tag_values(metric_name, tag_key)` - Get values for a tag
 
 ### Histogram Support
+
 KairosDB histogram data is automatically detected and rendered as heatmaps:
+
 - Use the **merge** aggregator with precision parameter
 - Histograms appear as Grafana heatmap panels
 - Automatic bin calculation and tooltip support
@@ -80,10 +88,12 @@ KairosDB histogram data is automatically detected and rendered as heatmaps:
 ## Development
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Docker (for development server)
 
 ### Development Setup
+
 ```bash
 # Clone and install dependencies
 git clone https://github.com/grafana/kairosdb-datasource
@@ -99,8 +109,9 @@ npm run server
 ```
 
 ### Available Scripts
+
 - `npm run build` - Development build
-- `npm run build:prod` - Production build  
+- `npm run build:prod` - Production build
 - `npm run dev` - Watch mode with live reload
 - `npm run test` - Run unit tests
 - `npm run test:ci` - Run tests in CI mode
@@ -109,6 +120,7 @@ npm run server
 - `npm run typecheck` - TypeScript type checking
 
 ### Testing
+
 ```bash
 # Unit tests
 npm test
@@ -121,12 +133,14 @@ npm run e2e     # In another terminal
 ## Architecture
 
 This plugin uses modern Grafana plugin architecture:
+
 - **React Components**: Modern UI built with React and TypeScript
-- **Webpack Build**: Optimized bundling and development experience  
+- **Webpack Build**: Optimized bundling and development experience
 - **Jest Testing**: Comprehensive unit test coverage
 - **Playwright E2E**: End-to-end testing for UI interactions
 
 ### Key Components
+
 - `src/datasource.ts` - Core datasource implementation
 - `src/components/` - React UI components
 - `src/aggregators.ts` - KairosDB aggregator definitions
@@ -139,7 +153,7 @@ This plugin uses modern Grafana plugin architecture:
 3. Make your changes and add tests
 4. Run linting and tests (`npm run lint && npm test`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)  
+6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
 ## Compatibility

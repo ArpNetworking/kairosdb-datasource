@@ -1,35 +1,35 @@
 export enum TimeUnit {
   MILLISECONDS = 'MILLISECONDS',
-  SECONDS = 'SECONDS', 
+  SECONDS = 'SECONDS',
   MINUTES = 'MINUTES',
   HOURS = 'HOURS',
   DAYS = 'DAYS',
   WEEKS = 'WEEKS',
   MONTHS = 'MONTHS',
-  YEARS = 'YEARS'
+  YEARS = 'YEARS',
 }
 
 export class TimeUnitUtils {
   private static SHORT_UNITS: { [key: string]: string } = {
-    'ms': 'MILLISECONDS',
-    's': 'SECONDS',
-    'm': 'MINUTES', 
-    'h': 'HOURS',
-    'd': 'DAYS',
-    'w': 'WEEKS',
-    'M': 'MONTHS',
-    'y': 'YEARS'
+    ms: 'MILLISECONDS',
+    s: 'SECONDS',
+    m: 'MINUTES',
+    h: 'HOURS',
+    d: 'DAYS',
+    w: 'WEEKS',
+    M: 'MONTHS',
+    y: 'YEARS',
   };
 
   private static LONG_UNITS: { [key: string]: string } = {
-    'millisecond': 'MILLISECONDS',
-    'second': 'SECONDS',
-    'minute': 'MINUTES',
-    'hour': 'HOURS', 
-    'day': 'DAYS',
-    'week': 'WEEKS',
-    'month': 'MONTHS',
-    'year': 'YEARS'
+    millisecond: 'MILLISECONDS',
+    second: 'SECONDS',
+    minute: 'MINUTES',
+    hour: 'HOURS',
+    day: 'DAYS',
+    week: 'WEEKS',
+    month: 'MONTHS',
+    year: 'YEARS',
   };
 
   static extractValue(interval: string): string {
@@ -53,8 +53,7 @@ export class TimeUnitUtils {
     const unitStr = this.extractUnit(interval);
     const value = this.extractFloatValue(interval);
     const unit = this.getTimeUnit(unitStr);
-    
-    
+
     return [unit, value];
   }
 

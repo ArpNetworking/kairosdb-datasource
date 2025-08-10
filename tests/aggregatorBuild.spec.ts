@@ -5,11 +5,11 @@ import { DataSourceInstanceSettings } from '@grafana/data';
 // Mock the Grafana runtime
 jest.mock('@grafana/runtime', () => ({
   getBackendSrv: () => ({
-    fetch: jest.fn()
+    fetch: jest.fn(),
   }),
   getTemplateSrv: () => ({
-    replace: (str: string) => str
-  })
+    replace: (str: string) => str,
+  }),
 }));
 
 describe('DataSource Aggregator Building', () => {
@@ -35,12 +35,12 @@ describe('DataSource Aggregator Building', () => {
           screenshots: [],
           updated: '2023-01-01',
           version: '1.0.0',
-          logos: { small: '', large: '' }
+          logos: { small: '', large: '' },
         },
         includes: [],
         categoryId: 'tsdb',
-        module: 'test'
-      }
+        module: 'test',
+      },
     };
 
     datasource = new DataSource(mockSettings);

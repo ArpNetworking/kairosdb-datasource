@@ -26,9 +26,9 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
 
     try {
       const metrics = await datasource.getMetricNames(inputValue);
-      return metrics.map(metric => ({
+      return metrics.map((metric) => ({
         label: metric,
-        value: metric
+        value: metric,
       }));
     } catch (error) {
       console.error('[MetricNameField] Error loading metric names:', error);
@@ -50,14 +50,16 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
   };
 
   // Convert current string value to SelectableValue for AsyncSelect
-  const currentValue: SelectableValue<string> | undefined = metricName ? {
-    label: metricName,
-    value: metricName
-  } : undefined;
+  const currentValue: SelectableValue<string> | undefined = metricName
+    ? {
+        label: metricName,
+        value: metricName,
+      }
+    : undefined;
 
   return (
-    <InlineField 
-      label="Metric Name" 
+    <InlineField
+      label="Metric Name"
       labelWidth={20}
       tooltip="Start typing to search for available metrics. Use ^ prefix (e.g., '^system') for prefix matching, or template variables (e.g., '$metric_name')."
       required

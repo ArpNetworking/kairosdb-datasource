@@ -16,7 +16,7 @@ const TIME_UNITS: Array<SelectableValue<string>> = [
   { label: 'days', value: 'days' },
   { label: 'weeks', value: 'weeks' },
   { label: 'months', value: 'months' },
-  { label: 'years', value: 'years' }
+  { label: 'years', value: 'years' },
 ];
 
 export function GroupByTime({ time, onChange }: Props) {
@@ -25,7 +25,7 @@ export function GroupByTime({ time, onChange }: Props) {
   const handleEnabledChange = (event: any) => {
     // Extract boolean value from Grafana UI Switch component
     const enabled = event.currentTarget ? event.currentTarget.checked : event;
-    
+
     if (enabled) {
       onChange({ value: 1, unit: 'minutes' });
     } else {
@@ -40,7 +40,7 @@ export function GroupByTime({ time, onChange }: Props) {
     }
     onChange({
       ...time,
-      value: newValue
+      value: newValue,
     });
   };
 
@@ -50,7 +50,7 @@ export function GroupByTime({ time, onChange }: Props) {
     }
     onChange({
       ...time,
-      unit: option.value
+      unit: option.value,
     });
   };
 
@@ -61,48 +61,34 @@ export function GroupByTime({ time, onChange }: Props) {
     }
     onChange({
       ...time,
-      range_size: newRangeSize
+      range_size: newRangeSize,
     });
   };
 
   return (
     <Stack direction="column" gap={1}>
       <InlineField label="Group by Time" labelWidth={20}>
-        <Switch
-          value={isEnabled}
-          onChange={handleEnabledChange}
-        />
+        <Switch value={isEnabled} onChange={handleEnabledChange} />
       </InlineField>
-      
+
       {isEnabled && time && (
         <Stack direction="column" gap={1}>
           <Stack direction="row" gap={1} alignItems="center">
             <InlineField label="Value" labelWidth={10}>
-              <Input
-                type="number"
-                width={15}
-                value={time.value}
-                onChange={handleValueChange}
-                placeholder="1"
-                min={1}
-              />
+              <Input type="number" width={15} value={time.value} onChange={handleValueChange} placeholder="1" min={1} />
             </InlineField>
-            
+
             <InlineField label="Unit" labelWidth={10}>
               <Select
                 width={20}
-                value={TIME_UNITS.find(unit => unit.value === time.unit)}
+                value={TIME_UNITS.find((unit) => unit.value === time.unit)}
                 options={TIME_UNITS}
                 onChange={handleUnitChange}
               />
             </InlineField>
           </Stack>
-          
-          <InlineField 
-            label="Range Size" 
-            labelWidth={20}
-            tooltip="Optional: Number of time periods to group together"
-          >
+
+          <InlineField label="Range Size" labelWidth={20} tooltip="Optional: Number of time periods to group together">
             <Input
               type="number"
               width={20}

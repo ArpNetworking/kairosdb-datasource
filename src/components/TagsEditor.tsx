@@ -25,24 +25,26 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
     const loadTags = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const tagData = await datasource.getMetricTags(metricName);
         setAvailableTags(tagData);
-        
+
         // Clean up selected tags that are no longer available
         const newTags: { [key: string]: string[] } = {};
-        Object.keys(tagData).forEach(tagName => {
+        Object.keys(tagData).forEach((tagName) => {
           if (tags[tagName]) {
-            newTags[tagName] = tags[tagName].filter(value => 
-              tagData[tagName].includes(value) || value.startsWith('$') || 
-              (value.startsWith('[') && value.endsWith(']'))
+            newTags[tagName] = tags[tagName].filter(
+              (value) =>
+                tagData[tagName].includes(value) ||
+                value.startsWith('$') ||
+                (value.startsWith('[') && value.endsWith(']'))
             );
           } else {
             newTags[tagName] = [];
           }
         });
-        
+
         // Only update if tags changed
         if (JSON.stringify(newTags) !== JSON.stringify(tags)) {
           onChange(newTags);
@@ -61,7 +63,7 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
   const handleTagChange = (tagName: string, selectedValues: string[]) => {
     const newTags = {
       ...tags,
-      [tagName]: selectedValues
+      [tagName]: selectedValues,
     };
     onChange(newTags);
   };
@@ -80,31 +82,33 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
   return (
     <FieldSet label="Tags">
       <Stack direction="column" gap={1}>
-        {isLoading && (
-          <LoadingPlaceholder text="Loading tags..." />
-        )}
-        
+        {isLoading && <LoadingPlaceholder text="Loading tags..." />}
+
         {error && (
-          <div style={{ 
-            color: 'rgb(229, 62, 62)', 
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>
+          <div
+            style={{
+              color: 'rgb(229, 62, 62)',
+              fontSize: '12px',
+              fontWeight: 'bold',
+            }}
+          >
             Unable to load tags: {error}
           </div>
         )}
-        
+
         {!isLoading && !error && tagCount > 0 && (
           <>
-            <div style={{ 
-              fontSize: '12px', 
-              color: 'rgba(204, 204, 220, 0.7)',
-              fontWeight: 'bold'
-            }}>
+            <div
+              style={{
+                fontSize: '12px',
+                color: 'rgba(204, 204, 220, 0.7)',
+                fontWeight: 'bold',
+              }}
+            >
               {tagCount} tags, {combinations} combinations
             </div>
-            
-            {tagNames.map(tagName => (
+
+            {tagNames.map((tagName) => (
               <TagsSelect
                 key={tagName}
                 tagName={tagName}
@@ -115,13 +119,15 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
             ))}
           </>
         )}
-        
+
         {!isLoading && !error && tagCount === 0 && (
-          <div style={{ 
-            color: 'rgba(204, 204, 220, 0.7)',
-            fontSize: '12px',
-            fontStyle: 'italic'
-          }}>
+          <div
+            style={{
+              color: 'rgba(204, 204, 220, 0.7)',
+              fontSize: '12px',
+              fontStyle: 'italic',
+            }}
+          >
             No tags available for this metric
           </div>
         )}

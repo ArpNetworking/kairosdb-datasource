@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  InlineField, 
-  InlineFieldRow, 
-  Input, 
-  Select, 
-  Button, 
-  Stack,
-  Card,
-  Alert,
-  AsyncSelect
-} from '@grafana/ui';
+import { InlineField, InlineFieldRow, Input, Select, Button, Stack, Card, Alert, AsyncSelect } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { DataSource } from '../datasource';
 
@@ -32,29 +22,29 @@ const QUERY_TYPE_OPTIONS: Array<SelectableValue<string>> = [
   { label: 'Metrics (pattern)', value: 'metrics', description: 'Find metric names containing a pattern' },
   { label: 'Tag Names', value: 'tag_names', description: 'Get tag names for a specific metric' },
   { label: 'Tag Values', value: 'tag_values', description: 'Get tag values with optional filters' },
-  { label: 'Custom Query', value: 'custom', description: 'Write custom variable query' }
+  { label: 'Custom Query', value: 'custom', description: 'Write custom variable query' },
 ];
 
 export function VariableQueryEditor({ datasource, query, onChange }: Props) {
   const [state, setState] = useState<VariableQueryState>(() => {
     return parseQueryToState(query);
   });
-  
+
   const [metrics, setMetrics] = useState<string[]>([]);
   const [tags, setTags] = useState<{ [key: string]: string[] }>({});
-  
+
   // Load available metrics on mount
   useEffect(() => {
     loadMetrics();
   }, []);
-  
+
   // Load tags when metric changes
   useEffect(() => {
     if (state.metric && (state.type === 'tag_names' || state.type === 'tag_values')) {
       loadTags(state.metric);
     }
   }, [state.metric, state.type]);
-  
+
   // Update query string when state changes
   useEffect(() => {
     const queryString = buildQueryString(state);
@@ -62,7 +52,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       onChange(queryString);
     }
   }, [state]);
-  
+
   const loadMetrics = async () => {
     try {
       const metricNames = await datasource.getMetricNames();
@@ -71,7 +61,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       console.error('[VariableQueryEditor] Error loading metrics:', error);
     }
   };
-  
+
   const loadTags = async (metric: string) => {
     try {
       const metricTags = await datasource.getMetricTags(metric);
@@ -81,9 +71,9 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       setTags({});
     }
   };
-  
+
   const handleTypeChange = (option: SelectableValue<string>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       type: (option.value as any) || 'metrics',
       // Reset other fields when type changes
@@ -91,74 +81,72 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       metric: undefined,
       tagName: undefined,
       filters: [],
-      customQuery: undefined
+      customQuery: undefined,
     }));
   };
-  
+
   const handlePatternChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      pattern: event.target.value
+      pattern: event.target.value,
     }));
   };
-  
+
   const handleMetricChange = (option: SelectableValue<string>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      metric: option.value || undefined
+      metric: option.value || undefined,
     }));
   };
-  
+
   const handleTagNameChange = (option: SelectableValue<string>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      tagName: option.value || undefined
+      tagName: option.value || undefined,
     }));
   };
-  
+
   const handleCustomQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      customQuery: event.target.value
+      customQuery: event.target.value,
     }));
   };
-  
+
   const addFilter = () => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      filters: [...prev.filters, { key: '', value: '', id: Date.now().toString() }]
+      filters: [...prev.filters, { key: '', value: '', id: Date.now().toString() }],
     }));
   };
-  
+
   const updateFilter = (id: string, field: 'key' | 'value', newValue: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      filters: prev.filters.map(filter => 
-        filter.id === id ? { ...filter, [field]: newValue } : filter
-      )
+      filters: prev.filters.map((filter) => (filter.id === id ? { ...filter, [field]: newValue } : filter)),
     }));
   };
-  
+
   const removeFilter = (id: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      filters: prev.filters.filter(filter => filter.id !== id)
+      filters: prev.filters.filter((filter) => filter.id !== id),
     }));
   };
-  
+
   const getMetricOptions = (inputValue: string): Promise<Array<SelectableValue<string>>> => {
     return Promise.resolve(
       metrics
-        .filter(metric => !inputValue || metric.toLowerCase().includes(inputValue.toLowerCase()))
+        .filter((metric) => !inputValue || metric.toLowerCase().includes(inputValue.toLowerCase()))
         .slice(0, 100) // Limit results for performance
-        .map(metric => ({ label: metric, value: metric }))
+        .map((metric) => ({ label: metric, value: metric }))
     );
   };
-  
+
   const getTagNameOptions = (): Array<SelectableValue<string>> => {
-    return Object.keys(tags).map(tagName => ({ label: tagName, value: tagName }));
+    return Object.keys(tags).map((tagName) => ({ label: tagName, value: tagName }));
   };
-  
+
   const renderQueryTypeFields = () => {
     switch (state.type) {
       case 'metrics':
@@ -174,7 +162,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
             </InlineField>
           </InlineFieldRow>
         );
-      
+
       case 'tag_names':
         return (
           <InlineFieldRow>
@@ -190,10 +178,10 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
             </InlineField>
           </InlineFieldRow>
         );
-      
+
       case 'tag_values':
         const tagNameOptions = getTagNameOptions();
-        
+
         return (
           <Stack direction="column" gap={1}>
             <InlineFieldRow>
@@ -208,7 +196,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
                 />
               </InlineField>
             </InlineFieldRow>
-            
+
             {state.metric && (
               <InlineFieldRow>
                 <InlineField label="Tag Name" tooltip="Tag name to get values for">
@@ -222,14 +210,14 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
                 </InlineField>
               </InlineFieldRow>
             )}
-            
+
             {/* Filters */}
             {state.filters.length > 0 && (
               <Card>
                 <Card.Heading>Filters (optional)</Card.Heading>
                 <Card.Description>
                   <Stack direction="column" gap={1}>
-                    {state.filters.map(filter => (
+                    {state.filters.map((filter) => (
                       <InlineFieldRow key={filter.id}>
                         <InlineField label="Tag">
                           <Input
@@ -259,7 +247,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
                 </Card.Description>
               </Card>
             )}
-            
+
             <InlineFieldRow>
               <Button variant="secondary" size="sm" icon="plus" onClick={addFilter}>
                 Add Filter
@@ -267,7 +255,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
             </InlineFieldRow>
           </Stack>
         );
-      
+
       case 'custom':
         return (
           <InlineFieldRow>
@@ -281,12 +269,12 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
             </InlineField>
           </InlineFieldRow>
         );
-      
+
       default:
         return null;
     }
   };
-  
+
   const getExampleQuery = () => {
     switch (state.type) {
       case 'metrics':
@@ -299,34 +287,38 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
         return '';
     }
   };
-  
+
   return (
     <Stack direction="column" gap={2}>
       <InlineFieldRow>
         <InlineField label="Query Type" tooltip="Type of variable query to create">
           <Select
             width={20}
-            value={QUERY_TYPE_OPTIONS.find(opt => opt.value === state.type)}
+            value={QUERY_TYPE_OPTIONS.find((opt) => opt.value === state.type)}
             options={QUERY_TYPE_OPTIONS}
             onChange={handleTypeChange}
           />
         </InlineField>
       </InlineFieldRow>
-      
+
       {renderQueryTypeFields()}
-      
+
       {state.type !== 'custom' && (
         <Alert severity="info" title="Generated Query">
           <code>{buildQueryString(state) || getExampleQuery()}</code>
         </Alert>
       )}
-      
+
       <Alert severity="info" title="Variable Query Examples">
         <div style={{ fontSize: '12px' }}>
-          <strong>Metrics:</strong> <code>metrics(cpu)</code> - Find metrics containing "cpu"<br/>
-          <strong>Tag Names:</strong> <code>tag_names(system.cpu.usage)</code> - Get tag names for metric<br/>
-          <strong>Tag Values:</strong> <code>tag_values(system.cpu.usage, host)</code> - Get host values<br/>
-          <strong>With Filters:</strong> <code>tag_values(system.cpu.usage, host, datacenter=us-east-1)</code><br/>
+          <strong>Metrics:</strong> <code>metrics(cpu)</code> - Find metrics containing "cpu"
+          <br />
+          <strong>Tag Names:</strong> <code>tag_names(system.cpu.usage)</code> - Get tag names for metric
+          <br />
+          <strong>Tag Values:</strong> <code>tag_values(system.cpu.usage, host)</code> - Get host values
+          <br />
+          <strong>With Filters:</strong> <code>tag_values(system.cpu.usage, host, datacenter=us-east-1)</code>
+          <br />
           <strong>With Variables:</strong> <code>tag_values($metric, host, region=$region)</code>
         </div>
       </Alert>
@@ -341,34 +333,34 @@ function parseQueryToState(query: string): VariableQueryState {
   if (!query) {
     return { type: 'metrics', filters: [] };
   }
-  
+
   // Try to parse as function calls
   const metricsMatch = query.match(/^metrics\(\s*(.+)\s*\)$/i);
   if (metricsMatch) {
     return {
       type: 'metrics',
       pattern: metricsMatch[1].replace(/['"]/g, ''),
-      filters: []
+      filters: [],
     };
   }
-  
+
   const tagNamesMatch = query.match(/^tag_names\(\s*(.+)\s*\)$/i);
   if (tagNamesMatch) {
     return {
       type: 'tag_names',
       metric: tagNamesMatch[1].replace(/['"]/g, ''),
-      filters: []
+      filters: [],
     };
   }
-  
+
   const tagValuesMatch = query.match(/^tag_values\(\s*(.+)\s*\)$/i);
   if (tagValuesMatch) {
     const params = parseParameters(tagValuesMatch[1]);
-    
+
     if (params.length >= 2) {
       const metric = params[0].replace(/['"]/g, '');
       const tagName = params[1].replace(/['"]/g, '');
-      
+
       const filters: Array<{ key: string; value: string; id: string }> = [];
       for (let i = 2; i < params.length; i++) {
         const filterMatch = params[i].match(/^(.+?)=(.+)$/);
@@ -378,11 +370,11 @@ function parseQueryToState(query: string): VariableQueryState {
           filters.push({ key, value, id: Date.now().toString() + i });
         }
       }
-      
+
       return { type: 'tag_values', metric, tagName, filters };
     }
   }
-  
+
   // Fallback to custom query
   return { type: 'custom', customQuery: query, filters: [] };
 }
@@ -394,28 +386,30 @@ function buildQueryString(state: VariableQueryState): string {
   switch (state.type) {
     case 'metrics':
       return state.pattern ? `metrics(${state.pattern})` : '';
-    
+
     case 'tag_names':
       return state.metric ? `tag_names(${state.metric})` : '';
-    
+
     case 'tag_values':
-      if (!state.metric || !state.tagName) {return '';}
-      
+      if (!state.metric || !state.tagName) {
+        return '';
+      }
+
       let query = `tag_values(${state.metric}, ${state.tagName}`;
-      
+
       // Add filters
-      const validFilters = state.filters.filter(f => f.key && f.value);
+      const validFilters = state.filters.filter((f) => f.key && f.value);
       if (validFilters.length > 0) {
-        const filterStrings = validFilters.map(f => `${f.key}=${f.value}`);
+        const filterStrings = validFilters.map((f) => `${f.key}=${f.value}`);
         query += ', ' + filterStrings.join(', ');
       }
-      
+
       query += ')';
       return query;
-    
+
     case 'custom':
       return state.customQuery || '';
-    
+
     default:
       return '';
   }
@@ -429,10 +423,10 @@ function parseParameters(paramString: string): string[] {
   let current = '';
   let inQuotes = false;
   let quoteChar = '';
-  
+
   for (let i = 0; i < paramString.length; i++) {
     const char = paramString[i];
-    
+
     if ((char === '"' || char === "'") && !inQuotes) {
       inQuotes = true;
       quoteChar = char;
@@ -448,10 +442,10 @@ function parseParameters(paramString: string): string[] {
       current += char;
     }
   }
-  
+
   if (current.trim()) {
     params.push(current.trim());
   }
-  
+
   return params;
 }

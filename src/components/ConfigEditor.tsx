@@ -61,8 +61,8 @@ export function ConfigEditor(props: Props) {
 
   return (
     <FieldSet label="KairosDB Details">
-      <InlineField 
-        label="Auto Value Intervals" 
+      <InlineField
+        label="Auto Value Intervals"
         labelWidth={20}
         tooltip="A comma delimited list of intervals used for auto value sampling in grafana time notation (e.g. 1m,1h). This will cause 'Auto' sampled aggregators to select the closest interval bigger than grafana's provided interval for the time range selected."
       >
@@ -74,9 +74,9 @@ export function ConfigEditor(props: Props) {
           width={50}
         />
       </InlineField>
-      
-      <InlineField 
-        label="Require Scalar Aggregators" 
+
+      <InlineField
+        label="Require Scalar Aggregators"
         labelWidth={20}
         tooltip="This setting allows for enforcement that queries include at least one scalar aggregator per query. This option should be enabled when most data is histograms that need to be converted into scalars in order to be graphed in common visualizers, e.g. timeseries line graphs"
       >
@@ -86,9 +86,9 @@ export function ConfigEditor(props: Props) {
           onChange={(event: any) => onEnforceScalarSettingChange(event.currentTarget.checked)}
         />
       </InlineField>
-      
-      <InlineField 
-        label="Metrics Autocomplete Limit" 
+
+      <InlineField
+        label="Metrics Autocomplete Limit"
         labelWidth={20}
         tooltip="This setting modifies the limit of metrics returned in an autocomplete list."
       >
@@ -101,11 +101,7 @@ export function ConfigEditor(props: Props) {
         />
       </InlineField>
 
-      <InlineField 
-        label="Timeout (seconds)" 
-        labelWidth={20}
-        tooltip="Request timeout in seconds"
-      >
+      <InlineField label="Timeout (seconds)" labelWidth={20} tooltip="Request timeout in seconds">
         <Input
           id="config-editor-timeout"
           onChange={onTimeoutChange}
@@ -115,8 +111,8 @@ export function ConfigEditor(props: Props) {
         />
       </InlineField>
 
-      <InlineField 
-        label="Metric Suffixes to Ignore" 
+      <InlineField
+        label="Metric Suffixes to Ignore"
         labelWidth={20}
         tooltip="Comma-separated list of metric suffixes to filter out from metric searches (e.g. _1h,_1d). These are typically rollup suffixes that create duplicate metric names."
       >

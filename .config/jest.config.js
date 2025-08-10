@@ -21,10 +21,7 @@ module.exports = {
     '<rootDir>/src/**/*.{spec,test,jest}.{js,jsx,ts,tsx}',
     '<rootDir>/tests/**/*.{spec,test,jest}.{js,jsx,ts,tsx}',
   ],
-  testPathIgnorePatterns: [
-    '<rootDir>/tests/configEditor.spec.ts',
-    '<rootDir>/tests/queryEditor.spec.ts',
-  ],
+  testPathIgnorePatterns: ['<rootDir>/tests/configEditor.spec.ts', '<rootDir>/tests/queryEditor.spec.ts'],
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc/jest',

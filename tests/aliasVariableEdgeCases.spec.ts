@@ -14,9 +14,9 @@ describe('Alias Variable Edge Cases', () => {
       uid: 'test-uid',
       type: 'arpnetworking-kairosdb-datasource',
       name: 'Test KairosDB',
-      url: 'http://localhost:8080', 
+      url: 'http://localhost:8080',
       access: 'proxy',
-      jsonData: {}
+      jsonData: {},
     });
   });
 
@@ -25,14 +25,14 @@ describe('Alias Variable Edge Cases', () => {
     const scopedVars: ScopedVars = {
       location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] },
       datacenter: { text: 'us-east-1', value: 'us-east-1' },
-      environment: { text: 'prod', value: 'prod' }
+      environment: { text: 'prod', value: 'prod' },
     };
 
     const expansion = (datasource as any).expandMetricNames('$datacenter/$location/$environment/cpu', 'A', scopedVars);
-    
+
     console.log('Mixed variables expansion:', {
       names: expansion.names.slice(0, 2), // Show first 2 for brevity
-      variableValues: expansion.variableValues.slice(0, 2)
+      variableValues: expansion.variableValues.slice(0, 2),
     });
 
     // Should expand only the multi-value variable
@@ -40,7 +40,7 @@ describe('Alias Variable Edge Cases', () => {
     expect(expansion.names).toEqual([
       'us-east-1/Attic/prod/cpu',
       'us-east-1/Bedroom/prod/cpu',
-      'us-east-1/Office/prod/cpu'
+      'us-east-1/Office/prod/cpu',
     ]);
 
     // Check that each expansion has correct individual values
@@ -57,49 +57,49 @@ describe('Alias Variable Edge Cases', () => {
 
   test('should handle empty or undefined alias', () => {
     const scopedVars: ScopedVars = {
-      location: { text: 'Attic,Bedroom', value: ['Attic', 'Bedroom'] }
+      location: { text: 'Attic,Bedroom', value: ['Attic', 'Bedroom'] },
     };
 
     const expansion = (datasource as any).expandMetricNames('homeseer/$location/temp', 'A', scopedVars);
-    
+
     // Use the actual alias processing from the datasource
     const { getTemplateSrv } = require('@grafana/runtime');
     const templateSrv = getTemplateSrv();
-    
+
     // Test undefined alias
-    let result = expansion.variableValues.map(vars => {
+    let result = expansion.variableValues.map((vars) => {
       const alias = undefined;
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
     console.log('Undefined alias result:', result);
 
-    // Test empty string alias  
-    result = expansion.variableValues.map(vars => {
+    // Test empty string alias
+    result = expansion.variableValues.map((vars) => {
       const alias = '';
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
     console.log('Empty alias result:', result);
 
     // Test null alias
-    result = expansion.variableValues.map(vars => {
+    result = expansion.variableValues.map((vars) => {
       const alias = null;
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
     console.log('Null alias result:', result);
-    
+
     // All should handle gracefully without throwing errors
     expect(result).toBeDefined();
   });
 
   test('should check what happens when metricToTargetMap gets corrupted', () => {
     // Simulate a scenario where the metricToTargetMap somehow gets the wrong data
-    
+
     const scopedVars: ScopedVars = {
-      server: { text: 'web01,web02', value: ['web01', 'web02'] }
+      server: { text: 'web01,web02', value: ['web01', 'web02'] },
     };
 
     const expansion = (datasource as any).expandMetricNames('cpu.$server', 'A', scopedVars);
-    
+
     // Simulate building metricToTargetMap as the real code would
     const metricToTargetMap = {};
     const mockTarget = {
@@ -109,26 +109,26 @@ describe('Alias Variable Edge Cases', () => {
         alias: '$server CPU',
         tags: {},
         groupBy: { tags: [], time: [], value: [] },
-        aggregators: []
-      }
+        aggregators: [],
+      },
     };
 
     expansion.names.forEach((name, index) => {
       metricToTargetMap[index] = {
         target: mockTarget,
-        variableValues: expansion.variableValues[index]
+        variableValues: expansion.variableValues[index],
       };
     });
 
     console.log('MetricToTargetMap structure:', JSON.stringify(metricToTargetMap, null, 2));
 
     // Check what each mapping contains
-    Object.keys(metricToTargetMap).forEach(key => {
+    Object.keys(metricToTargetMap).forEach((key) => {
       const mapping = metricToTargetMap[key];
       console.log(`Mapping ${key}:`, {
         targetAlias: mapping.target.query.alias,
         variableValues: mapping.variableValues,
-        serverValueType: typeof mapping.variableValues.server?.value
+        serverValueType: typeof mapping.variableValues.server?.value,
       });
     });
 
@@ -139,16 +139,16 @@ describe('Alias Variable Edge Cases', () => {
 
   test('should verify what happens if original scopedVars accidentally get used', () => {
     // This test simulates the bug scenario to confirm our fix prevents it
-    
+
     const originalScopedVars: ScopedVars = {
-      location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] }
+      location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] },
     };
 
     const expansion = (datasource as any).expandMetricNames('temp.$location', 'A', originalScopedVars);
 
     // What we should get (correct individual values)
     const correctVariableValues = expansion.variableValues;
-    
+
     // What would be wrong (using original scopedVars)
     const wrongVariableValues = [originalScopedVars, originalScopedVars, originalScopedVars];
 
@@ -157,8 +157,8 @@ describe('Alias Variable Edge Cases', () => {
 
     // Test template interpolation with both scenarios
     const alias = '$location Temperature';
-    
-    // Mock template service behavior  
+
+    // Mock template service behavior
     const templateReplace = (text: string, vars: ScopedVars) => {
       return text.replace(/\$(\w+)/g, (match, varName) => {
         const variable = vars[varName];
@@ -173,10 +173,10 @@ describe('Alias Variable Edge Cases', () => {
     };
 
     // Correct approach (using individual variable values)
-    const correctAliases = correctVariableValues.map(vars => templateReplace(alias, vars));
-    
-    // Wrong approach (using original scopedVars)  
-    const wrongAliases = wrongVariableValues.map(vars => templateReplace(alias, vars));
+    const correctAliases = correctVariableValues.map((vars) => templateReplace(alias, vars));
+
+    // Wrong approach (using original scopedVars)
+    const wrongAliases = wrongVariableValues.map((vars) => templateReplace(alias, vars));
 
     console.log('Correct aliases:', correctAliases);
     console.log('Wrong aliases (bug scenario):', wrongAliases);
@@ -184,8 +184,8 @@ describe('Alias Variable Edge Cases', () => {
     expect(correctAliases).toEqual(['Attic Temperature', 'Bedroom Temperature', 'Office Temperature']);
     expect(wrongAliases).toEqual([
       'Attic,Bedroom,Office Temperature',
-      'Attic,Bedroom,Office Temperature', 
-      'Attic,Bedroom,Office Temperature'
+      'Attic,Bedroom,Office Temperature',
+      'Attic,Bedroom,Office Temperature',
     ]);
 
     // This confirms the bug would manifest as identical comma-separated names for all series
@@ -193,15 +193,15 @@ describe('Alias Variable Edge Cases', () => {
 
   test('should test response processing simulation', () => {
     // Simulate the exact response processing logic to check for bugs
-    
+
     const originalScopedVars: ScopedVars = {
-      host: { text: 'server1,server2', value: ['server1', 'server2'] }
+      host: { text: 'server1,server2', value: ['server1', 'server2'] },
     };
 
     // Step 1: Expand metric names (this should work correctly)
     const expansion = (datasource as any).expandMetricNames('cpu.$host.usage', 'A', originalScopedVars);
-    
-    // Step 2: Build metricToTargetMap (as done in real code)  
+
+    // Step 2: Build metricToTargetMap (as done in real code)
     const metricToTargetMap = {};
     const mockTarget = {
       refId: 'A',
@@ -210,21 +210,21 @@ describe('Alias Variable Edge Cases', () => {
         alias: '$host CPU Usage',
         tags: {},
         groupBy: { tags: [], time: [], value: [] },
-        aggregators: []
-      }
+        aggregators: [],
+      },
     };
 
     expansion.names.forEach((name, index) => {
       metricToTargetMap[index] = {
         target: mockTarget,
-        variableValues: expansion.variableValues[index] // Individual values
+        variableValues: expansion.variableValues[index], // Individual values
       };
     });
 
     // Step 3: Simulate response processing (as done in real code)
     const mockResults = [
       { name: 'cpu.server1.usage', tags: { host: ['server1'] }, values: [[1234567890000, 80.5]] },
-      { name: 'cpu.server2.usage', tags: { host: ['server2'] }, values: [[1234567890000, 75.3]] }
+      { name: 'cpu.server2.usage', tags: { host: ['server2'] }, values: [[1234567890000, 75.3]] },
     ];
 
     const processedAliases = [];

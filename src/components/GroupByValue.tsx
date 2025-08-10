@@ -13,7 +13,7 @@ export function GroupByValue({ value, onChange }: Props) {
   const handleEnabledChange = (event: any) => {
     // Extract boolean value from Grafana UI Switch component
     const enabled = event.currentTarget ? event.currentTarget.checked : event;
-    
+
     if (enabled) {
       onChange({ range_size: 100 });
     } else {
@@ -27,19 +27,16 @@ export function GroupByValue({ value, onChange }: Props) {
       return;
     }
     onChange({
-      range_size: newRangeSize
+      range_size: newRangeSize,
     });
   };
 
   return (
     <Stack direction="row" gap={1} alignItems="center">
       <InlineField label="Group by Value" labelWidth={20}>
-        <Switch
-          value={isEnabled}
-          onChange={handleEnabledChange}
-        />
+        <Switch value={isEnabled} onChange={handleEnabledChange} />
       </InlineField>
-      
+
       {isEnabled && (
         <InlineField label="Range Size" labelWidth={15}>
           <Input

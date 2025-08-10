@@ -9,27 +9,23 @@ interface Props {
 }
 
 export function GroupByTags({ tags = [], availableTags = [], onChange }: Props) {
-  const options: Array<SelectableValue<string>> = availableTags.map(tag => ({
+  const options: Array<SelectableValue<string>> = availableTags.map((tag) => ({
     label: tag,
-    value: tag
+    value: tag,
   }));
 
-  const selectedOptions = tags.map(tag => ({
+  const selectedOptions = tags.map((tag) => ({
     label: tag,
-    value: tag
+    value: tag,
   }));
 
   const handleChange = (selected: Array<SelectableValue<string>>) => {
-    const newTags = selected.map(option => option.value!).filter(Boolean);
+    const newTags = selected.map((option) => option.value!).filter(Boolean);
     onChange(newTags);
   };
 
   return (
-    <InlineField 
-      label="Group by Tags" 
-      labelWidth={20}
-      tooltip="Group results by tag values"
-    >
+    <InlineField label="Group by Tags" labelWidth={20} tooltip="Group results by tag values">
       <MultiSelect
         width={50}
         options={options}

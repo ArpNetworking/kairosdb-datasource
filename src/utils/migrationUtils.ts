@@ -4,7 +4,6 @@ import { Aggregator, AggregatorParameter, AutoValueSwitch } from '../types';
  * Migration utilities for handling old dashboard formats
  */
 export class MigrationUtils {
-  
   /**
    * Migrates aggregators from old Angular plugin format to new React format
    */
@@ -13,19 +12,21 @@ export class MigrationUtils {
       return [];
     }
 
-    return aggregators.map((aggregator) => {
-      if (!aggregator || typeof aggregator !== 'object') {
-        return null;
-      }
+    return aggregators
+      .map((aggregator) => {
+        if (!aggregator || typeof aggregator !== 'object') {
+          return null;
+        }
 
-      const migratedAggregator: Aggregator = {
-        name: aggregator.name || '',
-        parameters: MigrationUtils.migrateParameters(aggregator.parameters || []),
-        autoValueSwitch: MigrationUtils.migrateAutoValueSwitch(aggregator.autoValueSwitch)
-      };
+        const migratedAggregator: Aggregator = {
+          name: aggregator.name || '',
+          parameters: MigrationUtils.migrateParameters(aggregator.parameters || []),
+          autoValueSwitch: MigrationUtils.migrateAutoValueSwitch(aggregator.autoValueSwitch),
+        };
 
-      return migratedAggregator;
-    }).filter((agg): agg is Aggregator => agg !== null);
+        return migratedAggregator;
+      })
+      .filter((agg): agg is Aggregator => agg !== null);
   }
 
   /**
@@ -36,20 +37,22 @@ export class MigrationUtils {
       return [];
     }
 
-    return parameters.map((param) => {
-      if (!param || typeof param !== 'object' || !param.name) {
-        return null;
-      }
+    return parameters
+      .map((param) => {
+        if (!param || typeof param !== 'object' || !param.name) {
+          return null;
+        }
 
-      const migratedParam: AggregatorParameter = {
-        name: param.name,
-        type: param.type || '',
-        value: MigrationUtils.migrateParameterValue(param),
-        text: param.text || param.name
-      };
+        const migratedParam: AggregatorParameter = {
+          name: param.name,
+          type: param.type || '',
+          value: MigrationUtils.migrateParameterValue(param),
+          text: param.text || param.name,
+        };
 
-      return migratedParam;
-    }).filter((param): param is AggregatorParameter => param !== null);
+        return migratedParam;
+      })
+      .filter((param): param is AggregatorParameter => param !== null);
   }
 
   /**
@@ -95,7 +98,7 @@ export class MigrationUtils {
       // Check if it's old format (array of objects) or new format (array of strings)
       if (autoValueSwitch.dependentParameters.length > 0) {
         const firstParam = autoValueSwitch.dependentParameters[0];
-        
+
         if (typeof firstParam === 'string') {
           // Already in new format
           dependentParameters = autoValueSwitch.dependentParameters;
@@ -110,7 +113,7 @@ export class MigrationUtils {
 
     return {
       enabled: Boolean(autoValueSwitch.enabled),
-      dependentParameters
+      dependentParameters,
     };
   }
 

@@ -64,11 +64,11 @@ export const DEFAULT_QUERY: Partial<KairosDBQuery> = {
     groupBy: {
       time: undefined,
       tags: [],
-      value: undefined
+      value: undefined,
     },
     aggregators: [],
-    overrideScalar: false
-  }
+    overrideScalar: false,
+  },
 };
 
 /**
@@ -154,17 +154,19 @@ export interface KairosDBDatapointsRequest {
     group_by?: Array<{
       name: string;
       tags?: string[];
-      range_size?: {
-        value: number;
-        unit: string;
-      } | number; // For value group by, range_size is just a number
+      range_size?:
+        | {
+            value: number;
+            unit: string;
+          }
+        | number; // For value group by, range_size is just a number
       group_count?: number;
     }>;
   }>;
 }
 
 /**
- * Request body for /api/v1/datapoints/query/tags endpoint  
+ * Request body for /api/v1/datapoints/query/tags endpoint
  */
 export interface KairosDBMetricTagsRequest {
   start_absolute?: number;

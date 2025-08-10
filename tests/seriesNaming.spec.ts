@@ -1,6 +1,6 @@
 /**
  * Tests for series naming logic - ensuring only relevant tags are included
- * 
+ *
  * These tests verify that series names only include tags that were explicitly
  * specified in the query's tags section or groupBy.tags, not all tags from the response.
  */
@@ -18,7 +18,7 @@ describe('Series Naming', () => {
       name: 'Test KairosDB',
       url: 'http://localhost:8080',
       access: 'proxy',
-      jsonData: {}
+      jsonData: {},
     });
   });
 
@@ -28,21 +28,21 @@ describe('Series Naming', () => {
         metricName: 'cpu.usage',
         tags: {
           host: ['server1'],
-          datacenter: ['us-east-1']
+          datacenter: ['us-east-1'],
           // Note: service not included in query
         },
-        groupBy: { tags: [], time: [], value: [] }
+        groupBy: { tags: [], time: [], value: [] },
       };
 
       const resultTags = {
         host: ['server1'],
-        datacenter: ['us-east-1'], 
+        datacenter: ['us-east-1'],
         service: ['web'], // This should NOT be included
-        cluster: ['prod'] // This should NOT be included
+        cluster: ['prod'], // This should NOT be included
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).toContain('host');
       expect(relevantKeys).toContain('datacenter');
       expect(relevantKeys).not.toContain('service');
@@ -57,19 +57,19 @@ describe('Series Naming', () => {
         groupBy: {
           tags: ['host'], // Only grouping by host
           time: [],
-          value: []
-        }
+          value: [],
+        },
       };
 
       const resultTags = {
         host: ['server1'],
         datacenter: ['us-east-1'], // Should NOT be included
-        service: ['web'],          // Should NOT be included
-        cluster: ['prod']          // Should NOT be included
+        service: ['web'], // Should NOT be included
+        cluster: ['prod'], // Should NOT be included
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).toContain('host');
       expect(relevantKeys).not.toContain('datacenter');
       expect(relevantKeys).not.toContain('service');
@@ -82,24 +82,24 @@ describe('Series Naming', () => {
         metricName: 'cpu.usage',
         tags: {
           host: ['server1'],
-          datacenter: ['us-east-1']
+          datacenter: ['us-east-1'],
         },
         groupBy: {
           tags: ['host', 'service'], // host is duplicate, service is new
           time: [],
-          value: []
-        }
+          value: [],
+        },
       };
 
       const resultTags = {
         host: ['server1'],
         datacenter: ['us-east-1'],
         service: ['web'],
-        cluster: ['prod'] // Should NOT be included
+        cluster: ['prod'], // Should NOT be included
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).toContain('host');
       expect(relevantKeys).toContain('datacenter');
       expect(relevantKeys).toContain('service');
@@ -111,18 +111,18 @@ describe('Series Naming', () => {
       const targetQuery = {
         metricName: 'cpu.usage',
         tags: {},
-        groupBy: { tags: [], time: [], value: [] }
+        groupBy: { tags: [], time: [], value: [] },
       };
 
       const resultTags = {
         host: ['server1'],
         datacenter: ['us-east-1'],
         service: ['web'],
-        cluster: ['prod']
+        cluster: ['prod'],
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).toHaveLength(0);
     });
 
@@ -131,21 +131,21 @@ describe('Series Naming', () => {
         metricName: 'cpu.usage',
         tags: {
           host: ['server1'],
-          datacenter: ['us-east-1']
+          datacenter: ['us-east-1'],
         },
-        groupBy: { tags: ['service'], time: [], value: [] }
+        groupBy: { tags: ['service'], time: [], value: [] },
       };
 
       const resultTags = {
-        host: ['server1']
+        host: ['server1'],
         // datacenter and service are missing from result
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).toContain('host');
       expect(relevantKeys).not.toContain('datacenter'); // Missing from result
-      expect(relevantKeys).not.toContain('service');    // Missing from result
+      expect(relevantKeys).not.toContain('service'); // Missing from result
       expect(relevantKeys).toHaveLength(1);
     });
 
@@ -154,18 +154,18 @@ describe('Series Naming', () => {
         metricName: 'cpu.usage',
         tags: {
           host: [], // Empty array - should not be included
-          datacenter: ['us-east-1']
+          datacenter: ['us-east-1'],
         },
-        groupBy: { tags: [], time: [], value: [] }
+        groupBy: { tags: [], time: [], value: [] },
       };
 
       const resultTags = {
         host: ['server1'],
-        datacenter: ['us-east-1']
+        datacenter: ['us-east-1'],
       };
 
       const relevantKeys = (datasource as any).getRelevantTagKeys(targetQuery, resultTags);
-      
+
       expect(relevantKeys).not.toContain('host'); // Empty in query
       expect(relevantKeys).toContain('datacenter');
       expect(relevantKeys).toHaveLength(1);

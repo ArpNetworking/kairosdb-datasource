@@ -15,18 +15,17 @@ interface Props {
   onAutoValueChange: (enabled: boolean) => void;
 }
 
-export function AggregatorItem({ 
-  aggregator, 
-  index, 
-  isFirst, 
-  isLast, 
-  onRemove, 
-  onMoveUp, 
+export function AggregatorItem({
+  aggregator,
+  index,
+  isFirst,
+  isLast,
+  onRemove,
+  onMoveUp,
   onMoveDown,
   onParameterChange,
-  onAutoValueChange
+  onAutoValueChange,
 }: Props) {
-
   const handleParameterChange = (param: AggregatorParameter, value: any) => {
     onParameterChange(param.name, value);
   };
@@ -98,18 +97,20 @@ export function AggregatorItem({
   };
 
   const renderParameter = (param: AggregatorParameter) => {
-    if (!param || !param.name) {return null;}
-    
+    if (!param || !param.name) {
+      return null;
+    }
+
     // Hide alignment parameters from UI - they are internal to KairosDB
     if (param.type === 'alignment') {
       return null;
     }
     const key = `${aggregator.name || 'unknown'}-${param.name}`;
     const paramValue = param.value || '';
-    
+
     // For dependent parameters when auto is enabled, show "auto" and disable
     const isParamDisabled = isAutoEnabled && isDependentParameter(param);
-    
+
     switch (param.type) {
       case 'enum':
         const enumOptions = getEnumOptions(param.name);
@@ -117,7 +118,13 @@ export function AggregatorItem({
           <InlineField key={key} label={param.name} labelWidth={12} transparent>
             <Select
               width={18}
-              value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
+              value={
+                isParamDisabled
+                  ? { label: 'auto', value: 'auto' }
+                  : paramValue
+                    ? { label: paramValue, value: paramValue }
+                    : null
+              }
               options={enumOptions}
               isDisabled={isParamDisabled}
               onChange={(option) => {
@@ -128,7 +135,7 @@ export function AggregatorItem({
             />
           </InlineField>
         );
-        
+
       case 'sampling_unit':
         const unitOptions = [
           { label: 'milliseconds', value: 'milliseconds' },
@@ -138,13 +145,19 @@ export function AggregatorItem({
           { label: 'days', value: 'days' },
           { label: 'weeks', value: 'weeks' },
           { label: 'months', value: 'months' },
-          { label: 'years', value: 'years' }
+          { label: 'years', value: 'years' },
         ];
         return (
           <InlineField key={key} label={param.name} labelWidth={10} transparent>
             <Select
               width={18}
-              value={isParamDisabled ? { label: 'auto', value: 'auto' } : (paramValue ? { label: paramValue, value: paramValue } : null)}
+              value={
+                isParamDisabled
+                  ? { label: 'auto', value: 'auto' }
+                  : paramValue
+                    ? { label: paramValue, value: paramValue }
+                    : null
+              }
               options={unitOptions}
               isDisabled={isParamDisabled}
               onChange={(option) => {
@@ -155,29 +168,35 @@ export function AggregatorItem({
             />
           </InlineField>
         );
-        
+
       case 'sampling':
         const samplingValidationError = getValidationError(param);
         const hasSamplingError = samplingValidationError !== null;
-        
+
         return (
           <div key={key}>
             <InlineField label={param.name} labelWidth={12} transparent>
               <Input
                 width={16}
-                type={isParamDisabled ? "text" : "number"}
-                value={isParamDisabled ? 'auto' : (paramValue || '')}
+                type={isParamDisabled ? 'text' : 'number'}
+                value={isParamDisabled ? 'auto' : paramValue || ''}
                 disabled={isParamDisabled}
                 readOnly={isParamDisabled}
                 invalid={hasSamplingError && !isParamDisabled}
-                style={isParamDisabled ? { 
-                  backgroundColor: 'rgba(128, 128, 128, 0.1)', 
-                  color: 'rgba(204, 204, 220, 0.6)',
-                  cursor: 'not-allowed'
-                } : (hasSamplingError ? {
-                  borderColor: '#e02f44',
-                  boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)'
-                } : undefined)}
+                style={
+                  isParamDisabled
+                    ? {
+                        backgroundColor: 'rgba(128, 128, 128, 0.1)',
+                        color: 'rgba(204, 204, 220, 0.6)',
+                        cursor: 'not-allowed',
+                      }
+                    : hasSamplingError
+                      ? {
+                          borderColor: '#e02f44',
+                          boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)',
+                        }
+                      : undefined
+                }
                 onChange={(e) => {
                   if (!isParamDisabled) {
                     handleParameterChange(param, parseFloat(e.currentTarget.value) || 0);
@@ -186,39 +205,47 @@ export function AggregatorItem({
               />
             </InlineField>
             {hasSamplingError && !isParamDisabled && (
-              <div style={{ 
-                fontSize: '11px', 
-                color: '#e02f44', 
-                marginTop: '2px',
-                marginLeft: '8px'
-              }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#e02f44',
+                  marginTop: '2px',
+                  marginLeft: '8px',
+                }}
+              >
                 {samplingValidationError}
               </div>
             )}
           </div>
         );
-        
+
       default:
         const validationError = getValidationError(param);
         const hasError = validationError !== null;
-        
+
         return (
           <div key={key}>
             <InlineField label={param.name} labelWidth={12} transparent>
               <Input
                 width={18}
-                value={isParamDisabled ? 'auto' : (paramValue || '')}
+                value={isParamDisabled ? 'auto' : paramValue || ''}
                 disabled={isParamDisabled}
                 readOnly={isParamDisabled}
                 invalid={hasError && !isParamDisabled}
-                style={isParamDisabled ? { 
-                  backgroundColor: 'rgba(128, 128, 128, 0.1)', 
-                  color: 'rgba(204, 204, 220, 0.6)',
-                  cursor: 'not-allowed'
-                } : (hasError ? {
-                  borderColor: '#e02f44',
-                  boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)'
-                } : undefined)}
+                style={
+                  isParamDisabled
+                    ? {
+                        backgroundColor: 'rgba(128, 128, 128, 0.1)',
+                        color: 'rgba(204, 204, 220, 0.6)',
+                        cursor: 'not-allowed',
+                      }
+                    : hasError
+                      ? {
+                          borderColor: '#e02f44',
+                          boxShadow: '0 0 0 2px rgba(224, 47, 68, 0.2)',
+                        }
+                      : undefined
+                }
                 onChange={(e) => {
                   if (!isParamDisabled) {
                     handleParameterChange(param, e.currentTarget.value);
@@ -227,12 +254,14 @@ export function AggregatorItem({
               />
             </InlineField>
             {hasError && !isParamDisabled && (
-              <div style={{ 
-                fontSize: '11px', 
-                color: '#e02f44', 
-                marginTop: '2px',
-                marginLeft: '8px'
-              }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#e02f44',
+                  marginTop: '2px',
+                  marginLeft: '8px',
+                }}
+              >
                 {validationError}
               </div>
             )}
@@ -248,7 +277,7 @@ export function AggregatorItem({
           {/* Left side: Aggregator name and auto toggle */}
           <Stack direction="row" gap={2} alignItems="center">
             <strong style={{ fontSize: '14px', minWidth: '60px' }}>{aggregator.name || 'Unknown'}</strong>
-            
+
             {/* Single Auto toggle for the whole aggregator */}
             {aggregator.autoValueSwitch && (
               <InlineField label="Auto" labelWidth={8} transparent>
@@ -262,14 +291,14 @@ export function AggregatorItem({
               </InlineField>
             )}
           </Stack>
-          
+
           {/* Middle: Parameters inline */}
           <div style={{ flex: 1 }}>
             <Stack direction="row" gap={1} alignItems="center">
               {(aggregator.parameters || []).map(renderParameter)}
             </Stack>
           </div>
-          
+
           {/* Right side: Action buttons */}
           <Stack direction="row" gap={0}>
             <Button
@@ -288,13 +317,7 @@ export function AggregatorItem({
               icon="arrow-down"
               tooltip="Move down"
             />
-            <Button
-              variant="destructive"
-              size="xs"
-              onClick={onRemove}
-              icon="trash-alt"
-              tooltip="Remove aggregator"
-            />
+            <Button variant="destructive" size="xs" onClick={onRemove} icon="trash-alt" tooltip="Remove aggregator" />
           </Stack>
         </Stack>
       </Card.Description>
@@ -304,13 +327,13 @@ export function AggregatorItem({
 
 function getEnumOptions(parameterName: string): Array<SelectableValue<string>> {
   const enumMaps: { [key: string]: Array<SelectableValue<string>> } = {
-    'unit': [
+    unit: [
       { label: 'SECONDS', value: 'SECONDS' },
       { label: 'MINUTES', value: 'MINUTES' },
       { label: 'HOURS', value: 'HOURS' },
-      { label: 'DAYS', value: 'DAYS' }
-    ]
+      { label: 'DAYS', value: 'DAYS' },
+    ],
   };
-  
+
   return enumMaps[parameterName] || [];
 }

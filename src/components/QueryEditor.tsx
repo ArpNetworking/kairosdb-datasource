@@ -22,37 +22,37 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     groupBy: {
       time: undefined,
       tags: [],
-      value: undefined
+      value: undefined,
     },
     aggregators: [],
     overrideScalar: false,
-    ...query.query
+    ...query.query,
   };
 
   // Migrate aggregators from old format if needed
   const currentQuery = {
     ...baseQuery,
-    aggregators: baseQuery.aggregators && MigrationUtils.needsMigration(baseQuery.aggregators)
-      ? MigrationUtils.migrateAggregators(baseQuery.aggregators)
-      : baseQuery.aggregators
+    aggregators:
+      baseQuery.aggregators && MigrationUtils.needsMigration(baseQuery.aggregators)
+        ? MigrationUtils.migrateAggregators(baseQuery.aggregators)
+        : baseQuery.aggregators,
   };
-  
-  
+
   // Ensure we have a valid query object and persist migrated data
   React.useEffect(() => {
     if (!query.query) {
       onChange({
         ...query,
-        query: currentQuery
+        query: currentQuery,
       });
     } else if (baseQuery.aggregators && MigrationUtils.needsMigration(baseQuery.aggregators)) {
       // Persist migrated aggregators back to the dashboard
       onChange({
         ...query,
-        query: currentQuery
+        query: currentQuery,
       });
     }
-  }, []);  // Remove dependencies to avoid infinite loops
+  }, []); // Remove dependencies to avoid infinite loops
 
   // Load available tags when metric name changes
   React.useEffect(() => {
@@ -74,12 +74,12 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
   }, [currentQuery.metricName, datasource]);
 
   const onMetricNameChange = (metricName: string) => {
-    const newQuery = { 
-      ...query, 
+    const newQuery = {
+      ...query,
       query: {
         ...currentQuery,
-        metricName
-      }
+        metricName,
+      },
     };
     onChange(newQuery);
     onRunQuery();
@@ -90,8 +90,8 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       ...query,
       query: {
         ...currentQuery,
-        alias: event.target.value
-      }
+        alias: event.target.value,
+      },
     });
   };
 
@@ -104,8 +104,8 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       ...query,
       query: {
         ...currentQuery,
-        aggregators
-      }
+        aggregators,
+      },
     });
     onRunQuery();
   };
@@ -115,8 +115,8 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       ...query,
       query: {
         ...currentQuery,
-        tags
-      }
+        tags,
+      },
     });
     onRunQuery();
   };
@@ -126,87 +126,91 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       ...query,
       query: {
         ...currentQuery,
-        groupBy
-      }
+        groupBy,
+      },
     });
     onRunQuery();
   };
 
   const getCollapsedText = (): string => {
-    
     if (!currentQuery?.metricName) {
       return 'SELECT * FROM <metric>';
     }
-    
-    let str = "SELECT ";
-    
+
+    let str = 'SELECT ';
+
     const aggregators = currentQuery.aggregators || [];
     if (aggregators.length > 0) {
-      aggregators.slice().reverse().forEach((agg) => {
-        if (agg?.name) {
-          // Build aggregator with parameters
-          let aggStr = agg.name;
-          
-          // Add parameters if any
-          const params = agg.parameters || [];
-          const paramStrings: string[] = [];
-          
-          params.forEach(param => {
-            if (param?.name && param?.value !== undefined && param?.value !== null && param?.value !== '') {
-              // Handle auto values
-              if (agg.autoValueSwitch?.enabled && agg.autoValueSwitch?.dependentParameters?.includes(param.type)) {
-                paramStrings.push(`${param.name}=auto`);
-              } else {
-                paramStrings.push(`${param.name}=${param.value}`);
+      aggregators
+        .slice()
+        .reverse()
+        .forEach((agg) => {
+          if (agg?.name) {
+            // Build aggregator with parameters
+            let aggStr = agg.name;
+
+            // Add parameters if any
+            const params = agg.parameters || [];
+            const paramStrings: string[] = [];
+
+            params.forEach((param) => {
+              if (param?.name && param?.value !== undefined && param?.value !== null && param?.value !== '') {
+                // Handle auto values
+                if (agg.autoValueSwitch?.enabled && agg.autoValueSwitch?.dependentParameters?.includes(param.type)) {
+                  paramStrings.push(`${param.name}=auto`);
+                } else {
+                  paramStrings.push(`${param.name}=${param.value}`);
+                }
               }
+            });
+
+            if (paramStrings.length > 0) {
+              aggStr += `[${paramStrings.join(', ')}]`;
             }
-          });
-          
-          if (paramStrings.length > 0) {
-            aggStr += `[${paramStrings.join(', ')}]`;
+
+            str += aggStr + '(';
           }
-          
-          str += aggStr + "(";
-        }
-      });
-      str += "*";
+        });
+      str += '*';
       aggregators.forEach(() => {
-        str += ")";
+        str += ')';
       });
     } else {
-      str += "*";
+      str += '*';
     }
 
     if (currentQuery.alias) {
-      str += " as " + currentQuery.alias;
+      str += ' as ' + currentQuery.alias;
     }
 
-    str += " FROM " + currentQuery.metricName;
+    str += ' FROM ' + currentQuery.metricName;
 
     const tags = currentQuery.tags || {};
-    const tagKeys = Object.keys(tags).filter(key => 
-      tags[key] && Array.isArray(tags[key]) && tags[key].length > 0
-    );
-    
+    const tagKeys = Object.keys(tags).filter((key) => tags[key] && Array.isArray(tags[key]) && tags[key].length > 0);
+
     if (tagKeys.length > 0) {
-      str += " WHERE " + tagKeys.map(key => {
-        const values = tags[key] || [];
-        return values.length > 1 ? `${key}=[${values.join(',')}]` : `${key}=${values[0] || ''}`;
-      }).join(', ');
+      str +=
+        ' WHERE ' +
+        tagKeys
+          .map((key) => {
+            const values = tags[key] || [];
+            return values.length > 1 ? `${key}=[${values.join(',')}]` : `${key}=${values[0] || ''}`;
+          })
+          .join(', ');
     }
 
     // Add GROUP BY clause
     const groupByParts: string[] = [];
     const groupBy = currentQuery.groupBy || {};
-    
+
     if (groupBy.tags && Array.isArray(groupBy.tags) && groupBy.tags.length > 0) {
       groupByParts.push(...groupBy.tags.filter(Boolean));
     }
-    
+
     if (groupBy.value?.range_size) {
       groupByParts.push(`value(${groupBy.value.range_size})`);
     }
-    
+
     if (groupBy.time?.value && groupBy.time?.unit) {
       const time = groupBy.time;
       let timeStr = `time(${time.value}${time.unit})`;
@@ -215,21 +219,16 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       }
       groupByParts.push(timeStr);
     }
-    
+
     if (groupByParts.length > 0) {
-      str += " GROUP BY " + groupByParts.join(', ');
+      str += ' GROUP BY ' + groupByParts.join(', ');
     }
 
     return str;
   };
 
   return (
-    <Collapse 
-      label="Query" 
-      collapsible={true}
-      isOpen={true}
-      onToggle={() => {}}
-    >
+    <Collapse label="Query" collapsible={true} isOpen={true} onToggle={() => {}}>
       <Stack direction="column" gap={2}>
         <FieldSet label="Query">
           <Stack direction="column" gap={1}>
@@ -238,7 +237,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
               onChange={onMetricNameChange}
               datasource={datasource}
             />
-            
+
             <InlineField label="Alias" labelWidth={20}>
               <Input
                 id="query-editor-alias"
@@ -263,22 +262,23 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           groupBy={currentQuery.groupBy || { time: undefined, tags: [], value: undefined }}
           onChange={onGroupByChange}
           availableTags={availableTags}
-          hasMultiValuedTags={Object.values(currentQuery.tags || {}).some(values => Array.isArray(values) && values.length > 1)}
+          hasMultiValuedTags={Object.values(currentQuery.tags || {}).some(
+            (values) => Array.isArray(values) && values.length > 1
+          )}
         />
 
-        <Aggregators
-          aggregators={currentQuery.aggregators || []}
-          onChange={onAggregatorsChange}
-        />
+        <Aggregators aggregators={currentQuery.aggregators || []} onChange={onAggregatorsChange} />
 
         <FieldSet label="Preview">
-          <div style={{ 
-            backgroundColor: 'rgba(128, 128, 128, 0.1)', 
-            padding: '8px', 
-            borderRadius: '4px',
-            fontFamily: 'monospace',
-            fontSize: '12px'
-          }}>
+          <div
+            style={{
+              backgroundColor: 'rgba(128, 128, 128, 0.1)',
+              padding: '8px',
+              borderRadius: '4px',
+              fontFamily: 'monospace',
+              fontSize: '12px',
+            }}
+          >
             {getCollapsedText()}
           </div>
         </FieldSet>

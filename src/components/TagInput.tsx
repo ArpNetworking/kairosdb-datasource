@@ -25,23 +25,20 @@ export function TagInput({ segment, tagValues, onChange }: Props) {
   if (segment.value === null) {
     return (
       <>
-        <Button
-          variant="secondary"
-          size="xs"
-          onClick={() => setIsOpen(!isOpen)}
-          icon="plus"
-        />
-        
+        <Button variant="secondary" size="xs" onClick={() => setIsOpen(!isOpen)} icon="plus" />
+
         {isOpen && (
-          <div style={{ 
-            position: 'absolute', 
-            zIndex: 1000, 
-            marginTop: '24px',
-            minWidth: '200px'
-          }}>
+          <div
+            style={{
+              position: 'absolute',
+              zIndex: 1000,
+              marginTop: '24px',
+              minWidth: '200px',
+            }}
+          >
             <Select
               placeholder="Select tag value..."
-              options={tagValues.map(value => ({ label: value, value }))}
+              options={tagValues.map((value) => ({ label: value, value }))}
               onChange={handleChange}
               onCloseMenu={() => setIsOpen(false)}
               autoFocus
@@ -68,26 +65,26 @@ export function TagInput({ segment, tagValues, onChange }: Props) {
           border: '1px solid rgba(36, 41, 46, 1)',
           borderRadius: '3px',
           fontSize: '11px',
-          padding: '2px 6px'
+          padding: '2px 6px',
         }}
       >
         {segment.value}
       </Button>
-      
+
       {isOpen && (
-        <div style={{ 
-          position: 'absolute', 
-          zIndex: 1000, 
-          marginTop: '24px',
-          minWidth: '200px'
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 1000,
+            marginTop: '24px',
+            minWidth: '200px',
+          }}
+        >
           <Select
             value={{ label: segment.value, value: segment.value }}
             options={[
               { label: segment.value, value: segment.value },
-              ...tagValues
-                .filter(value => value !== segment.value)
-                .map(value => ({ label: value, value }))
+              ...tagValues.filter((value) => value !== segment.value).map((value) => ({ label: value, value })),
             ]}
             onChange={handleChange}
             onCloseMenu={() => setIsOpen(false)}

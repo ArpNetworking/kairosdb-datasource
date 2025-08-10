@@ -9,11 +9,7 @@ test('smoke: should render config editor', async ({ createDataSourceConfigPage, 
   await expect(page.getByText('Metrics Autocomplete Limit')).toBeVisible();
 });
 
-test('should have Save & test button', async ({
-  createDataSourceConfigPage,
-  readProvisionedDataSource,
-  page,
-}) => {
+test('should have Save & test button', async ({ createDataSourceConfigPage, readProvisionedDataSource, page }) => {
   const ds = await readProvisionedDataSource({ fileName: 'datasources.yml' });
   const configPage = await createDataSourceConfigPage({ type: ds.type });
   // Just check that the Save & Test button exists rather than trying to mock network calls

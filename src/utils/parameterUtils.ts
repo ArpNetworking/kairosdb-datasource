@@ -12,11 +12,10 @@ export class ParameterObjectBuilder {
     const [unit, value] = TimeUnitUtils.intervalToUnitValue(defaultInterval);
     this.autoIntervalValue = value.toString();
     this.autoIntervalUnit = unit;
-    
+
     // Set up auto value logic based on aggregator's autoValueSwitch
     this.autoValueEnabled = aggregator.autoValueSwitch?.enabled || false;
     this.autoValueDependentParameters = aggregator.autoValueSwitch?.dependentParameters || [];
-    
   }
 
   public build(parameter: AggregatorParameter): any {
@@ -34,17 +33,16 @@ export class ParameterObjectBuilder {
 
   private buildSamplingParameter(parameter: AggregatorParameter, autoValue: string): any {
     const parameterObject = { sampling: {} as any };
-    
+
     // Use auto value if auto is enabled and this parameter type is dependent
     const finalValue = this.isOverriddenByAutoValue(parameter) ? autoValue : parameter.value;
-      
-    
+
     // For sampling values that should be numeric, ensure they are numbers
     let processedValue = finalValue;
     if (parameter.name === 'value') {
       processedValue = typeof finalValue === 'string' ? parseFloat(finalValue) : finalValue;
     }
-    
+
     parameterObject.sampling[parameter.name] = processedValue;
     return parameterObject;
   }
