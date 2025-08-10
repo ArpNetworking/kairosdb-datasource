@@ -1300,6 +1300,10 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
 
   private deepMerge(target: any, source: any): void {
     for (const key in source) {
+      // Block prototype pollution
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       if (source.hasOwnProperty(key)) {
         if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
           // If target doesn't have this key, create it
