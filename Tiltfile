@@ -6,7 +6,7 @@ docker_build(
     '.',
     dockerfile='./Dockerfile',
     build_args={
-        'grafana_version': '11.3.0',
+        'grafana_version': 'latest',
         'grafana_image': 'grafana/grafana',
         'development': 'true',
         'anonymous_auth_enabled': 'true'
