@@ -39,9 +39,6 @@ spec:
               mountPath: /etc/grafana/provisioning/datasources/kairosdb.yaml
               subPath: kairosdb.yaml
               readOnly: true
-            - name: dashboards
-              mountPath: /var/lib/grafana/dashboards
-              readOnly: true
       volumes:
         - name: dashboards-config
           configMap:
@@ -49,9 +46,6 @@ spec:
         - name: datasources-config
           configMap:
             name: grafana-datasources-config
-        - name: dashboards
-          configMap:
-            name: grafana-dashboards
 ---
 apiVersion: v1
 kind: Service

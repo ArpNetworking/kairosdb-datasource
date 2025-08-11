@@ -773,23 +773,41 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    */
   async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars }): Promise<MetricFindValue[]> {
     try {
+      // Handle empty query - return all metrics
+      if (!query || query.trim() === '') {
+        const metrics = await this.getMetricNames();
+        return metrics.map((metric) => ({
+          text: metric,
+          value: metric,
+        }));
+      }
+
       // Parse the query to determine type and parameters
       const parsedQuery = VariableQueryParser.parse(query);
 
       if (parsedQuery) {
         // Execute the parsed query
         const result = await this.variableQueryExecutor.execute(parsedQuery, options?.scopedVars);
-
         return result;
       } else {
-        // Fallback: if query doesn't match any function patterns, treat as simple metric name filter
-        const metrics = await this.getMetricNames(query);
-        const result = metrics.map((metric) => ({
-          text: metric,
-          value: metric,
-        }));
-
-        return result;
+        // Fallback for backwards compatibility:
+        // If query doesn't match any function patterns, treat as:
+        // 1. Simple metric name pattern (partial match)
+        // 2. Direct metric name list
+        
+        // Check if it looks like a simple pattern (no function syntax)
+        if (!query.includes('(')) {
+          // Simple pattern matching - this maintains old behavior
+          const metrics = await this.getMetricNames(query);
+          return metrics.map((metric) => ({
+            text: metric,
+            value: metric,
+          }));
+        }
+        
+        // If we get here, it might be malformed function syntax
+        console.warn('[DataSource] Unable to parse variable query:', query);
+        return [];
       }
     } catch (error) {
       console.error('[DataSource] Error in metricFindQuery:', error);

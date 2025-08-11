@@ -334,45 +334,83 @@ function parseQueryToState(query: string): VariableQueryState {
     return { type: 'metrics', filters: [] };
   }
 
-  // Try to parse as function calls
-  const metricsMatch = query.match(/^metrics\(\s*(.+)\s*\)$/i);
+  // Clean up legacy formatting
+  const cleanedQuery = query.trim()
+    .replace(/\s*\(\s*/g, '(')  // Remove spaces around parentheses
+    .replace(/\s*\)\s*/g, ')');
+
+  // Try to parse as function calls with more flexible regex
+  const metricsMatch = cleanedQuery.match(/^metrics\s*\(\s*(.+?)\s*\)$/i);
   if (metricsMatch) {
     return {
       type: 'metrics',
-      pattern: metricsMatch[1].replace(/['"]/g, ''),
+      pattern: metricsMatch[1].trim().replace(/^["']|["']$/g, ''),
       filters: [],
     };
   }
 
-  const tagNamesMatch = query.match(/^tag_names\(\s*(.+)\s*\)$/i);
+  const tagNamesMatch = cleanedQuery.match(/^tag_names\s*\(\s*(.+?)\s*\)$/i);
   if (tagNamesMatch) {
     return {
       type: 'tag_names',
-      metric: tagNamesMatch[1].replace(/['"]/g, ''),
+      metric: tagNamesMatch[1].trim().replace(/^["']|["']$/g, ''),
       filters: [],
     };
   }
 
-  const tagValuesMatch = query.match(/^tag_values\(\s*(.+)\s*\)$/i);
+  const tagValuesMatch = cleanedQuery.match(/^tag_values\s*\(\s*(.+)\s*\)$/i);
   if (tagValuesMatch) {
     const params = parseParameters(tagValuesMatch[1]);
 
     if (params.length >= 2) {
-      const metric = params[0].replace(/['"]/g, '');
-      const tagName = params[1].replace(/['"]/g, '');
+      const metric = params[0].trim().replace(/^["']|["']$/g, '');
+      
+      // Use the same detection logic as VariableQueryParser
+      // Detect format by checking if 2nd parameter contains '=' (filter)
+      const secondParam = params[1]?.trim() || '';
+      const isLegacyFormat = secondParam.includes('=');
+      
+      let tagName: string;
+      let filterStartIndex: number;
+      let filterEndIndex: number;
+      
+      if (isLegacyFormat) {
+        // Legacy format: tag_values(metric, filter1=value1, ..., tag_name)
+        tagName = params[params.length - 1].trim().replace(/^["']|["']$/g, '');
+        filterStartIndex = 1;
+        filterEndIndex = params.length - 1;
+      } else {
+        // New format: tag_values(metric, tag_name, filter1=value1, ...)
+        tagName = params[1].trim().replace(/^["']|["']$/g, '');
+        filterStartIndex = 2;
+        filterEndIndex = params.length;
+      }
 
       const filters: Array<{ key: string; value: string; id: string }> = [];
-      for (let i = 2; i < params.length; i++) {
-        const filterMatch = params[i].match(/^(.+?)=(.+)$/);
+      for (let i = filterStartIndex; i < filterEndIndex; i++) {
+        const param = params[i]?.trim();
+        if (!param) continue;
+        
+        const filterMatch = param.match(/^(.+?)=(.+)$/);
         if (filterMatch) {
-          const key = filterMatch[1].trim().replace(/['"]/g, '');
-          const value = filterMatch[2].trim().replace(/['"]/g, '');
+          const key = filterMatch[1].trim().replace(/^["']|["']$/g, '');
+          const value = filterMatch[2].trim().replace(/^["']|["']$/g, '');
           filters.push({ key, value, id: Date.now().toString() + i });
         }
       }
 
       return { type: 'tag_values', metric, tagName, filters };
     }
+  }
+
+  // Check if it's a simple metric pattern (backwards compatibility)
+  if (!cleanedQuery.includes('(') && !cleanedQuery.includes(')')) {
+    // Treat as a metric pattern query
+    return {
+      type: 'metrics',
+      pattern: cleanedQuery,
+      filters: [],
+    };
   }
 
   // Fallback to custom query

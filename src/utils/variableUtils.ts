@@ -17,41 +17,77 @@ export class VariableQueryParser {
    * - metrics(pattern)
    * - tag_names(metric)
    * - tag_values(metric, tag_name [, filter1=value1, filter2=value2...])
+   * 
+   * Also handles legacy formats for backwards compatibility
    */
   static parse(query: string): VariableQuery | null {
     // Remove whitespace
     const cleanQuery = query.trim();
 
+    // Handle legacy format conversions
+    const legacyConverted = this.convertLegacyFormat(cleanQuery);
+    if (legacyConverted !== cleanQuery) {
+      return this.parse(legacyConverted);
+    }
+
     // Metrics query: metrics(pattern)
-    const metricsMatch = cleanQuery.match(/^metrics\(\s*(.+)\s*\)$/i);
+    // Also support regex patterns like ^metrics\(([\\S ]+)\)$ from old version
+    const metricsMatch = cleanQuery.match(/^metrics\s*\(\s*(.*?)\s*\)$/i);
     if (metricsMatch) {
-      const pattern = metricsMatch[1].replace(/['"]/g, ''); // Remove quotes
+      const pattern = this.cleanParameter(metricsMatch[1]);
       return { type: 'metrics', pattern };
     }
 
     // Tag names query: tag_names(metric)
-    const tagNamesMatch = cleanQuery.match(/^tag_names\(\s*(.+)\s*\)$/i);
+    const tagNamesMatch = cleanQuery.match(/^tag_names\s*\(\s*(.*?)\s*\)$/i);
     if (tagNamesMatch) {
-      const metric = tagNamesMatch[1].replace(/['"]/g, ''); // Remove quotes
+      const metric = this.cleanParameter(tagNamesMatch[1]);
       return { type: 'tag_names', metric };
     }
 
-    // Tag values query: tag_values(metric, tag_name [, filter1=value1, filter2=value2...])
-    const tagValuesMatch = cleanQuery.match(/^tag_values\(\s*(.+)\s*\)$/i);
+    // Tag values query - support both new and legacy formats:
+    // New format: tag_values(metric, tag_name, filter1=value1, filter2=value2, ...)
+    // Legacy format: tag_values(metric, filter1=value1, filter2=value2, ..., tag_name)
+    const tagValuesMatch = cleanQuery.match(/^tag_values\s*\(\s*(.+)\s*\)$/i);
     if (tagValuesMatch) {
       const params = this.parseParameters(tagValuesMatch[1]);
 
       if (params.length >= 2) {
-        const metric = params[0].replace(/['"]/g, '');
-        const tagName = params[1].replace(/['"]/g, '');
+        const metric = this.cleanParameter(params[0]);
+        
+        // Detect format by checking if 2nd parameter contains '=' (filter)
+        const secondParam = params[1]?.trim() || '';
+        const isLegacyFormat = secondParam.includes('=');
+        
+        let tagName: string;
+        let filterStartIndex: number;
+        let filterEndIndex: number;
+        
+        if (isLegacyFormat) {
+          // Legacy format: tag_values(metric, filter1=value1, ..., tag_name)
+          tagName = this.cleanParameter(params[params.length - 1]);
+          filterStartIndex = 1;
+          filterEndIndex = params.length - 1;
+        } else {
+          // New format: tag_values(metric, tag_name, filter1=value1, ...)
+          tagName = this.cleanParameter(params[1]);
+          filterStartIndex = 2;
+          filterEndIndex = params.length;
+        }
 
-        // Parse filters from remaining parameters
+        // Parse filters
         const filters: { [key: string]: string } = {};
-        for (let i = 2; i < params.length; i++) {
-          const filterMatch = params[i].match(/^(.+?)=(.+)$/);
+        for (let i = filterStartIndex; i < filterEndIndex; i++) {
+          const param = params[i]?.trim();
+          
+          // Skip empty parameters
+          if (!param) continue;
+          
+          // Check if it's a filter (contains =)
+          const filterMatch = param.match(/^(.+?)=(.+)$/);
           if (filterMatch) {
-            const key = filterMatch[1].trim().replace(/['"]/g, '');
-            const value = filterMatch[2].trim().replace(/['"]/g, '');
+            const key = this.cleanParameter(filterMatch[1]);
+            const value = this.cleanParameter(filterMatch[2]);
             filters[key] = value;
           }
         }
@@ -61,6 +97,40 @@ export class VariableQueryParser {
     }
 
     return null;
+  }
+
+  /**
+   * Convert legacy query formats to modern format
+   */
+  private static convertLegacyFormat(query: string): string {
+    // Handle old-style function calls with extra spaces or different formatting
+    let converted = query.trim();
+    
+    // Normalize spacing around parentheses
+    converted = converted.replace(/\s*\(\s*/g, '(').replace(/\s*\)\s*/g, ')');
+    
+    // Handle legacy tag_values format that might have had different syntax
+    // If we see tag_values with more than 2 parameters before filters, handle it
+    const tagValuesMatch = converted.match(/^tag_values\s*\(\s*([^)]+)\s*\)$/i);
+    if (tagValuesMatch) {
+      const params = this.parseParameters(tagValuesMatch[1]);
+      if (params.length >= 3) {
+        // Check if 3rd parameter looks like a filter (contains =)
+        if (params[2] && !params[2].includes('=')) {
+          // This might be an old format where there was a 3rd parameter before filters
+          // For now, we'll ignore that parameter and treat everything from the 3rd parameter onwards as filters
+        }
+      }
+    }
+    
+    return converted;
+  }
+
+  /**
+   * Clean parameter by removing quotes and trimming whitespace
+   */
+  private static cleanParameter(param: string): string {
+    return param.trim().replace(/^["']|["']$/g, '');
   }
 
   /**

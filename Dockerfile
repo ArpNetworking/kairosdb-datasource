@@ -46,6 +46,9 @@ COPY dist /var/lib/grafana/plugins/arpnetworking-kairosdb-datasource
 # Copy provisioning configuration (will be overridden by live_update)
 COPY docker/provisioning /etc/grafana/provisioning
 
+# Copy dashboard files directly into the image
+COPY docker/dashboards /var/lib/grafana/dashboards
+
 # Copy entrypoint script
 COPY entrypoint-dev.sh /entrypoint-dev.sh
 RUN chmod +x /entrypoint-dev.sh

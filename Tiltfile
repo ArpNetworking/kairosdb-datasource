@@ -32,7 +32,7 @@ local_resource(
 # Deploy Kubernetes manifests
 k8s_yaml('k8s/deployment.yaml')
 
-# Create ConfigMaps from provisioning files
+# Create ConfigMaps from provisioning files (excluding large dashboard files)
 local_resource(
   'create-configmaps',
   cmd='''
@@ -43,12 +43,8 @@ kubectl create configmap grafana-dashboards-config \
 kubectl create configmap grafana-datasources-config \
   --from-file=kairosdb.yaml=docker/provisioning/datasources/kairosdb.yaml \
   --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl create configmap grafana-dashboards \
-  --from-file=docker/dashboards/ \
-  --dry-run=client -o yaml | kubectl apply -f -
   ''',
-  deps=['docker/provisioning', 'docker/dashboards'],
+  deps=['docker/provisioning'],
   labels=['setup']
 )
 
