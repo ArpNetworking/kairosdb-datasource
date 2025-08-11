@@ -27,11 +27,18 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'jenkins-dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD'),
             usernamePassword(credentialsId: 'jenkins-ossrh', usernameVariable: 'OSSRH_USER', passwordVariable: 'OSSRH_PASS'),
             string(credentialsId: 'jenkins-gpg', variable: 'GPG_PASS')]) {
-          sh 'npm install'
-          sh 'grunt'
-          sh 'npm test'
-          sh 'cp -R dist kairosdb-datasource'
-          sh 'zip -r kairosdb-datasource.zip kairosdb-datasource/'
+          sh '''
+            # Source nvm and install/use Node version from .nvmrc
+            . $NVM_DIR/nvm.sh
+            nvm use
+            
+            # Build and test
+            npm install
+            npm run build:prod
+            npm run test:ci
+            cp -R dist kairosdb-datasource
+            zip -r kairosdb-datasource.zip kairosdb-datasource/
+          '''
         }
       }
     }

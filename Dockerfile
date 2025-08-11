@@ -1,38 +1,63 @@
-FROM ubuntu as build
-RUN apt update && \
-	DEBIAN_FRONTEND=noninteractive apt install -y curl gnupg-agent zip && \
-	rm -rf /var/lib/apt/lists/*
-RUN curl -q -o- https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb https://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list && \
-    DEBIAN_FRONTEND=noninteractive apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y google-chrome-stable
-ENV NVM_DIR=/usr/local/nvm
-ENV NODE_VERSION=v20.8.0
-RUN touch /root/.bashrc && \
-    mkdir $NVM_DIR && \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash && \
-    . $NVM_DIR/nvm.sh && \
-    nvm install $NODE_VERSION && \
-    nvm alias default $NODE_VERSION && \
-    nvm use default && \
-	npm install -g grunt-cli && \
-	npm install -g yarn && \
-    chown -R 1000:1000 /root/.npm
-RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`/chromedriver_linux64.zip && \
-    unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/ && \
-    rm /tmp/chromedriver.zip
+ARG grafana_version=latest
+ARG grafana_image=grafana/grafana
 
-ENV PATH=$NVM_DIR/versions/node/$NODE_VERSION/bin:$PATH
-WORKDIR /root/
-COPY package.json package-lock.json /root/
-RUN npm install
-COPY Gruntfile.js plugin.json tsconfig.json tslint.json karma.conf.js /root/
-COPY src /root/src
-COPY specs /root/specs
-RUN grunt
+FROM ${grafana_image}:${grafana_version}
 
-FROM grafana/grafana:10.4.0 as prod
-COPY --from=build /root/dist /var/lib/grafana/plugins/kairosdb
-ENV GF_FEATURE_TOGGLES_ENABLE="newVizTooltips"
+ARG anonymous_auth_enabled=true
+ARG development=true
+ARG TARGETARCH
+
+ENV DEV "${development}"
+
+# Make it as simple as possible to access the grafana instance for development purposes
+# Do NOT enable these settings in a public facing / production grafana instance
+ENV GF_AUTH_ANONYMOUS_ORG_ROLE "Admin"
+ENV GF_AUTH_ANONYMOUS_ENABLED "${anonymous_auth_enabled}"
+ENV GF_AUTH_BASIC_ENABLED "false"
+# Set development mode so plugins can be loaded without the need to sign
+ENV GF_DEFAULT_APP_MODE "development"
+# Allow loading unsigned plugins (for development)
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS "arpnetworking-kairosdb-datasource"
+
+LABEL maintainer="Arp Networking <support@arpnetworking.com>"
+
+ENV GF_PATHS_HOME="/usr/share/grafana"
+WORKDIR $GF_PATHS_HOME
+
+USER root
+
+# Installing supervisor and inotify-tools for development
+RUN if [ "${development}" = "true" ]; then \
+    if grep -i -q alpine /etc/issue; then \
+        apk add --no-cache supervisor inotify-tools git nodejs npm; \
+    elif grep -i -q ubuntu /etc/issue; then \
+        DEBIAN_FRONTEND=noninteractive && \
+        apt-get update && \
+        apt-get install -y supervisor inotify-tools git nodejs npm && \
+        rm -rf /var/lib/apt/lists/*; \
+    else \
+        echo 'ERROR: Unsupported base image' && /bin/false; \
+    fi \
+fi
+
+# Copy plugin files to Grafana plugins directory
+COPY dist /var/lib/grafana/plugins/arpnetworking-kairosdb-datasource
+
+# Copy provisioning configuration (will be overridden by live_update)
 COPY docker/provisioning /etc/grafana/provisioning
-COPY docker/dashboards  /var/lib/grafana/dashboards
+
+# Copy entrypoint script
+COPY entrypoint-dev.sh /entrypoint-dev.sh
+RUN chmod +x /entrypoint-dev.sh
+
+# Inject livereload script for development
+RUN if [ "${development}" = "true" ]; then \
+    sed -i 's|</body>|<script src="http://localhost:35729/livereload.js"></script></body>|g' /usr/share/grafana/public/views/index.html; \
+fi
+
+# Switch back to grafana user
+USER grafana
+
+EXPOSE 3000
+
+ENTRYPOINT ["/entrypoint-dev.sh"]

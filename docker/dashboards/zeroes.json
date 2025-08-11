@@ -24,7 +24,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "grafana-kairosdb-datasource",
+        "type": "arpnetworking-kairosdb-datasource",
         "uid": "P60BA5072AB4AC9E4"
       },
       "fieldConfig": {
@@ -87,7 +87,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-kairosdb-datasource",
+            "type": "arpnetworking-kairosdb-datasource",
             "uid": "P60BA5072AB4AC9E4"
           },
           "query": {

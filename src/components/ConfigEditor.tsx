@@ -1,0 +1,139 @@
+import React, { ChangeEvent } from 'react';
+import { InlineField, Input, Switch, FieldSet, DataSourceHttpSettings } from '@grafana/ui';
+import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { KairosDBDataSourceOptions, KairosDBSecureJsonData } from '../types';
+
+interface Props extends DataSourcePluginOptionsEditorProps<KairosDBDataSourceOptions, KairosDBSecureJsonData> {}
+
+export function ConfigEditor(props: Props) {
+  const { onOptionsChange, options } = props;
+  const { jsonData } = options;
+
+  const onSnapToIntervalsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        snapToIntervals: event.target.value,
+      },
+    });
+  };
+
+  const onEnforceScalarSettingChange = (value: boolean) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        enforceScalarSetting: value,
+      },
+    });
+  };
+
+  const onAutocompleteMaxMetricsChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        autocompleteMaxMetrics: event.target.value,
+      },
+    });
+  };
+
+  const onTimeoutChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        timeout: event.target.value,
+      },
+    });
+  };
+
+  const onMetricSuffixesToIgnoreChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      jsonData: {
+        ...jsonData,
+        metricSuffixesToIgnore: event.target.value,
+      },
+    });
+  };
+
+  return (
+    <>
+      <DataSourceHttpSettings
+        defaultUrl="http://localhost:8080"
+        dataSourceConfig={options}
+        onChange={onOptionsChange}
+        showAccessOptions={true}
+        showForwardOAuthIdentityOption={false}
+      />
+
+      <FieldSet label="KairosDB Details">
+      <InlineField
+        label="Auto Value Intervals"
+        labelWidth={20}
+        tooltip="A comma delimited list of intervals used for auto value sampling in grafana time notation (e.g. 1m,1h). This will cause 'Auto' sampled aggregators to select the closest interval bigger than grafana's provided interval for the time range selected."
+      >
+        <Input
+          id="config-editor-snap-to-intervals"
+          onChange={onSnapToIntervalsChange}
+          value={jsonData.snapToIntervals || '1m,5m,10m,15m,30m,1h,2h,3h,4h,6h,12h,1d,2d,3d,7d'}
+          placeholder="1m,5m,10m,15m,30m,1h,2h,3h,4h,6h,12h,1d,2d,3d,7d"
+          width={50}
+        />
+      </InlineField>
+
+      <InlineField
+        label="Require Scalar Aggregators"
+        labelWidth={20}
+        tooltip="This setting allows for enforcement that queries include at least one scalar aggregator per query. This option should be enabled when most data is histograms that need to be converted into scalars in order to be graphed in common visualizers, e.g. timeseries line graphs"
+      >
+        <Switch
+          id="config-editor-enforce-scalar"
+          value={jsonData.enforceScalarSetting || false}
+          onChange={(event: any) => onEnforceScalarSettingChange(event.currentTarget.checked)}
+        />
+      </InlineField>
+
+      <InlineField
+        label="Metrics Autocomplete Limit"
+        labelWidth={20}
+        tooltip="This setting modifies the limit of metrics returned in an autocomplete list."
+      >
+        <Input
+          id="config-editor-autocomplete-max-metrics"
+          onChange={onAutocompleteMaxMetricsChange}
+          value={jsonData.autocompleteMaxMetrics || '1000'}
+          placeholder="1000"
+          width={20}
+        />
+      </InlineField>
+
+      <InlineField label="Timeout (seconds)" labelWidth={20} tooltip="Request timeout in seconds">
+        <Input
+          id="config-editor-timeout"
+          onChange={onTimeoutChange}
+          value={jsonData.timeout || '115'}
+          placeholder="115"
+          width={20}
+        />
+      </InlineField>
+
+      <InlineField
+        label="Metric Suffixes to Ignore"
+        labelWidth={20}
+        tooltip="Comma-separated list of metric suffixes to filter out from metric searches (e.g. _1h,_1d). These are typically rollup suffixes that create duplicate metric names."
+      >
+        <Input
+          id="config-editor-metric-suffixes-ignore"
+          onChange={onMetricSuffixesToIgnoreChange}
+          value={jsonData.metricSuffixesToIgnore || '_1h,_1d'}
+          placeholder="_1h,_1d"
+          width={30}
+        />
+      </InlineField>
+      </FieldSet>
+    </>
+  );
+}

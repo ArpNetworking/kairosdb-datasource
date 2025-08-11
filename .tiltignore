@@ -1,0 +1,31 @@
+# Tilt ignore file - exclude files that don't need to trigger rebuilds
+
+# Build outputs
+dist/
+coverage/
+test-results/
+
+# Dependencies
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Documentation
+README.md
+LICENSE
+*.md
+
+# CI/CD
+Jenkinsfile
+.github/

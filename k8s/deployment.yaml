@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-kairosdb
+  labels:
+    app: grafana-kairosdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana-kairosdb
+  template:
+    metadata:
+      labels:
+        app: grafana-kairosdb
+    spec:
+      containers:
+        - name: grafana
+          image: kairosdb-plugin
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
+              value: 'arpnetworking-kairosdb-datasource'
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: 'true'
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: 'Admin'
+            - name: GF_DEFAULT_APP_MODE
+              value: 'development'
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: 'newVizTooltips'
+          volumeMounts:
+            - name: dashboards-config
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+              subPath: dashboards.yaml
+              readOnly: true
+            - name: datasources-config
+              mountPath: /etc/grafana/provisioning/datasources/kairosdb.yaml
+              subPath: kairosdb.yaml
+              readOnly: true
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+              readOnly: true
+      volumes:
+        - name: dashboards-config
+          configMap:
+            name: grafana-dashboards-config
+        - name: datasources-config
+          configMap:
+            name: grafana-datasources-config
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-kairosdb-service
+spec:
+  selector:
+    app: grafana-kairosdb
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

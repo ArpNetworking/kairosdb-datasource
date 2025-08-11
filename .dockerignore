@@ -1,2 +1,27 @@
+# Exclude massive node_modules directories
+arpnetworking-kairosdb-datasource/node_modules
+kairosdb-datasource-old/node_modules
 node_modules
-Dockerfile
+
+# Exclude build artifacts and caches
+arpnetworking-kairosdb-datasource/.webpack
+arpnetworking-kairosdb-datasource/coverage
+kairosdb-datasource-old/dist
+
+# Exclude logs and temporary files
+*.log
+npm-debug.log
+.npm
+.nyc_output
+
+# Exclude IDE and system files
+.vscode
+.idea
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Exclude Git
+.git
+.gitignore
