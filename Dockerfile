@@ -17,7 +17,7 @@ ENV GF_AUTH_BASIC_ENABLED "false"
 # Set development mode so plugins can be loaded without the need to sign
 ENV GF_DEFAULT_APP_MODE "development"
 # Allow loading unsigned plugins (for development)
-ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS "grafana-kairosdb-datasource"
+ENV GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS "arpnetworking-kairosdb-datasource"
 
 LABEL maintainer="Arp Networking <support@arpnetworking.com>"
 
@@ -41,7 +41,7 @@ RUN if [ "${development}" = "true" ]; then \
 fi
 
 # Copy plugin files to Grafana plugins directory
-COPY dist /var/lib/grafana/plugins/grafana-kairosdb-datasource
+COPY dist /var/lib/grafana/plugins/arpnetworking-kairosdb-datasource
 
 # Copy provisioning configuration (will be overridden by live_update)
 COPY docker/provisioning /etc/grafana/provisioning

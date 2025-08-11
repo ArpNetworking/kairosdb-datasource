@@ -14,7 +14,7 @@ docker_build(
     # Live update for fast development iteration
     live_update=[
         # Sync built plugin files to Grafana plugins directory
-        sync('./dist', '/var/lib/grafana/plugins/kairosdb-datasource'),
+        sync('./dist', '/var/lib/grafana/plugins/arpnetworking-kairosdb-datasource'),
         # Sync provisioning config
         sync('./docker/provisioning', '/etc/grafana/provisioning')
     ]

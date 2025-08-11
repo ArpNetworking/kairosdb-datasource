@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { InlineField, Input, Switch, FieldSet } from '@grafana/ui';
+import { InlineField, Input, Switch, FieldSet, DataSourceHttpSettings } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import { KairosDBDataSourceOptions, KairosDBSecureJsonData } from '../types';
 
@@ -60,7 +60,16 @@ export function ConfigEditor(props: Props) {
   };
 
   return (
-    <FieldSet label="KairosDB Details">
+    <>
+      <DataSourceHttpSettings
+        defaultUrl="http://localhost:8080"
+        dataSourceConfig={options}
+        onChange={onOptionsChange}
+        showAccessOptions={true}
+        showForwardOAuthIdentityOption={false}
+      />
+
+      <FieldSet label="KairosDB Details">
       <InlineField
         label="Auto Value Intervals"
         labelWidth={20}
@@ -124,6 +133,7 @@ export function ConfigEditor(props: Props) {
           width={30}
         />
       </InlineField>
-    </FieldSet>
+      </FieldSet>
+    </>
   );
 }

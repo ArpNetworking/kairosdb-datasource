@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS
-              value: 'kairosdb'
+              value: 'arpnetworking-kairosdb-datasource'
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: 'true'
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE
