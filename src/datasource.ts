@@ -419,14 +419,32 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           const alias = targetQuery.alias || metricName;
           const tags = result.tags || {};
 
+          // Extract grouped tag values from the group_by response field
+          // When group_by is used, the actual grouped values are in result.group_by[].group
+          let groupedTagValues: { [key: string]: string } = {};
+          if (result.group_by && Array.isArray(result.group_by)) {
+            result.group_by.forEach((groupBy) => {
+              if (groupBy.name === 'tag' && groupBy.group) {
+                // Merge the group object which contains the actual grouped tag values
+                groupedTagValues = { ...groupedTagValues, ...groupBy.group };
+              }
+            });
+          }
+
           // Create $_tag_group_{tagName} variables for alias interpolation
           const tagGroupVars: { [key: string]: any } = {};
           const groupByTags = targetQuery.groupBy?.tags || [];
 
           // For each tag that we're grouping by, create a $_tag_group_{tagName} variable
           groupByTags.forEach((tagName: string) => {
-            if (tags[tagName] && tags[tagName].length > 0) {
-              // Use the first tag value (KairosDB group by typically results in single values per series)
+            // First check the group_by response for the actual grouped value
+            if (groupedTagValues[tagName]) {
+              tagGroupVars[`_tag_group_${tagName}`] = {
+                text: groupedTagValues[tagName],
+                value: groupedTagValues[tagName],
+              };
+            } else if (tags[tagName] && tags[tagName].length > 0) {
+              // Fallback to tags object if not in group_by (shouldn't happen, but safe fallback)
               tagGroupVars[`_tag_group_${tagName}`] = {
                 text: tags[tagName][0],
                 value: tags[tagName][0],
@@ -454,11 +472,15 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
           let seriesName = interpolatedAlias;
 
           // Only include tags that were explicitly specified in the query
-          const relevantTagKeys = this.getRelevantTagKeys(targetQuery, tags);
+          const relevantTagKeys = this.getRelevantTagKeys(targetQuery, tags, groupedTagValues);
 
           // If alias wasn't changed and we have relevant tags, include them in the series name
           if (seriesName === alias && relevantTagKeys.length > 0) {
-            const tagParts = relevantTagKeys.map((key) => `${key}=${tags[key].join(',')}`);
+            const tagParts = relevantTagKeys.map((key) => {
+              // Use grouped tag value if available, otherwise fall back to tags array
+              const value = groupedTagValues[key] || (tags[key] ? tags[key].join(',') : '');
+              return `${key}=${value}`;
+            });
             seriesName = `${interpolatedAlias}{${tagParts.join(', ')}}`;
           }
 
@@ -1494,14 +1516,22 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Get the tag keys that should be included in series names.
    * Only includes tags that were explicitly specified in the query's tags section or groupBy.tags
    */
-  private getRelevantTagKeys(targetQuery: any, resultTags: { [key: string]: string[] }): string[] {
+  private getRelevantTagKeys(
+    targetQuery: any,
+    resultTags: { [key: string]: string[] },
+    groupedTagValues: { [key: string]: string } = {}
+  ): string[] {
     const relevantTagKeys: string[] = [];
 
     // Include tags that were specified in the query.tags section
     if (targetQuery.tags && typeof targetQuery.tags === 'object') {
       Object.keys(targetQuery.tags).forEach((tagKey) => {
-        // Only include if this tag key has values in the query AND in the result
-        if (targetQuery.tags[tagKey] && targetQuery.tags[tagKey].length > 0 && resultTags[tagKey]) {
+        // Only include if this tag key has values in the query AND in the result (either grouped or regular tags)
+        if (
+          targetQuery.tags[tagKey] &&
+          targetQuery.tags[tagKey].length > 0 &&
+          (groupedTagValues[tagKey] || resultTags[tagKey])
+        ) {
           relevantTagKeys.push(tagKey);
         }
       });
@@ -1510,8 +1540,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     // Include tags that were specified in groupBy.tags
     if (targetQuery.groupBy && targetQuery.groupBy.tags && Array.isArray(targetQuery.groupBy.tags)) {
       targetQuery.groupBy.tags.forEach((tagKey: string) => {
-        // Only include if this tag exists in the result and we haven't already added it
-        if (resultTags[tagKey] && !relevantTagKeys.includes(tagKey)) {
+        // Only include if this tag exists in the result (prefer grouped values) and we haven't already added it
+        if ((groupedTagValues[tagKey] || resultTags[tagKey]) && !relevantTagKeys.includes(tagKey)) {
           relevantTagKeys.push(tagKey);
         }
       });
