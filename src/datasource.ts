@@ -766,10 +766,11 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       if (filters && Object.keys(filters).length > 0) {
         metricRequest.tags = filters;
       }
-
+      
+      const now = Date.now();
       const requestBody: KairosDBMetricTagsRequest = {
-        start_absolute: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
-        end_absolute: Date.now(),
+        start_absolute: now - 24 * 60 * 60 * 1000, // 24 hours ago
+        end_absolute: now,
         metrics: [metricRequest],
       };
 
