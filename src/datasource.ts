@@ -743,19 +743,34 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * Get available tags for a metric
    */
   async getMetricTags(metricName: string): Promise<{ [key: string]: string[] }> {
+    return this.getMetricTagsWithFilters(metricName, {});
+  }
+
+  /**
+   * Get available tags for a metric with optional filters
+   */
+  async getMetricTagsWithFilters(
+    metricName: string, 
+    filters: { [key: string]: string[] } = {}
+  ): Promise<{ [key: string]: string[] }> {
     try {
       if (!metricName) {
         return {};
       }
 
+      const metricRequest: KairosDBMetricTagsRequest['metrics'][0] = {
+        name: metricName,
+      };
+
+      // Add filters if provided
+      if (filters && Object.keys(filters).length > 0) {
+        metricRequest.tags = filters;
+      }
+
       const requestBody: KairosDBMetricTagsRequest = {
         start_absolute: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
         end_absolute: Date.now(),
-        metrics: [
-          {
-            name: metricName,
-          },
-        ],
+        metrics: [metricRequest],
       };
 
       const response = await getBackendSrv().fetch({
@@ -776,8 +791,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
         return {};
       }
 
-      const metric = query.results[0];
-      const tags = metric.tags || {};
+      const metricResult = query.results[0];
+      const tags = metricResult.tags || {};
 
       return tags;
     } catch (error) {

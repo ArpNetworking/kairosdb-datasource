@@ -285,8 +285,8 @@ describe('Template Variable Interpolation', () => {
         datacenter: { text: 'us-east-1', value: 'us-east-1' },
       };
 
-      // Mock the getMetricTags method for tag values query
-      jest.spyOn(datasource, 'getMetricTags').mockResolvedValue({
+      // Mock the new getMetricTagsWithFilters method since the query has filters
+      jest.spyOn(datasource, 'getMetricTagsWithFilters').mockResolvedValue({
         host: ['web01', 'web02', 'web03'],
         datacenter: ['us-east-1'],
       });

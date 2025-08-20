@@ -250,28 +250,36 @@ export class VariableQueryExecutor {
     const interpolatedMetric = this.interpolateVariables(metric, scopedVars);
     const interpolatedTagName = this.interpolateVariables(tagName, scopedVars);
 
-    // Interpolate filter values
-    const interpolatedFilters: { [key: string]: string } = {};
+    // Interpolate filter values and convert to KairosDB filter format
+    const kairosFilters: { [key: string]: string[] } = {};
     Object.keys(filters).forEach((key) => {
-      interpolatedFilters[key] = this.interpolateVariables(filters[key], scopedVars);
+      const interpolatedValue = this.interpolateVariables(filters[key], scopedVars);
+      
+      // Skip filters with empty or undefined values, or values that are still variables (not interpolated)
+      if (interpolatedValue && 
+          interpolatedValue.trim() !== '' && 
+          !interpolatedValue.startsWith('$')) {
+        
+        // Handle multi-value variables (comma-separated)
+        const values = interpolatedValue.includes(',')
+          ? interpolatedValue.split(',').map(v => v.trim()).filter(v => v !== '')
+          : [interpolatedValue];
+        
+        if (values.length > 0) {
+          kairosFilters[key] = values;
+        }
+      }
     });
 
-    // For now, get all tags and filter (future enhancement: use KairosDB filtering)
-    const tags = await this.datasource.getMetricTags(interpolatedMetric);
+    // Use the new method with filters
+    const tags = await this.datasource.getMetricTagsWithFilters(interpolatedMetric, kairosFilters);
 
     if (!tags[interpolatedTagName]) {
       console.warn('[VariableQueryExecutor] Tag not found:', interpolatedTagName);
       return [];
     }
 
-    let tagValues = tags[interpolatedTagName] || [];
-
-    // Apply filters (this is a simplified implementation)
-    // In a full implementation, you'd want to query KairosDB with filters
-    if (Object.keys(interpolatedFilters).length > 0) {
-      // For now, return all values - full filtering would require additional KairosDB queries
-    }
-
+    const tagValues = tags[interpolatedTagName] || [];
     return tagValues.map((value) => ({ text: value, value: value }));
   }
 
