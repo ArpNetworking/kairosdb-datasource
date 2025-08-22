@@ -33,6 +33,25 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
   const [metrics, setMetrics] = useState<string[]>([]);
   const [tags, setTags] = useState<{ [key: string]: string[] }>({});
 
+  const loadMetrics = useCallback(async () => {
+    try {
+      const metricNames = await datasource.getMetricNames();
+      setMetrics(metricNames);
+    } catch (error) {
+      console.error('[VariableQueryEditor] Error loading metrics:', error);
+    }
+  }, [datasource]);
+
+  const loadTags = useCallback(async (metric: string) => {
+    try {
+      const metricTags = await datasource.getMetricTags(metric);
+      setTags(metricTags);
+    } catch (error) {
+      console.error('[VariableQueryEditor] Error loading tags for metric:', metric, error);
+      setTags({});
+    }
+  }, [datasource]);
+
   // Load available metrics on mount
   useEffect(() => {
     loadMetrics();
@@ -52,25 +71,6 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       onChange(queryString);
     }
   }, [state, query, onChange]);
-
-  const loadMetrics = useCallback(async () => {
-    try {
-      const metricNames = await datasource.getMetricNames();
-      setMetrics(metricNames);
-    } catch (error) {
-      console.error('[VariableQueryEditor] Error loading metrics:', error);
-    }
-  }, [datasource]);
-
-  const loadTags = useCallback(async (metric: string) => {
-    try {
-      const metricTags = await datasource.getMetricTags(metric);
-      setTags(metricTags);
-    } catch (error) {
-      console.error('[VariableQueryEditor] Error loading tags for metric:', metric, error);
-      setTags({});
-    }
-  }, [datasource]);
 
   const handleTypeChange = (option: SelectableValue<string>) => {
     setState((prev) => ({
