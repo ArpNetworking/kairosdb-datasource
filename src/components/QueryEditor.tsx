@@ -52,7 +52,8 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
         query: currentQuery,
       });
     }
-  }, []); // Remove dependencies to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - avoid infinite loops from onChange
 
   // Load available tags when metric name changes
   React.useEffect(() => {

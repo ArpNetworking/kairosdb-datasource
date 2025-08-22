@@ -58,7 +58,8 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
     };
 
     loadTags();
-  }, [metricName, datasource]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metricName, datasource]); // Intentionally omit onChange and tags to avoid infinite loops
 
   const handleTagChange = (tagName: string, selectedValues: string[]) => {
     const newTags = {

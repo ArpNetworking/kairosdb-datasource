@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { InlineField, InlineFieldRow, Input, Select, Button, Stack, Card, Alert, AsyncSelect } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { DataSource } from '../datasource';
@@ -36,14 +36,14 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
   // Load available metrics on mount
   useEffect(() => {
     loadMetrics();
-  }, []);
+  }, [loadMetrics]);
 
   // Load tags when metric changes
   useEffect(() => {
     if (state.metric && (state.type === 'tag_names' || state.type === 'tag_values')) {
       loadTags(state.metric);
     }
-  }, [state.metric, state.type]);
+  }, [state.metric, state.type, loadTags]);
 
   // Update query string when state changes
   useEffect(() => {
@@ -51,18 +51,18 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
     if (queryString !== query) {
       onChange(queryString);
     }
-  }, [state]);
+  }, [state, query, onChange]);
 
-  const loadMetrics = async () => {
+  const loadMetrics = useCallback(async () => {
     try {
       const metricNames = await datasource.getMetricNames();
       setMetrics(metricNames);
     } catch (error) {
       console.error('[VariableQueryEditor] Error loading metrics:', error);
     }
-  };
+  }, [datasource]);
 
-  const loadTags = async (metric: string) => {
+  const loadTags = useCallback(async (metric: string) => {
     try {
       const metricTags = await datasource.getMetricTags(metric);
       setTags(metricTags);
@@ -70,7 +70,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
       console.error('[VariableQueryEditor] Error loading tags for metric:', metric, error);
       setTags({});
     }
-  };
+  }, [datasource]);
 
   const handleTypeChange = (option: SelectableValue<string>) => {
     setState((prev) => ({
@@ -311,7 +311,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
 
       <Alert severity="info" title="Variable Query Examples">
         <div style={{ fontSize: '12px' }}>
-          <strong>Metrics:</strong> <code>metrics(cpu)</code> - Find metrics containing "cpu"
+          <strong>Metrics:</strong> <code>metrics(cpu)</code> - Find metrics containing &quot;cpu&quot;
           <br />
           <strong>Tag Names:</strong> <code>tag_names(system.cpu.usage)</code> - Get tag names for metric
           <br />
@@ -389,7 +389,7 @@ function parseQueryToState(query: string): VariableQueryState {
       const filters: Array<{ key: string; value: string; id: string }> = [];
       for (let i = filterStartIndex; i < filterEndIndex; i++) {
         const param = params[i]?.trim();
-        if (!param) continue;
+        if (!param) {continue;}
         
         const filterMatch = param.match(/^(.+?)=(.+)$/);
         if (filterMatch) {

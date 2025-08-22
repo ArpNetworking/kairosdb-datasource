@@ -103,7 +103,35 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
                 ? {
                     ...target.query.groupBy,
                     tags: target.query.groupBy.tags
-                      ? target.query.groupBy.tags.map((tag) => templateSrv.replace(tag, options.scopedVars))
+                      ? target.query.groupBy.tags
+                          .map((tag) => {
+                            const interpolated = templateSrv.replace(tag, options.scopedVars);
+                            
+                            // Handle empty values
+                            if (!interpolated || interpolated.trim() === '') {
+                              return [];
+                            }
+                            
+                            // Check if this is a composite value with a prefix/suffix and a multi-value variable
+                            // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
+                            // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
+                            const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
+                            if (prefixMatch) {
+                              const prefix = prefixMatch[1] || '';
+                              const values = prefixMatch[2];
+                              const suffix = prefixMatch[3] || '';
+                              return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
+                            }
+                            
+                            // Handle regular multi-value variables (comma-separated)
+                            if (interpolated.includes(',') && !interpolated.includes('{')) {
+                              return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
+                            }
+                            
+                            return [interpolated];
+                          })
+                          .flat()
+                          .filter((v: string) => v !== '')
                       : [],
                   }
                 : target.query.groupBy,
@@ -914,13 +942,41 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     Object.keys(tags).forEach((tagName) => {
       const tagValues = tags[tagName];
       if (Array.isArray(tagValues)) {
-        interpolatedTags[tagName] = tagValues
+        const processedValues = tagValues
           .map((value) => {
             const interpolated = this.interpolateVariable(value, scopedVars);
-            // If the interpolated value contains commas, split it (multi-value variable)
-            return interpolated.includes(',') ? interpolated.split(',') : [interpolated];
+            
+            // Handle empty values
+            if (!interpolated || interpolated.trim() === '') {
+              return [];
+            }
+            
+            // Check if this is a composite value with a prefix/suffix and a multi-value variable
+            // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
+            // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
+            const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
+            if (prefixMatch) {
+              const prefix = prefixMatch[1] || '';
+              const values = prefixMatch[2];
+              const suffix = prefixMatch[3] || '';
+              return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
+            }
+            
+            // Handle regular multi-value variables (comma-separated)
+            if (interpolated.includes(',')) {
+              return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
+            }
+            
+            // Single value
+            return [interpolated];
           })
-          .flat();
+          .flat()
+          .filter((v: string) => v !== ''); // Remove any empty strings
+        
+        // Only add the tag if it has non-empty values
+        if (processedValues.length > 0) {
+          interpolatedTags[tagName] = processedValues;
+        }
       } else {
         interpolatedTags[tagName] = tagValues;
       }
@@ -937,10 +993,28 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       interpolated.tags = interpolated.tags
         .map((tag: string) => {
           const interpolatedTag = this.interpolateVariable(tag, scopedVars);
-          // If the interpolated value contains commas, split it (multi-value variable)
-          return interpolatedTag.includes(',') ? interpolatedTag.split(',') : [interpolatedTag];
+          
+          // Handle empty values
+          if (!interpolatedTag || interpolatedTag.trim() === '') {
+            return [];
+          }
+          
+          // Handle Grafana's "All" format: {value1,value2,value3}
+          if (interpolatedTag.startsWith('{') && interpolatedTag.endsWith('}')) {
+            const innerValues = interpolatedTag.slice(1, -1); // Remove curly braces
+            return innerValues.split(',').map(v => v.trim()).filter(v => v !== '');
+          }
+          
+          // Handle regular multi-value variables (comma-separated)
+          if (interpolatedTag.includes(',')) {
+            return interpolatedTag.split(',').map(v => v.trim()).filter(v => v !== '');
+          }
+          
+          // Single value
+          return [interpolatedTag];
         })
-        .flat();
+        .flat()
+        .filter((v: string) => v !== ''); // Remove any empty strings
     }
 
     return interpolated;
@@ -1001,13 +1075,41 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     Object.keys(tags).forEach((tagName) => {
       const tagValues = tags[tagName];
       if (Array.isArray(tagValues)) {
-        interpolatedTags[tagName] = tagValues
+        const processedValues = tagValues
           .map((value) => {
             const interpolated = templateSrv.replace(value, scopedVars);
-            // If the interpolated value contains commas, split it (multi-value variable)
-            return interpolated.includes(',') ? interpolated.split(',') : [interpolated];
+            
+            // Handle empty values
+            if (!interpolated || interpolated.trim() === '') {
+              return [];
+            }
+            
+            // Check if this is a composite value with a prefix/suffix and a multi-value variable
+            // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
+            // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
+            const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
+            if (prefixMatch) {
+              const prefix = prefixMatch[1] || '';
+              const values = prefixMatch[2];
+              const suffix = prefixMatch[3] || '';
+              return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
+            }
+            
+            // Handle regular multi-value variables (comma-separated)
+            if (interpolated.includes(',') && !interpolated.includes('{')) {
+              return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
+            }
+            
+            // Single value
+            return [interpolated];
           })
-          .flat();
+          .flat()
+          .filter((v: string) => v !== ''); // Remove any empty strings
+        
+        // Only add the tag if it has non-empty values
+        if (processedValues.length > 0) {
+          interpolatedTags[tagName] = processedValues;
+        }
       } else {
         interpolatedTags[tagName] = tagValues;
       }

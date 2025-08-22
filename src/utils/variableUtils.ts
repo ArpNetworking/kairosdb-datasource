@@ -81,7 +81,7 @@ export class VariableQueryParser {
           const param = params[i]?.trim();
           
           // Skip empty parameters
-          if (!param) continue;
+          if (!param) {continue;}
           
           // Check if it's a filter (contains =)
           const filterMatch = param.match(/^(.+?)=(.+)$/);
