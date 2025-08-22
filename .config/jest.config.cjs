@@ -6,7 +6,7 @@
  */
 
 const path = require('path');
-const { grafanaESModules, nodeModulesToTransform } = require('./jest/utils');
+const { grafanaESModules, nodeModulesToTransform } = require('./jest/utils.cjs');
 
 module.exports = {
   moduleNameMapper: {
