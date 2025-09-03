@@ -333,6 +333,17 @@ function getEnumOptions(parameterName: string): Array<SelectableValue<string>> {
       { label: 'HOURS', value: 'HOURS' },
       { label: 'DAYS', value: 'DAYS' },
     ],
+    filter_op: [
+      { label: 'GT', value: 'GT' },
+      { label: 'GTE', value: 'GTE' },
+      { label: 'EQUAL', value: 'EQUAL' },
+      { label: 'LTE', value: 'LTE' },
+      { label: 'LT', value: 'LT' },
+    ],
+    filter_indeterminate_inclusion: [
+      { label: 'keep', value: 'keep' },
+      { label: 'discard', value: 'discard' },
+    ],
   };
 
   return enumMaps[parameterName] || [];

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FieldSet, Stack, LoadingPlaceholder } from '@grafana/ui';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FieldSet, Stack, LoadingPlaceholder, Button } from '@grafana/ui';
 import { TagsSelect } from './TagsSelect';
 import { DataSource } from '../datasource';
 
@@ -15,48 +15,48 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
   const [availableTags, setAvailableTags] = useState<{ [key: string]: string[] }>({});
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadTags = useCallback(async () => {
     if (!metricName || !datasource) {
       setAvailableTags({});
       setError(null);
       return;
     }
 
-    const loadTags = async () => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const tagData = await datasource.getMetricTags(metricName);
-        setAvailableTags(tagData);
+    try {
+      const tagData = await datasource.getMetricTags(metricName);
+      setAvailableTags(tagData);
 
-        // Clean up selected tags that are no longer available
-        const newTags: { [key: string]: string[] } = {};
-        Object.keys(tagData).forEach((tagName) => {
-          if (tags[tagName]) {
-            newTags[tagName] = tags[tagName].filter(
-              (value) =>
-                tagData[tagName].includes(value) ||
-                value.startsWith('$') ||
-                (value.startsWith('[') && value.endsWith(']'))
-            );
-          } else {
-            newTags[tagName] = [];
-          }
-        });
-
-        // Only update if tags changed
-        if (JSON.stringify(newTags) !== JSON.stringify(tags)) {
-          onChange(newTags);
+      // Clean up selected tags that are no longer available
+      const newTags: { [key: string]: string[] } = {};
+      Object.keys(tagData).forEach((tagName) => {
+        if (tags[tagName]) {
+          newTags[tagName] = tags[tagName].filter(
+            (value) =>
+              tagData[tagName].includes(value) ||
+              value.startsWith('$') ||
+              (value.startsWith('[') && value.endsWith(']'))
+          );
+        } else {
+          newTags[tagName] = [];
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load tags');
-        setAvailableTags({});
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      });
 
+      // Only update if tags changed
+      if (JSON.stringify(newTags) !== JSON.stringify(tags)) {
+        onChange(newTags);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load tags');
+      setAvailableTags({});
+    } finally {
+      setIsLoading(false);
+    }
+  }, [metricName, datasource, tags, onChange]);
+
+  useEffect(() => {
     loadTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metricName, datasource]); // Intentionally omit onChange and tags to avoid infinite loops
@@ -81,7 +81,23 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
   }, 1);
 
   return (
-    <FieldSet label="Tags">
+    <FieldSet 
+      label={
+        <Stack direction="row" alignItems="center" gap={1}>
+          <span>Tags</span>
+          {metricName && (
+            <Button
+              size="sm"
+              variant="secondary"
+              icon="sync"
+              onClick={loadTags}
+              disabled={isLoading}
+              tooltip="Refresh tags"
+            />
+          )}
+        </Stack>
+      }
+    >
       <Stack direction="column" gap={1}>
         {isLoading && <LoadingPlaceholder text="Loading tags..." />}
 

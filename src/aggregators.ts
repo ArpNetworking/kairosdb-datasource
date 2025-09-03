@@ -144,6 +144,35 @@ export class ScaleAggregator extends BaseAggregator {
   }
 }
 
+// Filter aggregator
+export class FilterAggregator extends BaseAggregator {
+  static readonly NAME = 'filter';
+
+  constructor() {
+    super(FilterAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'filter_op',
+        type: 'enum',
+        value: 'GT',
+        text: 'GT',
+      },
+      {
+        name: 'threshold',
+        type: 'any',
+        value: 0,
+        text: '0',
+      },
+      {
+        name: 'filter_indeterminate_inclusion',
+        type: 'enum',
+        value: 'keep',
+        text: 'keep',
+      },
+    ];
+  }
+}
+
 // Merge aggregator for histograms
 export class MergeAggregator extends RangeAggregator {
   static readonly NAME = 'merge';
@@ -185,6 +214,7 @@ export const AVAILABLE_AGGREGATORS: Aggregator[] = [
   new RangeAggregator('count'),
   new RangeAggregator('dev'),
   new RangeAggregator('first'),
+  new FilterAggregator(),
   new RangeAggregator('gaps'),
   new RangeAggregator('last'),
   new RangeAggregator('max'),
@@ -204,6 +234,7 @@ export const SCALAR_AGGREGATOR_NAMES = [
   'count',
   'dev',
   'diff',
+  'filter',
   'first',
   'gaps',
   'last',

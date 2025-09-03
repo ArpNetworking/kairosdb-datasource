@@ -10,6 +10,7 @@ interface Props {
 }
 
 export function MetricNameField({ metricName = '', onChange, datasource }: Props) {
+
   const loadOptions = async (inputValue: string): Promise<Array<SelectableValue<string>>> => {
     if (!datasource) {
       return [];
@@ -42,11 +43,7 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
   };
 
   const handleInputChange = (inputValue: string) => {
-    // For template variables (starting with $ or containing variables), update immediately
-    if (inputValue.includes('$') || inputValue.includes('{')) {
-      onChange(inputValue);
-    }
-    // Otherwise, let AsyncSelect handle typing vs selection through handleSelectionChange
+    onChange(inputValue);
   };
 
   // Convert current string value to SelectableValue for AsyncSelect
@@ -67,6 +64,7 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
       <AsyncSelect
         width={50}
         value={currentValue}
+        inputValue={metricName}
         placeholder="Type to search (use ^ for prefix search)..."
         loadOptions={loadOptions}
         onChange={handleSelectionChange}
