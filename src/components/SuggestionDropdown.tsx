@@ -85,8 +85,6 @@ export const SuggestionDropdown: React.FC<SuggestionDropdownProps> = ({
     maxHeight: `${maxHeight}px`,
   };
 
-  // Debug positioning
-  console.log('DEBUG: SuggestionDropdown rendering with style:', dropdownStyle, 'isVisible:', isVisible, 'suggestions:', validSuggestions.length);
 
   return (
     <ul

@@ -59,7 +59,6 @@ async function getAllMetrics(dataSource: DataSource): Promise<string[]> {
   
   // Fetch all metrics from server (empty query gets all metrics)
   const metrics = await dataSource.getMetricNames('');
-  console.log(`[MetricAutocomplete] Fetched ${metrics.length} total metrics from server`);
   
   // Update cache
   allMetricsCache = {
@@ -76,7 +75,6 @@ async function getAllMetrics(dataSource: DataSource): Promise<string[]> {
  */
 function filterMetrics(allMetrics: string[], searchTerm: string): string[] {
   if (!searchTerm || searchTerm.trim().length === 0) {
-    console.log('[MetricAutocomplete] Empty search - returning all metrics:', allMetrics.length);
     return allMetrics; // No limit - return all metrics
   }
   
@@ -112,14 +110,12 @@ function filterMetrics(allMetrics: string[], searchTerm: string): string[] {
   try {
     const regex = new RegExp(finalPattern, 'i');
     const filteredResults = allMetrics.filter(metric => regex.test(metric));
-    console.log(`[MetricAutocomplete] Regex search "${searchTerm}" found ${filteredResults.length} results (from ${allMetrics.length} total metrics)`);
     return filteredResults;
   } catch (e) {
     // Invalid regex, fall back to simple contains search
     const lowerTerm = term.toLowerCase();
     const filteredResults = allMetrics
       .filter(metric => metric.toLowerCase().includes(lowerTerm));
-    console.log(`[MetricAutocomplete] Fallback search "${searchTerm}" found ${filteredResults.length} results (from ${allMetrics.length} total metrics)`);
     return filteredResults;
   }
 }
@@ -233,16 +229,11 @@ export function useMetricAutocomplete(
 
         // Deduplicate results
         const uniqueResults = [...new Set(successResults)];
-        console.log(`[MetricAutocomplete] Final results for "${trimmed}": ${uniqueResults.length} unique suggestions`);
         
         // Apply maxResults limit
         const limitedResults = maxResults 
           ? uniqueResults.slice(0, maxResults)
           : uniqueResults;
-
-        if (maxResults && uniqueResults.length > maxResults) {
-          console.log(`[MetricAutocomplete] Limited results from ${uniqueResults.length} to ${maxResults}`);
-        }
 
         setSuggestions(limitedResults);
         setIsLoading(false);
