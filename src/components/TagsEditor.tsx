@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FieldSet, Stack, LoadingPlaceholder, Button } from '@grafana/ui';
 import { TagsSelect } from './TagsSelect';
+import { ManualTagEntry } from './ManualTagEntry';
 import { DataSource } from '../datasource';
 
 interface Props {
@@ -14,6 +15,8 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
   const [isLoading, setIsLoading] = useState(false);
   const [availableTags, setAvailableTags] = useState<{ [key: string]: string[] }>({});
   const [error, setError] = useState<string | null>(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualTags, setManualTags] = useState<{ [key: string]: string[] }>({});
 
   const loadTags = useCallback(async () => {
     if (!metricName || !datasource) {
@@ -69,21 +72,63 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
     onChange(newTags);
   };
 
+  const handleManualTagAdd = useCallback((tagName: string, tagValue: string) => {
+    // Add to manual tags tracking
+    const newManualTags = {
+      ...manualTags,
+      [tagName]: manualTags[tagName] ? [...manualTags[tagName], tagValue] : [tagValue],
+    };
+    setManualTags(newManualTags);
+
+    // Add to current tags
+    const newTags = {
+      ...tags,
+      [tagName]: tags[tagName] ? [...tags[tagName], tagValue] : [tagValue],
+    };
+    onChange(newTags);
+    setShowManualEntry(false);
+  }, [tags, manualTags, onChange]);
+
+  const handleManualTagCancel = useCallback(() => {
+    setShowManualEntry(false);
+  }, []);
+
   if (!metricName) {
     return null;
   }
 
-  const tagNames = Object.keys(availableTags);
+  // Combine available tags from server with manual tags
+  const allTags = { ...availableTags };
+  Object.keys(manualTags).forEach(tagName => {
+    if (!allTags[tagName]) {
+      allTags[tagName] = [];
+    }
+    // Add manual values that aren't already in available tags
+    manualTags[tagName].forEach(value => {
+      if (!allTags[tagName].includes(value)) {
+        allTags[tagName].push(value);
+      }
+    });
+  });
+
+  // Include any tag names from current selection that aren't in available or manual
+  Object.keys(tags).forEach(tagName => {
+    if (!allTags[tagName]) {
+      allTags[tagName] = [];
+    }
+  });
+
+  const tagNames = Object.keys(allTags);
   const tagCount = tagNames.length;
   const combinations = tagNames.reduce((total, tagName) => {
-    const tagValues = availableTags[tagName];
-    return total * (tagValues.length || 1);
+    const tagValues = allTags[tagName];
+    return total * Math.max(tagValues.length, 1);
   }, 1);
 
   return (
     <FieldSet 
       label={
-        <Stack direction="row" alignItems="center" gap={1}>
+          <Stack direction="row" alignItems="center" gap={1}>
           <span>Tags</span>
           {metricName && (
             <Button
@@ -95,6 +140,16 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
               tooltip="Refresh tags"
             />
           )}
+          <Button
+            size="sm"
+            variant="secondary"
+            icon="plus"
+            onClick={() => setShowManualEntry(true)}
+            disabled={showManualEntry}
+            tooltip="Add custom tag"
+          >
+            Add Tag
+          </Button>
         </Stack>
       }
     >
@@ -129,7 +184,7 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
               <TagsSelect
                 key={tagName}
                 tagName={tagName}
-                tagValues={availableTags[tagName]}
+                tagValues={allTags[tagName]}
                 selectedValues={tags[tagName] || []}
                 onChange={(selectedValues) => handleTagChange(tagName, selectedValues)}
               />
@@ -137,7 +192,7 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
           </>
         )}
 
-        {!isLoading && !error && tagCount === 0 && (
+        {!isLoading && !error && tagCount === 0 && !showManualEntry && (
           <div
             style={{
               color: 'rgba(204, 204, 220, 0.7)',
@@ -145,8 +200,16 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
               fontStyle: 'italic',
             }}
           >
-            No tags available for this metric
+            No tags available for this metric. Use "Add Tag" to create custom tags.
           </div>
+        )}
+
+        {showManualEntry && (
+          <ManualTagEntry
+            onAdd={handleManualTagAdd}
+            onCancel={handleManualTagCancel}
+            existingTagNames={tagNames}
+          />
         )}
       </Stack>
     </FieldSet>

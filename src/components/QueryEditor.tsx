@@ -61,18 +61,29 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
       if (currentQuery.metricName && datasource) {
         try {
           const tagData = await datasource.getMetricTags(currentQuery.metricName);
-          setAvailableTags(Object.keys(tagData));
+          const serverTags = Object.keys(tagData);
+          
+          // Include tag keys from current query (manual tags)
+          const manualTags = Object.keys(currentQuery.tags || {});
+          
+          // Combine and deduplicate
+          const allTags = [...new Set([...serverTags, ...manualTags])];
+          setAvailableTags(allTags);
         } catch (error) {
           console.error('[QueryEditor] Error loading available tags:', error);
-          setAvailableTags([]);
+          // Even if server fails, include manual tags
+          const manualTags = Object.keys(currentQuery.tags || {});
+          setAvailableTags(manualTags);
         }
       } else {
-        setAvailableTags([]);
+        // No metric name, but still include manual tags if they exist
+        const manualTags = Object.keys(currentQuery.tags || {});
+        setAvailableTags(manualTags);
       }
     };
 
     loadAvailableTags();
-  }, [currentQuery.metricName, datasource]);
+  }, [currentQuery.metricName, currentQuery.tags, datasource]);
 
   const onMetricNameChange = (metricName: string) => {
     const newQuery = {
