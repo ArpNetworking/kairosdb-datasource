@@ -14,12 +14,15 @@ export function ManualTagEntry({ onAdd, onCancel, existingTagNames }: Props) {
 
   const validateInputs = useCallback(() => {
     const newErrors: { tagName?: string; tagValue?: string } = {};
+    const trimmedTagName = tagName.trim();
 
     // Validate tag name
-    if (!tagName.trim()) {
+    if (!trimmedTagName) {
       newErrors.tagName = 'Tag name is required';
-    } else if (!/^[a-zA-Z][a-zA-Z0-9_.-]*$/.test(tagName.trim())) {
+    } else if (!/^[a-zA-Z][a-zA-Z0-9_.-]*$/.test(trimmedTagName)) {
       newErrors.tagName = 'Tag name must start with a letter and contain only letters, numbers, dots, dashes, and underscores';
+    } else if (existingTagNames.includes(trimmedTagName)) {
+      newErrors.tagName = 'This tag name already exists';
     }
 
     // Validate tag value
@@ -29,7 +32,7 @@ export function ManualTagEntry({ onAdd, onCancel, existingTagNames }: Props) {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [tagName, tagValue]);
+  }, [tagName, tagValue, existingTagNames]);
 
   const handleAdd = useCallback(() => {
     if (validateInputs()) {

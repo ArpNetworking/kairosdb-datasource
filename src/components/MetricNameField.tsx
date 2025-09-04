@@ -56,11 +56,12 @@ export function MetricNameField({ metricName = '', onChange, datasource }: Props
   // Handle input blur
   const handleBlur = useCallback(() => {
     // Delay hiding dropdown to allow for suggestion clicks
+    const BLUR_DELAY_MS = 150;
     setTimeout(() => {
       setIsFocused(false);
       setIsDropdownVisible(false);
       setHighlightedIndex(-1);
-    }, 150);
+    }, BLUR_DELAY_MS);
   }, []);
 
   // Handle input value change

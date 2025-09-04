@@ -26,29 +26,29 @@ export interface VirtualListProps {
 }
 
 interface VirtualListStyles {
-  container: string;
-  viewport: string;
-  content: string;
+  container: React.CSSProperties;
+  viewport: React.CSSProperties;
+  content: React.CSSProperties;
 }
 
 const getStyles = (theme: GrafanaTheme2): VirtualListStyles => ({
-  container: `
-    position: relative;
-    overflow: hidden;
-    border: 1px solid ${theme.colors.border.medium};
-    border-radius: ${theme.shape.radius.default};
-    background: ${theme.colors.background.primary};
-  `,
-  viewport: `
-    position: relative;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-  `,
-  content: `
-    position: relative;
-    width: 100%;
-  `,
+  container: {
+    position: 'relative',
+    overflow: 'hidden',
+    border: `1px solid ${theme.colors.border.medium}`,
+    borderRadius: theme.shape.radius.default,
+    background: theme.colors.background.primary,
+  },
+  viewport: {
+    position: 'relative',
+    height: '100%',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+  },
+  content: {
+    position: 'relative',
+    width: '100%',
+  },
 });
 
 /**
@@ -162,19 +162,17 @@ export const VirtualList: React.FC<VirtualListProps> = ({
       aria-multiselectable={false}
       style={{
         height: containerHeight,
-        ...parseStyleString(styles.container)
+        ...styles.container
       }}
     >
       <div
         ref={viewportRef}
-        style={{
-          ...parseStyleString(styles.viewport)
-        }}
+        style={styles.viewport}
         onScroll={handleScroll}
       >
         <div
           style={{
-            ...parseStyleString(styles.content),
+            ...styles.content,
             height: totalHeight,
           }}
         >
@@ -217,26 +215,5 @@ export const VirtualList: React.FC<VirtualListProps> = ({
   );
 };
 
-/**
- * Helper function to parse CSS-in-JS style strings into objects
- * Converts template literal styles to React style objects
- */
-function parseStyleString(styleString: string): React.CSSProperties {
-  const styles: React.CSSProperties = {};
-  
-  // Split by semicolon and process each declaration
-  const declarations = styleString.split(';').map(d => d.trim()).filter(Boolean);
-  
-  for (const declaration of declarations) {
-    const [property, value] = declaration.split(':').map(s => s.trim());
-    if (property && value) {
-      // Convert kebab-case to camelCase
-      const camelProperty = property.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-      styles[camelProperty as keyof React.CSSProperties] = value as any;
-    }
-  }
-  
-  return styles;
-}
 
 export default VirtualList;
