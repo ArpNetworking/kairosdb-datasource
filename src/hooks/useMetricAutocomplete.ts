@@ -34,8 +34,14 @@ const cache = new Map<string, CacheEntry>();
 let allMetricsCache: { metrics: string[]; timestamp: number } | null = null;
 const ALL_METRICS_CACHE_TTL = 60000; // 1 minute
 
-// Export cache for testing purposes
+// Export caches for testing purposes
 export { cache };
+
+// Export function to clear all caches (for testing)
+export function clearAllCaches() {
+  cache.clear();
+  allMetricsCache = null;
+}
 
 /**
  * Get all metrics from cache or fetch from server, then filter client-side

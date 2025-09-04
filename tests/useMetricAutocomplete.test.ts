@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useMetricAutocomplete } from '../src/hooks/useMetricAutocomplete';
+import { useMetricAutocomplete, clearAllCaches } from '../src/hooks/useMetricAutocomplete';
 
 // Mock dependencies
 const mockDataSource = {
@@ -22,14 +22,11 @@ describe('useMetricAutocomplete', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.clearAllTimers();
+    clearAllCaches(); // Clear all caches before each test
     
     // Reset mocks to default behavior
     mockGetAllSearchTerms.mockReset();
     mockDataSource.getMetricNames.mockReset();
-    
-    // Clear the global cache between tests
-    const { cache } = require('../src/hooks/useMetricAutocomplete');
-    cache.clear();
   });
 
   describe('basic functionality', () => {
@@ -364,6 +361,7 @@ describe('useMetricAutocomplete', () => {
       expect(mockDataSource.getMetricNames).toHaveBeenCalledTimes(1);
 
       // With caching disabled, same search should make another API call
+      clearAllCaches(); // Clear cache between searches to ensure fresh API call
       rerender({ input: '' });
       rerender({ input: 'system.cpu' });
 

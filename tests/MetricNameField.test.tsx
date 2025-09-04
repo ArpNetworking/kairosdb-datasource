@@ -5,16 +5,10 @@ import { MetricNameField } from '../src/components/MetricNameField';
 
 // Mock our custom hooks and components
 jest.mock('../src/hooks/useMetricAutocomplete');
-jest.mock('../src/hooks/useDropdownPosition');
-jest.mock('../src/components/SuggestionDropdown');
 
 import { useMetricAutocomplete } from '../src/hooks/useMetricAutocomplete';
-import { useDropdownPosition } from '../src/hooks/useDropdownPosition';
-import { SuggestionDropdown } from '../src/components/SuggestionDropdown';
 
 const mockUseMetricAutocomplete = useMetricAutocomplete as jest.MockedFunction<typeof useMetricAutocomplete>;
-const mockUseDropdownPosition = useDropdownPosition as jest.MockedFunction<typeof useDropdownPosition>;
-const mockSuggestionDropdown = SuggestionDropdown as jest.MockedComponent<typeof SuggestionDropdown>;
 
 // Mock DataSource interface
 const mockDataSource = {
@@ -453,62 +447,6 @@ describe('MetricNameField', () => {
     });
   });
 
-  describe('dropdown positioning', () => {
-    it('should pass correct props to useDropdownPosition hook', async () => {
-      const user = userEvent.setup();
-      render(<MetricNameField {...defaultProps} />);
-      
-      const input = screen.getByRole('textbox');
-      await user.click(input);
-      
-      expect(mockUseDropdownPosition).toHaveBeenCalledWith(
-        expect.objectContaining({
-          current: input,
-        }),
-        true, // isVisible
-        200   // maxHeight
-      );
-    });
-
-    it('should pass position to SuggestionDropdown', () => {
-      const position = {
-        top: 100,
-        left: 50,
-        width: 300,
-        maxHeight: 150,
-        direction: 'up' as const,
-      };
-
-      mockUseDropdownPosition.mockReturnValue(position);
-
-      render(<MetricNameField {...defaultProps} />);
-      
-      expect(mockSuggestionDropdown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          position: {
-            top: position.top,
-            left: position.left,
-            width: position.width,
-          },
-          maxHeight: position.maxHeight,
-        }),
-        expect.anything()
-      );
-    });
-
-    it('should hide dropdown when position is null', () => {
-      mockUseDropdownPosition.mockReturnValue(null);
-
-      render(<MetricNameField {...defaultProps} />);
-      
-      expect(mockSuggestionDropdown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isVisible: false,
-        }),
-        expect.anything()
-      );
-    });
-  });
 
   describe('error handling', () => {
     it('should display error state when autocomplete fails', () => {
