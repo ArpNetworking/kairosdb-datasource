@@ -104,13 +104,6 @@ describe('Multiple Queries Final Validation', () => {
       });
     });
 
-    console.log('Processed series:');
-    processedSeries.forEach((series) => {
-      console.log(
-        `  Result ${series.resultIndex}: ${series.host} (${series.refId}) -> "${series.seriesName}" [value: ${series.value}]`
-      );
-    });
-
     // Step 5: Validate the fix
     expect(processedSeries).toHaveLength(4);
 
@@ -131,10 +124,6 @@ describe('Multiple Queries Final Validation', () => {
     expect(processedSeries[2].value).toBe(95.0); // web01 max (higher)
     expect(processedSeries[1].value).toBe(80.0); // web02 avg
     expect(processedSeries[3].value).toBe(98.0); // web02 max (higher)
-
-    console.log('\n✅ Fix validated: Each series gets the correct alias!');
-    console.log('   - avg results: "web01 avg", "web02 avg"');
-    console.log('   - max results: "web01 max", "web02 max"');
   });
 
   test('should handle edge case with uneven results per target', () => {
@@ -192,10 +181,6 @@ describe('Multiple Queries Final Validation', () => {
       metricResultCount[metricName]++;
     });
 
-    console.log('Uneven results assignment:');
-    assignments.forEach((a) => {
-      console.log(`  Result ${a.resultIndex} (${a.host}) -> ${a.assignedRefId}`);
-    });
 
     // With 5 results and 2 targets: ceil(5/2) = 3 results per target
     // Results 0,1,2 -> A, Results 3,4 -> B

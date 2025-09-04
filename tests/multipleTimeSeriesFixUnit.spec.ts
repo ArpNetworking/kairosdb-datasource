@@ -123,10 +123,6 @@ describe('Multiple Time Series Fix (Unit Tests)', () => {
       });
     });
 
-    console.log('Groupby test result:', {
-      seriesCount: processedSeries.length,
-      seriesNames: processedSeries.map((s) => s.seriesName),
-    });
 
     // The fix should handle all 3 time series
     expect(processedSeries).toHaveLength(3);
@@ -245,10 +241,6 @@ describe('Multiple Time Series Fix (Unit Tests)', () => {
       });
     });
 
-    console.log('Multi-value + groupby result:', {
-      seriesCount: processedSeries.length,
-      seriesNames: processedSeries.map((s) => s.seriesName),
-    });
 
     // Should get all 4 series
     expect(processedSeries).toHaveLength(4);
@@ -351,10 +343,6 @@ describe('Multiple Time Series Fix (Unit Tests)', () => {
       });
     });
 
-    console.log('Single series result:', {
-      seriesCount: processedSeries.length,
-      seriesNames: processedSeries.map((s) => s.seriesName),
-    });
 
     expect(processedSeries).toHaveLength(1);
     expect(processedSeries[0].seriesName).toBe('web01 Memory');

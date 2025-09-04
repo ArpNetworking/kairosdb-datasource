@@ -105,9 +105,6 @@ describe('Alias Pre-processing Fix', () => {
     const originalAlias = originalTarget?.query?.alias || interpolatedTarget.query.alias;
     const preprocessedAlias = interpolatedTarget.query.alias;
 
-    console.log('Original alias (from options.targets):', originalAlias);
-    console.log('Pre-processed alias (from interpolated targets):', preprocessedAlias);
-
     expect(originalAlias).toBe('$location Temperature');
     expect(preprocessedAlias).toBe('{Attic,Bedroom,Office} Temperature');
 
@@ -125,9 +122,6 @@ describe('Alias Pre-processing Fix', () => {
 
     // Without fix: using pre-processed alias
     const buggyResults = individualScopedVars.map((vars) => templateSrv.replace(preprocessedAlias, vars));
-
-    console.log('With fix (using original alias):', fixedResults);
-    console.log('Without fix (using pre-processed alias):', buggyResults);
 
     // The fix produces correct individual names
     expect(fixedResults).toEqual(['Attic Temperature', 'Bedroom Temperature', 'Office Temperature']);
@@ -212,9 +206,6 @@ describe('Alias Pre-processing Fix', () => {
 
     // WITH the fix: using original alias
     const fixedResults = individualScopedVars.map((vars) => templateSrv.replace(originalAlias, vars));
-
-    console.log('Without fix (buggy):', buggyResults);
-    console.log('With fix (correct):', fixedResults);
 
     // The bug: all series get the same literal name
     expect(buggyResults).toEqual([

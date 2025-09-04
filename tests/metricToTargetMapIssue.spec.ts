@@ -44,15 +44,6 @@ describe('MetricToTargetMap Issue Analysis', () => {
     // But we only have metricToTargetMap[0] because we only sent 1 metric!
     // So responseResults[1] and responseResults[2] have no mapping and get skipped.
 
-    console.log('Request metrics count:', requestMetrics.length);
-    console.log('Response results count:', responseResults.length);
-    console.log(
-      'Problem: We have',
-      responseResults.length,
-      'results but only',
-      requestMetrics.length,
-      'mapping entries'
-    );
 
     expect(requestMetrics.length).toBe(1);
     expect(responseResults.length).toBe(3);
@@ -68,7 +59,6 @@ describe('MetricToTargetMap Issue Analysis', () => {
 
     // Step 1: expandMetricNames creates multiple metrics
     const expansion = (datasource as any).expandMetricNames('$service.cpu', 'A', scopedVars);
-    console.log('Expanded metrics:', expansion.names);
 
     // Step 2: We send these metrics to KairosDB
     const requestMetrics = expansion.names; // ['web.cpu', 'api.cpu']
@@ -91,10 +81,6 @@ describe('MetricToTargetMap Issue Analysis', () => {
     // metricToTargetMap[2] -> undefined (doesn't exist!)
     // metricToTargetMap[3] -> undefined (doesn't exist!)
 
-    console.log('Expanded metrics count:', requestMetrics.length);
-    console.log('Response results count:', responseResults.length);
-    console.log('MetricToTargetMap entries:', requestMetrics.length);
-    console.log('Missing mappings for results 2 and 3');
 
     expect(requestMetrics.length).toBe(2);
     expect(responseResults.length).toBe(4);
@@ -133,7 +119,6 @@ describe('MetricToTargetMap Issue Analysis', () => {
     responseResults.forEach((result) => {
       const mapping = metricNameToTargetMap[result.name];
       expect(mapping).toBeDefined();
-      console.log(`Result ${result.name} with host ${result.tags.host[0]} maps to:`, mapping?.variableValues);
     });
   });
 });
