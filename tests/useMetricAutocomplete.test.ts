@@ -58,26 +58,31 @@ describe('useMetricAutocomplete', () => {
         useMetricAutocomplete('system.cpu', mockDataSource, { debounceMs: 0 })
       );
 
+      // Should return only metrics matching the search pattern (client-side filtered)
+      const expectedMetrics = ['system.cpu.usage', 'system.cpu.idle']; // system.memory.used filtered out
       await waitFor(() => {
-        expect(result.current.suggestions).toEqual(mockMetrics);
+        expect(result.current.suggestions).toEqual(expectedMetrics);
       });
 
       expect(result.current.isLoading).toBe(false);
       expect(result.current.error).toBeNull();
-      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('system.cpu');
+      // Now calls with empty string to get all metrics, then filters client-side
+      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('');
     });
   });
 
   describe('template variable handling', () => {
     it('should use multiple search terms from template resolver', async () => {
-      const mockMetrics1 = ['system.web01.cpu', 'system.web01.memory'];
-      const mockMetrics2 = ['system.web02.cpu', 'system.web02.memory'];
-      const mockMetrics3 = ['system.prod.cpu', 'system.test.cpu', 'system.dev.cpu'];
+      // All metrics that would be returned from server
+      const allMetrics = [
+        'system.web01.cpu', 'system.web01.memory', 
+        'system.web02.cpu', 'system.web02.memory',
+        'system.prod.cpu', 'system.test.cpu', 'system.dev.cpu',
+        'other.metric'
+      ];
 
-      mockDataSource.getMetricNames
-        .mockResolvedValueOnce(mockMetrics1)  // for 'system.web01.cpu'
-        .mockResolvedValueOnce(mockMetrics2)  // for 'system.web02.cpu'  
-        .mockResolvedValueOnce(mockMetrics3); // for 'system.*.cpu'
+      // With new hybrid approach, always returns all metrics then filters client-side
+      mockDataSource.getMetricNames.mockResolvedValue(allMetrics);
 
       // Mock multiple search terms from template resolution
       mockGetAllSearchTerms.mockReturnValue([
@@ -94,15 +99,18 @@ describe('useMetricAutocomplete', () => {
         expect(result.current.suggestions.length).toBeGreaterThan(0);
       });
 
-      // Should have called getMetricNames for each search term
+      // With hybrid approach, should call getMetricNames 3 times (once for each search term) with empty string
       expect(mockDataSource.getMetricNames).toHaveBeenCalledTimes(3);
-      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('system.web01.cpu');
-      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('system.web02.cpu');
-      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('system.*.cpu');
+      expect(mockDataSource.getMetricNames).toHaveBeenCalledWith('');
 
-      // Results should be combined and deduplicated
-      const expectedResults = [...new Set([...mockMetrics1, ...mockMetrics2, ...mockMetrics3])];
-      expect(result.current.suggestions).toEqual(expect.arrayContaining(expectedResults));
+      // Should include metrics that match any of the search patterns
+      expect(result.current.suggestions).toEqual(expect.arrayContaining([
+        'system.web01.cpu',
+        'system.web02.cpu',
+        'system.prod.cpu',
+        'system.test.cpu',
+        'system.dev.cpu'
+      ]));
     });
 
     it('should include original template string in results', async () => {
@@ -341,7 +349,7 @@ describe('useMetricAutocomplete', () => {
     });
 
     it('should handle cache with different cache TTL settings', async () => {
-      const mockMetrics = ['system.cpu.usage'];
+      const mockMetrics = ['system.cpu.usage', 'system.memory.used'];
       mockDataSource.getMetricNames.mockResolvedValue(mockMetrics);
       mockGetAllSearchTerms.mockReturnValue(['system.cpu']);
 
@@ -354,8 +362,10 @@ describe('useMetricAutocomplete', () => {
         { initialProps: { input: 'system.cpu' } }
       );
 
+      // Should filter client-side to only return matching metrics
+      const expectedMetrics = ['system.cpu.usage']; // system.memory.used filtered out
       await waitFor(() => {
-        expect(result.current.suggestions).toEqual(mockMetrics);
+        expect(result.current.suggestions).toEqual(expectedMetrics);
       });
 
       expect(mockDataSource.getMetricNames).toHaveBeenCalledTimes(1);
