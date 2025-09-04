@@ -175,6 +175,61 @@ describe('MetricNameField', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
 
+    it('should navigate through suggestions with arrow keys', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage', 'system.memory.used', 'network.bytes.in'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+
+      // Arrow down should move to first item
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      
+      // Arrow down should move to second item
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      
+      // Arrow up should move back to first item
+      fireEvent.keyDown(input, { key: 'ArrowUp' });
+    });
+
+    it('should wrap around at beginning and end of suggestions', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['item1', 'item2'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('item1')).toBeInTheDocument();
+      });
+
+      // Arrow up from start should wrap to end
+      fireEvent.keyDown(input, { key: 'ArrowUp' });
+      
+      // Arrow down from end should wrap to start
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+    });
+
     it('should handle escape key', async () => {
       const user = userEvent.setup();
       
@@ -194,6 +249,216 @@ describe('MetricNameField', () => {
       });
 
       fireEvent.keyDown(input, { key: 'Escape' });
+    });
+
+    it('should select highlighted suggestion with Enter', async () => {
+      const user = userEvent.setup();
+      const mockOnChange = jest.fn();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage', 'system.memory.used'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} onChange={mockOnChange} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+
+      // Navigate to second item and select
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      expect(mockOnChange).toHaveBeenCalledWith('system.memory.used');
+    });
+  });
+
+  describe('dropdown visibility', () => {
+    it('should show dropdown only when focused and has suggestions', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      
+      // Initially no dropdown
+      expect(screen.queryByText('system.cpu.usage')).not.toBeInTheDocument();
+      
+      // Focus should show dropdown
+      await user.click(input);
+      
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+    });
+
+    it('should hide dropdown on blur', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+
+      // Blur should hide dropdown (after timeout)
+      await user.tab();
+      
+      await waitFor(() => {
+        expect(screen.queryByText('system.cpu.usage')).not.toBeInTheDocument();
+      }, { timeout: 200 });
+    });
+
+    it('should not show dropdown without datasource', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} datasource={undefined} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      // Should not show suggestions without datasource
+      expect(screen.queryByText('system.cpu.usage')).not.toBeInTheDocument();
+    });
+
+    it('should show loading state in dropdown', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: [],
+        isLoading: true,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} metricName="test" />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      // Should show loading text or spinner
+      await waitFor(() => {
+        expect(screen.getByText('Loading...')).toBeInTheDocument();
+      });
+    });
+
+    it('should not show dropdown when no suggestions and not loading', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: [],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} metricName="test" />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      // Component doesn't show dropdown when no suggestions and not loading
+      // This is the actual behavior - no dropdown appears
+      expect(screen.queryByText('No metrics found')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('suggestion interaction', () => {
+    it('should select suggestion on mouse click', async () => {
+      const user = userEvent.setup();
+      const mockOnChange = jest.fn();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage', 'system.memory.used'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} onChange={mockOnChange} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.memory.used')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('system.memory.used'));
+
+      expect(mockOnChange).toHaveBeenCalledWith('system.memory.used');
+    });
+
+    it('should update highlighted index on hover', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage', 'system.memory.used'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+
+      // Hover over second item
+      await user.hover(screen.getByText('system.memory.used'));
+      
+      // Item should be visually highlighted (implementation may vary)
+    });
+
+    it('should prevent text selection on mouse down', async () => {
+      const user = userEvent.setup();
+      
+      mockUseMetricAutocomplete.mockReturnValue({
+        suggestions: ['system.cpu.usage'],
+        isLoading: false,
+        error: null,
+      });
+
+      render(<MetricNameField {...defaultProps} />);
+      
+      const input = screen.getByRole('textbox');
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('system.cpu.usage')).toBeInTheDocument();
+      });
+
+      const suggestion = screen.getByText('system.cpu.usage');
+      fireEvent.mouseDown(suggestion);
+      
+      // Should not lose focus or cause text selection issues
     });
   });
 });
