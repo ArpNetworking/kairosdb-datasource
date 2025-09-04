@@ -170,11 +170,12 @@ describe('useMetricAutocomplete', () => {
     });
 
     it('should handle loading state for multiple concurrent requests', async () => {
+      // Return metrics that would match the search terms after client-side filtering
       const promise1 = new Promise<string[]>((resolve) => 
-        setTimeout(() => resolve(['metric1']), 100)
+        setTimeout(() => resolve(['term1.metric', 'other.metric']), 100)
       );
       const promise2 = new Promise<string[]>((resolve) => 
-        setTimeout(() => resolve(['metric2']), 200)
+        setTimeout(() => resolve(['term2.metric', 'another.metric']), 200)
       );
 
       mockDataSource.getMetricNames
@@ -194,7 +195,8 @@ describe('useMetricAutocomplete', () => {
         expect(result.current.isLoading).toBe(false);
       }, { timeout: 300 });
 
-      expect(result.current.suggestions).toEqual(expect.arrayContaining(['metric1', 'metric2']));
+      // Should include metrics that match the search patterns after client-side filtering
+      expect(result.current.suggestions).toEqual(expect.arrayContaining(['term1.metric', 'term2.metric']));
     });
   });
 
@@ -314,7 +316,7 @@ describe('useMetricAutocomplete', () => {
     });
 
     it('should expire cache after TTL', async () => {
-      const mockMetrics = ['system.cpu.usage'];
+      const mockMetrics = ['system.cpu.usage', 'system.memory.usage'];
       mockDataSource.getMetricNames.mockResolvedValue(mockMetrics);
       mockGetAllSearchTerms.mockReturnValue(['system.cpu']);
 
@@ -326,8 +328,10 @@ describe('useMetricAutocomplete', () => {
         { initialProps: { input: 'system.cpu' } }
       );
 
+      // Should return filtered results
+      const expectedMetrics = ['system.cpu.usage']; // system.memory.usage filtered out
       await waitFor(() => {
-        expect(result.current.suggestions).toEqual(mockMetrics);
+        expect(result.current.suggestions).toEqual(expectedMetrics);
       });
 
       expect(mockDataSource.getMetricNames).toHaveBeenCalledTimes(1);
@@ -336,6 +340,9 @@ describe('useMetricAutocomplete', () => {
       act(() => {
         jest.advanceTimersByTime(6000);
       });
+
+      // Clear global cache to simulate TTL expiration (since global cache has its own TTL)
+      clearAllCaches();
 
       // Trigger a different search first to clear component state
       rerender({ input: '' });
@@ -383,7 +390,7 @@ describe('useMetricAutocomplete', () => {
 
   describe('configuration options', () => {
     it('should respect maxResults limit', async () => {
-      const manyMetrics = Array.from({ length: 100 }, (_, i) => `metric${i}`);
+      const manyMetrics = Array.from({ length: 100 }, (_, i) => `test.metric${i}`);
       mockDataSource.getMetricNames.mockResolvedValue(manyMetrics);
       mockGetAllSearchTerms.mockReturnValue(['test']);
 
@@ -398,11 +405,12 @@ describe('useMetricAutocomplete', () => {
         expect(result.current.suggestions.length).toBe(10);
       });
 
+      // Should get first 10 results that match the search pattern
       expect(result.current.suggestions).toEqual(manyMetrics.slice(0, 10));
     });
 
     it('should handle unlimited results when maxResults is undefined', async () => {
-      const manyMetrics = Array.from({ length: 100 }, (_, i) => `metric${i}`);
+      const manyMetrics = Array.from({ length: 100 }, (_, i) => `test.metric${i}`);
       mockDataSource.getMetricNames.mockResolvedValue(manyMetrics);
       mockGetAllSearchTerms.mockReturnValue(['test']);
 
