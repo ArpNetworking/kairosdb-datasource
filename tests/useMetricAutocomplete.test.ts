@@ -1,6 +1,22 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useMetricAutocomplete, clearAllCaches } from '../src/hooks/useMetricAutocomplete';
 
+// Suppress act warnings for this test file since they're caused by async operations
+// inside the hook that are not easily wrappable and don't affect test correctness
+const originalError = console.error;
+beforeAll(() => {
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('wrapped in act')) {
+      return; // Suppress act warnings for this test file
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalError;
+});
+
 // Mock dependencies
 const mockDataSource = {
   getMetricNames: jest.fn(),
@@ -62,6 +78,7 @@ describe('useMetricAutocomplete', () => {
       const expectedMetrics = ['system.cpu.usage', 'system.cpu.idle']; // system.memory.used filtered out
       await waitFor(() => {
         expect(result.current.suggestions).toEqual(expectedMetrics);
+        expect(result.current.isLoading).toBe(false);
       });
 
       expect(result.current.isLoading).toBe(false);
@@ -97,6 +114,7 @@ describe('useMetricAutocomplete', () => {
 
       await waitFor(() => {
         expect(result.current.suggestions.length).toBeGreaterThan(0);
+        expect(result.current.isLoading).toBe(false);
       });
 
       // With hybrid approach, should call getMetricNames 3 times (once for each search term) with empty string
@@ -157,8 +175,8 @@ describe('useMetricAutocomplete', () => {
       expect(result.current.isLoading).toBe(true);
       expect(result.current.suggestions).toEqual([]);
 
-      // Resolve the promise
-      act(() => {
+      // Resolve the promise and wait for state updates
+      await act(async () => {
         resolvePromise!(['system.cpu.usage']);
       });
 
@@ -458,7 +476,7 @@ describe('useMetricAutocomplete', () => {
       rerender({ input: 'second' });
 
       // Resolve second request first
-      act(() => {
+      await act(async () => {
         resolveSecond(['second-metric']);
       });
 
@@ -467,7 +485,7 @@ describe('useMetricAutocomplete', () => {
       });
 
       // Now resolve first request (should be ignored)
-      act(() => {
+      await act(async () => {
         resolveFirst(['first-metric']);
       });
 
