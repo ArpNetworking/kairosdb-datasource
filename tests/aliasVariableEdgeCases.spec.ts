@@ -68,21 +68,18 @@ describe('Alias Variable Edge Cases', () => {
       const alias = undefined;
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
-    console.log('Undefined alias result:', result);
 
     // Test empty string alias
     result = expansion.variableValues.map((vars) => {
       const alias = '';
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
-    console.log('Empty alias result:', result);
 
     // Test null alias
     result = expansion.variableValues.map((vars) => {
       const alias = null;
       return alias ? templateSrv.replace(alias, vars) : alias;
     });
-    console.log('Null alias result:', result);
 
     // All should handle gracefully without throwing errors
     expect(result).toBeDefined();
@@ -117,17 +114,7 @@ describe('Alias Variable Edge Cases', () => {
       };
     });
 
-    console.log('MetricToTargetMap structure:', JSON.stringify(metricToTargetMap, null, 2));
-
     // Check what each mapping contains
-    Object.keys(metricToTargetMap).forEach((key) => {
-      const mapping = metricToTargetMap[key];
-      console.log(`Mapping ${key}:`, {
-        targetAlias: mapping.target.query.alias,
-        variableValues: mapping.variableValues,
-        serverValueType: typeof mapping.variableValues.server?.value,
-      });
-    });
 
     // Verify each mapping has correct individual values
     expect(metricToTargetMap[0].variableValues.server.value).toBe('web01');
@@ -149,8 +136,6 @@ describe('Alias Variable Edge Cases', () => {
     // What would be wrong (using original scopedVars)
     const wrongVariableValues = [originalScopedVars, originalScopedVars, originalScopedVars];
 
-    console.log('Correct variable values (first entry):', correctVariableValues[0]);
-    console.log('Wrong variable values (first entry):', wrongVariableValues[0]);
 
     // Test template interpolation with both scenarios
     const alias = '$location Temperature';
@@ -175,8 +160,6 @@ describe('Alias Variable Edge Cases', () => {
     // Wrong approach (using original scopedVars)
     const wrongAliases = wrongVariableValues.map((vars) => templateReplace(alias, vars));
 
-    console.log('Correct aliases:', correctAliases);
-    console.log('Wrong aliases (bug scenario):', wrongAliases);
 
     expect(correctAliases).toEqual(['Attic Temperature', 'Bedroom Temperature', 'Office Temperature']);
     expect(wrongAliases).toEqual([

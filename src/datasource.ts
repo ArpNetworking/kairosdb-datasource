@@ -217,7 +217,10 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               ? MigrationUtils.migrateAggregators(query.aggregators)
               : query.aggregators;
 
-            metric.aggregators = migratedAggregators.map((agg) => {
+            // Filter out invisible aggregators
+            const visibleAggregators = migratedAggregators.filter(agg => agg.visible !== false);
+
+            metric.aggregators = visibleAggregators.map((agg) => {
               const aggregator: { name: string; [key: string]: any } = {
                 name: agg.name,
               };

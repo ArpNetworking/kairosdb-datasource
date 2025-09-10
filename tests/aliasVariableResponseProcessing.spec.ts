@@ -79,7 +79,6 @@ describe('Alias Variable Response Processing Issue', () => {
     // Test what happens when we use the individual scoped vars (should work correctly)
     const correctResults = expansion.variableValues.map((vars, index) => {
       const result = templateSrv.replace(alias, vars);
-      console.log(`Metric ${index} alias with individual vars:`, result);
       return result;
     });
 
@@ -87,7 +86,6 @@ describe('Alias Variable Response Processing Issue', () => {
 
     // Step 5: Test what happens if we accidentally use the original scopedVars (the bug scenario)
     const buggyResult = templateSrv.replace(alias, originalScopedVars);
-    console.log('Alias with original multi-value vars (WRONG):', buggyResult);
 
     expect(buggyResult).toBe('Attic,Bedroom,Office Temperature'); // This is the bug!
 
@@ -147,11 +145,7 @@ describe('Alias Variable Response Processing Issue', () => {
         const alias = mappingInfo.target.query.alias;
 
         // This is the critical step - which variable values are being used?
-        console.log(`Processing metric ${responseMetricIndex}:`, result.name);
-        console.log('  Using variable values:', JSON.stringify(metricVariableValues));
-
         const interpolatedAlias = templateSrv.replace(alias, metricVariableValues);
-        console.log('  Interpolated alias:', interpolatedAlias);
 
         processedResults.push(interpolatedAlias);
       }
@@ -159,7 +153,6 @@ describe('Alias Variable Response Processing Issue', () => {
     });
 
     // Step 9: Verify the final result
-    console.log('Final processed alias results:', processedResults);
 
     expect(processedResults).toEqual(['Attic Temperature', 'Bedroom Temperature', 'Office Temperature']);
 
@@ -172,18 +165,15 @@ describe('Alias Variable Response Processing Issue', () => {
 
     // Test undefined variable values
     const resultWithUndefined = templateSrv.replace(alias, undefined);
-    console.log('Result with undefined scopedVars:', resultWithUndefined);
 
     // Test empty variable values
     const resultWithEmpty = templateSrv.replace(alias, {});
-    console.log('Result with empty scopedVars:', resultWithEmpty);
 
     // Test with original multi-value variable (the bug case)
     const originalScopedVars = {
       location: { text: 'Attic,Bedroom,Office', value: ['Attic', 'Bedroom', 'Office'] },
     };
     const resultWithArray = templateSrv.replace(alias, originalScopedVars);
-    console.log('Result with array variable (BUG):', resultWithArray);
 
     // These show different failure modes
     expect(resultWithUndefined).toBe('$location Temperature'); // Variable not replaced

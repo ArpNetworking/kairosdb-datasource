@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Stack, Input, Select, Switch, InlineField, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator, AggregatorParameter } from '../types';
+import { formatAggregatorDisplayName } from '../utils/parameterUtils';
 
 interface Props {
   aggregator: Aggregator;
@@ -13,6 +14,7 @@ interface Props {
   onMoveDown: () => void;
   onParameterChange: (parameterName: string, value: any) => void;
   onAutoValueChange: (enabled: boolean) => void;
+  onVisibilityChange: (visible: boolean) => void;
 }
 
 export function AggregatorItem({
@@ -25,6 +27,7 @@ export function AggregatorItem({
   onMoveDown,
   onParameterChange,
   onAutoValueChange,
+  onVisibilityChange,
 }: Props) {
   const handleParameterChange = (param: AggregatorParameter, value: any) => {
     onParameterChange(param.name, value);
@@ -271,12 +274,12 @@ export function AggregatorItem({
   };
 
   return (
-    <Card>
+    <Card style={{ opacity: aggregator.visible !== false ? 1 : 0.6 }}>
       <Card.Description>
         <Stack direction="row" gap={2} alignItems="center" justifyContent="space-between">
           {/* Left side: Aggregator name and auto toggle */}
           <Stack direction="row" gap={2} alignItems="center">
-            <strong style={{ fontSize: '14px', minWidth: '60px' }}>{aggregator.name || 'Unknown'}</strong>
+            <strong style={{ fontSize: '14px', minWidth: '60px' }}>{formatAggregatorDisplayName(aggregator.name)}</strong>
 
             {/* Single Auto toggle for the whole aggregator */}
             {aggregator.autoValueSwitch && (
@@ -301,6 +304,13 @@ export function AggregatorItem({
 
           {/* Right side: Action buttons */}
           <Stack direction="row" gap={0}>
+            <Button
+              variant={aggregator.visible !== false ? "primary" : "secondary"}
+              size="xs"
+              onClick={() => onVisibilityChange(!(aggregator.visible !== false))}
+              icon={aggregator.visible !== false ? "eye" : "eye-slash"}
+              tooltip={aggregator.visible !== false ? "Hide aggregator" : "Show aggregator"}
+            />
             <Button
               variant="secondary"
               size="xs"
@@ -332,6 +342,17 @@ function getEnumOptions(parameterName: string): Array<SelectableValue<string>> {
       { label: 'MINUTES', value: 'MINUTES' },
       { label: 'HOURS', value: 'HOURS' },
       { label: 'DAYS', value: 'DAYS' },
+    ],
+    filter_op: [
+      { label: 'GT', value: 'GT' },
+      { label: 'GTE', value: 'GTE' },
+      { label: 'EQUAL', value: 'EQUAL' },
+      { label: 'LTE', value: 'LTE' },
+      { label: 'LT', value: 'LT' },
+    ],
+    filter_indeterminate_inclusion: [
+      { label: 'keep', value: 'keep' },
+      { label: 'discard', value: 'discard' },
     ],
   };
 

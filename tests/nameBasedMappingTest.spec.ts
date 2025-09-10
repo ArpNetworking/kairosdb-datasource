@@ -46,14 +46,6 @@ describe('Name-Based Mapping Fix', () => {
       };
     });
 
-    console.log('Mapping results:');
-    mappedResults.forEach((item, index) => {
-      console.log(`  Result ${index}: ${item.result.name} -> ${item.hasmapping ? 'FOUND' : 'NOT FOUND'}`);
-      if (item.mapping) {
-        console.log(`    Target refId: ${item.mapping.target.refId}`);
-        console.log(`    Variable values: ${JSON.stringify(item.mapping.variableValues)}`);
-      }
-    });
 
     // All results should find their mapping
     expect(mappedResults.every((item) => item.hasmapping)).toBe(true);
@@ -102,13 +94,6 @@ describe('Name-Based Mapping Fix', () => {
       };
     });
 
-    console.log('Old index-based mapping (broken):');
-    oldMappedResults.forEach((item) => {
-      const status = item.isCorrect ? '✓' : '✗';
-      console.log(
-        `  ${status} Result ${item.index}: ${item.resultName} -> mapping ${item.mapping} (expected ${item.expectedMetric})`
-      );
-    });
 
     // Show that only the first result mapped correctly
     const correctMappings = oldMappedResults.filter((item) => item.isCorrect);
@@ -155,10 +140,6 @@ describe('Name-Based Mapping Fix', () => {
       service: metricNameToTargetMap[result.name]?.variableValues?.service?.value,
     }));
 
-    console.log('Complex scenario mappings:');
-    mappings.forEach((item) => {
-      console.log(`  ${item.name} (${item.host}) -> service: ${item.service}`);
-    });
 
     // All results should have mappings
     expect(mappings.every((item) => item.mapping)).toBe(true);

@@ -41,6 +41,7 @@ export interface Aggregator {
   name: string;
   parameters: AggregatorParameter[];
   autoValueSwitch?: AutoValueSwitch;
+  visible?: boolean; // Controls whether the aggregator is active in queries
 }
 
 export interface AggregatorParameter {

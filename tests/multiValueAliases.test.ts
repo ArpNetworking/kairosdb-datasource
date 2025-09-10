@@ -32,8 +32,6 @@ describe('Multi-Value Variable Aliases Integration', () => {
     // Test the expansion functionality
     const expansion = (datasource as any).expandMetricNames('homeseer/$location/gauge/Temperature', 'A', scopedVars);
 
-    console.log('Expansion result:', expansion);
-
     // Verify we get the correct number of expanded metrics
     expect(expansion.names).toHaveLength(3);
     expect(expansion.variableValues).toHaveLength(3);
@@ -49,13 +47,6 @@ describe('Multi-Value Variable Aliases Integration', () => {
     expect(expansion.variableValues[0].location.value).toBe('Attic');
     expect(expansion.variableValues[1].location.value).toBe('Bedroom');
     expect(expansion.variableValues[2].location.value).toBe('Office');
-
-    // This proves that when we process the response, each metric will have access
-    // to its specific variable value for alias interpolation instead of the full array
-    console.log('Variable values for alias interpolation:');
-    expansion.variableValues.forEach((vars, index) => {
-      console.log(`  Metric ${index}: ${expansion.names[index]} -> location = ${vars.location.value}`);
-    });
   });
 
   test('should handle single-value variables correctly', () => {

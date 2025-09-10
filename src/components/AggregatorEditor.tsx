@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Select, Stack, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator } from '../types';
+import { formatAggregatorDisplayName } from '../utils/parameterUtils';
 
 interface Props {
   availableAggregators: Aggregator[];
@@ -15,7 +16,7 @@ export function AggregatorEditor({ availableAggregators = [], onAdd, onCancel }:
   const aggregatorOptions: Array<SelectableValue<string>> = availableAggregators
     .filter((agg) => agg && agg.name)
     .map((agg) => ({
-      label: agg.name,
+      label: formatAggregatorDisplayName(agg.name),
       value: agg.name,
       description: getAggregatorDescription(agg.name),
     }));
