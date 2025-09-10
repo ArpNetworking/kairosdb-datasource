@@ -208,44 +208,144 @@ export class MergeAggregator extends RangeAggregator {
   }
 }
 
+// Apdex aggregator
+export class ApdexAggregator extends RangeAggregator {
+  static readonly NAME = 'apdex';
+
+  constructor() {
+    super(ApdexAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'value',
+        type: 'sampling',
+        value: 1,
+        text: '1',
+      },
+      {
+        name: 'unit',
+        type: 'sampling_unit',
+        value: 'minutes',
+        text: 'minutes',
+      },
+      {
+        name: 'target',
+        type: 'any',
+        value: 0.5,
+        text: '0.5',
+      },
+    ];
+
+    // Auto value switch controls sampling parameters (not target)
+    this.autoValueSwitch = {
+      enabled: true, // Default to auto mode
+      dependentParameters: ['sampling', 'sampling_unit'],
+    };
+  }
+}
+
+// Simple Moving Average aggregator
+export class SmaAggregator extends BaseAggregator {
+  static readonly NAME = 'sma';
+
+  constructor() {
+    super(SmaAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'size',
+        type: 'any',
+        value: 10,
+        text: '10',
+      },
+    ];
+  }
+}
+
+// Divide aggregator
+export class DivideAggregator extends BaseAggregator {
+  static readonly NAME = 'div';
+
+  constructor() {
+    super(DivideAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'divisor',
+        type: 'any',
+        value: 1,
+        text: '1',
+      },
+    ];
+  }
+}
+
+// Trim aggregator
+export class TrimAggregator extends BaseAggregator {
+  static readonly NAME = 'trim';
+
+  constructor() {
+    super(TrimAggregator.NAME);
+    this.parameters = [
+      {
+        name: 'trim',
+        type: 'enum',
+        value: 'first',
+        text: 'first',
+      },
+    ];
+  }
+}
+
 // Available aggregators list
 export const AVAILABLE_AGGREGATORS: Aggregator[] = [
+  new ApdexAggregator(),
   new RangeAggregator('avg'),
   new RangeAggregator('count'),
   new RangeAggregator('dev'),
-  new RangeAggregator('first'),
+  new BaseAggregator('diff'),
+  new DivideAggregator(),
   new FilterAggregator(),
+  new RangeAggregator('first'),
   new RangeAggregator('gaps'),
   new RangeAggregator('last'),
+  new RangeAggregator('least_squares'),
   new RangeAggregator('max'),
   new MergeAggregator(),
   new RangeAggregator('min'),
-  new RangeAggregator('sum'),
-  new BaseAggregator('diff'),
+  new RangeAggregator('movingWindow'),
+  new BaseAggregator('percent_remaining'),
   new PercentileAggregator(),
   new RateAggregator(),
   new SamplerAggregator(),
   new ScaleAggregator(),
+  new SmaAggregator(),
+  new RangeAggregator('sum'),
+  new TrimAggregator(),
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 // Scalar aggregators (for enforcement)
 export const SCALAR_AGGREGATOR_NAMES = [
+  'apdex',
   'avg',
   'count',
   'dev',
   'diff',
+  'div',
   'filter',
   'first',
   'gaps',
   'last',
+  'least_squares',
   'max',
   'merge',
   'min',
+  'movingWindow',
+  'percent_remaining',
   'percentile',
   'rate',
   'sampler',
   'scale',
+  'sma',
   'sum',
+  'trim',
 ];
 
 // Factory function to create aggregator from object
