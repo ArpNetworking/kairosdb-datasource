@@ -200,7 +200,7 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
               fontStyle: 'italic',
             }}
           >
-            No tags available for this metric. Use "Add Tag" to create custom tags.
+            No tags available for this metric. Use &quot;Add Tag&quot; to create custom tags.
           </div>
         )}
 

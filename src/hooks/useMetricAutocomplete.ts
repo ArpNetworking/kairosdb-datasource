@@ -263,7 +263,7 @@ export function useMetricAutocomplete(
     };
 
     fetchMetrics();
-  }, [searchTerms, dataSource, maxResults, cacheTtlMs]);
+  }, [debouncedInput, searchTerms, dataSource, maxResults, cacheTtlMs]);
 
   return {
     suggestions,
