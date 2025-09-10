@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Stack, Input, Select, Switch, InlineField, Card } from '@grafana/ui';
 import { SelectableValue } from '@grafana/data';
 import { Aggregator, AggregatorParameter } from '../types';
+import { formatAggregatorDisplayName } from '../utils/parameterUtils';
 
 interface Props {
   aggregator: Aggregator;
@@ -276,7 +277,7 @@ export function AggregatorItem({
         <Stack direction="row" gap={2} alignItems="center" justifyContent="space-between">
           {/* Left side: Aggregator name and auto toggle */}
           <Stack direction="row" gap={2} alignItems="center">
-            <strong style={{ fontSize: '14px', minWidth: '60px' }}>{aggregator.name || 'Unknown'}</strong>
+            <strong style={{ fontSize: '14px', minWidth: '60px' }}>{formatAggregatorDisplayName(aggregator.name)}</strong>
 
             {/* Single Auto toggle for the whole aggregator */}
             {aggregator.autoValueSwitch && (

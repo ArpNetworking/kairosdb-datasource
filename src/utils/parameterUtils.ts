@@ -75,3 +75,28 @@ export class ParameterObjectBuilder {
     return result;
   }
 }
+
+/**
+ * Formats aggregator names for display in Title Case
+ * Converts snake_case and camelCase to proper Title Case
+ */
+export function formatAggregatorDisplayName(name: string): string {
+  if (!name) {
+    return 'Unknown';
+  }
+
+  // Convert snake_case and camelCase to space-separated words
+  const words = name
+    // Split on underscores and convert to lowercase
+    .split('_')
+    .flatMap(word => 
+      // Split camelCase words (e.g., movingWindow -> moving Window)
+      word.split(/(?=[A-Z])/)
+    )
+    .filter(word => word.length > 0);
+
+  // Convert to Title Case
+  return words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}

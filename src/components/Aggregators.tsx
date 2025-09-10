@@ -3,6 +3,7 @@ import { Button, FieldSet, Stack, Dropdown, Menu } from '@grafana/ui';
 import { Aggregator } from '../types';
 import { AggregatorItem } from './AggregatorItem';
 import { AVAILABLE_AGGREGATORS } from '../aggregators';
+import { formatAggregatorDisplayName } from '../utils/parameterUtils';
 
 interface Props {
   aggregators: Aggregator[];
@@ -90,7 +91,7 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
             overlay={() => (
               <Menu>
                 {availableAggregators.map((aggregator) => (
-                  <Menu.Item key={aggregator.name} label={aggregator.name} onClick={() => handleAdd(aggregator)} />
+                  <Menu.Item key={aggregator.name} label={formatAggregatorDisplayName(aggregator.name)} onClick={() => handleAdd(aggregator)} />
                 ))}
               </Menu>
             )}
