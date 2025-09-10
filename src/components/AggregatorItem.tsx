@@ -14,6 +14,7 @@ interface Props {
   onMoveDown: () => void;
   onParameterChange: (parameterName: string, value: any) => void;
   onAutoValueChange: (enabled: boolean) => void;
+  onVisibilityChange: (visible: boolean) => void;
 }
 
 export function AggregatorItem({
@@ -26,6 +27,7 @@ export function AggregatorItem({
   onMoveDown,
   onParameterChange,
   onAutoValueChange,
+  onVisibilityChange,
 }: Props) {
   const handleParameterChange = (param: AggregatorParameter, value: any) => {
     onParameterChange(param.name, value);
@@ -272,7 +274,7 @@ export function AggregatorItem({
   };
 
   return (
-    <Card>
+    <Card style={{ opacity: aggregator.visible !== false ? 1 : 0.6 }}>
       <Card.Description>
         <Stack direction="row" gap={2} alignItems="center" justifyContent="space-between">
           {/* Left side: Aggregator name and auto toggle */}
@@ -302,6 +304,13 @@ export function AggregatorItem({
 
           {/* Right side: Action buttons */}
           <Stack direction="row" gap={0}>
+            <Button
+              variant={aggregator.visible !== false ? "primary" : "secondary"}
+              size="xs"
+              onClick={() => onVisibilityChange(!(aggregator.visible !== false))}
+              icon={aggregator.visible !== false ? "eye" : "eye-slash"}
+              tooltip={aggregator.visible !== false ? "Hide aggregator" : "Show aggregator"}
+            />
             <Button
               variant="secondary"
               size="xs"

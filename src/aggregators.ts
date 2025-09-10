@@ -6,6 +6,7 @@ export class BaseAggregator implements Aggregator {
   public name: string;
   public parameters: AggregatorParameter[] = [];
   public autoValueSwitch?: AutoValueSwitch;
+  public visible = true; // Default to visible
 
   constructor(name: string) {
     this.name = name;
@@ -15,6 +16,7 @@ export class BaseAggregator implements Aggregator {
     const cloned = new BaseAggregator(this.name);
     cloned.parameters = this.parameters.map((param) => ({ ...param }));
     cloned.autoValueSwitch = this.autoValueSwitch ? { ...this.autoValueSwitch } : undefined;
+    cloned.visible = this.visible;
     return cloned;
   }
 }
@@ -355,7 +357,10 @@ export function createAggregatorFromObject(obj: any): Aggregator {
     const newAgg = Object.create(Object.getPrototypeOf(aggregatorClass));
     newAgg.name = obj.name;
     newAgg.parameters = obj.parameters || [];
+    newAgg.visible = obj.visible !== undefined ? obj.visible : true; // Default to visible
     return newAgg;
   }
-  return new BaseAggregator(obj.name);
+  const baseAgg = new BaseAggregator(obj.name);
+  baseAgg.visible = obj.visible !== undefined ? obj.visible : true; // Default to visible
+  return baseAgg;
 }

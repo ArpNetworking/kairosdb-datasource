@@ -83,6 +83,21 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
     onChange(newAggregators);
   };
 
+  const handleVisibilityChange = (index: number, visible: boolean) => {
+    if (index < 0 || index >= aggregators.length) {
+      return;
+    }
+
+    const newAggregators = [...aggregators];
+    const aggregator = newAggregators[index];
+    if (!aggregator) {
+      return;
+    }
+
+    aggregator.visible = visible;
+    onChange(newAggregators);
+  };
+
   return (
     <FieldSet label="Aggregators">
       <Stack direction="column" gap={2}>
@@ -122,6 +137,7 @@ export function Aggregators({ aggregators = [], onChange, availableAggregators =
                 onMoveDown={() => handleMoveDown(index)}
                 onParameterChange={(paramName, value) => handleParameterChange(index, paramName, value)}
                 onAutoValueChange={(enabled) => handleAutoValueChange(index, enabled)}
+                onVisibilityChange={(visible) => handleVisibilityChange(index, visible)}
               />
             ))}
         </Stack>
