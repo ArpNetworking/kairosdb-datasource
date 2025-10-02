@@ -104,7 +104,7 @@ export function ConfigEditor(props: Props) {
           <Switch
             id="config-editor-enforce-scalar"
             value={jsonData.enforceScalarSetting || false}
-            onChange={(event: any) => onEnforceScalarSettingChange(event.currentTarget.checked)}
+            onChange={(event: React.FormEvent<HTMLInputElement>) => onEnforceScalarSettingChange(event.currentTarget.checked)}
           />
         </InlineField>
 
