@@ -240,6 +240,7 @@ export function VariableQueryEditor({ datasource, query, onChange }: Props) {
                           size="sm"
                           icon="trash-alt"
                           onClick={() => removeFilter(filter.id)}
+                          aria-label="Remove filter"
                         />
                       </InlineFieldRow>
                     ))}

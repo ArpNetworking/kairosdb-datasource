@@ -25,7 +25,7 @@ export function TagInput({ segment, tagValues, onChange }: Props) {
   if (segment.value === null) {
     return (
       <>
-        <Button variant="secondary" size="xs" onClick={() => setIsOpen(!isOpen)} icon="plus" />
+        <Button variant="secondary" size="xs" onClick={() => setIsOpen(!isOpen)} icon="plus" aria-label="Add tag" />
 
         {isOpen && (
           <div
