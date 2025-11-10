@@ -8,69 +8,121 @@
  * We use placeholder substitution to protect literal characters during template
  * variable interpolation.
  *
- * Escaping syntax:
- * - \$foo → literal "$foo"
- * - \${foo} → literal "${foo}"
+ * Escaping syntax (backslash-based):
+ * - \\ → literal "\"
+ * - \$ → literal "$"
+ * - \{ → literal "{"
+ * - \} → literal "}"
  * - {id} → literal "{id}" (only if no $ present)
  * - $foo → template variable (expands to value)
  * - ${foo} → template variable (expands to value)
+ *
+ * Examples:
+ * - \$foo → literal "$foo"
+ * - \\$foo → literal "\" + template variable $foo → "\<expanded>"
+ * - \\\$foo → literal "\" + literal "$" → "\$foo"
+ * - \\\${foo} → literal "\${foo}"
  */
 
 // Use unique placeholders that are unlikely to appear in real tag values
 const LEFT_BRACE_PLACEHOLDER = '__KAIROSDB_LEFT_BRACE__';
 const RIGHT_BRACE_PLACEHOLDER = '__KAIROSDB_RIGHT_BRACE__';
 const DOLLAR_PLACEHOLDER = '__KAIROSDB_DOLLAR__';
+const BACKSLASH_PLACEHOLDER = '__KAIROSDB_BACKSLASH__';
 
 /**
- * Check if a value looks like it contains template variables (after removing escaped dollars)
+ * Process escape sequences and check for template variables.
+ * Returns the processed string with escape sequences replaced by placeholders,
+ * and whether the string contains template variables.
+ */
+function processEscapeSequences(value: string): { processed: string; hasTemplateVars: boolean } {
+  let result = '';
+  let hasTemplateVars = false;
+  let i = 0;
+
+  while (i < value.length) {
+    if (value[i] === '\\' && i + 1 < value.length) {
+      const next = value[i + 1];
+      if (next === '\\') {
+        // Escaped backslash
+        result += BACKSLASH_PLACEHOLDER;
+        i += 2;
+        continue;
+      } else if (next === '$') {
+        // Escaped dollar
+        result += DOLLAR_PLACEHOLDER;
+        i += 2;
+        continue;
+      } else if (next === '{') {
+        // Escaped left brace
+        result += LEFT_BRACE_PLACEHOLDER;
+        i += 2;
+        continue;
+      } else if (next === '}') {
+        // Escaped right brace
+        result += RIGHT_BRACE_PLACEHOLDER;
+        i += 2;
+        continue;
+      }
+      // Not a recognized escape sequence, keep the backslash
+      result += value[i];
+      i += 1;
+    } else {
+      // Check if this is start of a template variable
+      if (value[i] === '$' && i + 1 < value.length && /[a-zA-Z_{]/.test(value[i + 1])) {
+        hasTemplateVars = true;
+      }
+      result += value[i];
+      i += 1;
+    }
+  }
+
+  return { processed: result, hasTemplateVars };
+}
+
+/**
+ * Check if a value looks like it contains template variables (after processing escapes)
  */
 export function containsTemplateVariable(value: string): boolean {
   if (!value) {
     return false;
   }
 
-  // Remove escaped dollar signs before checking for template variables
-  // \$ should not be considered a template variable marker
-  const withoutEscapedDollars = value.replace(/\\\$/g, '');
-
-  // Check for $variable or ${variable} syntax
-  return /\$\{?[a-zA-Z_]/.test(withoutEscapedDollars);
+  const { hasTemplateVars } = processEscapeSequences(value);
+  return hasTemplateVars;
 }
 
 /**
- * Escape literal dollar signs (\$) and curly braces in a tag value.
+ * Escape literal characters using backslash escape sequences.
  *
- * This protects literal characters from being interpreted as template variables.
+ * Processes escape sequences (\\, \$, \{, \}) and protects literal characters
+ * from template interpolation. Also escapes unescaped braces if no template vars present.
+ *
  * Must be called BEFORE template interpolation.
  *
  * @param value The tag value to escape
- * @returns The value with literal characters replaced by placeholders
+ * @returns The value with escape sequences processed and literal chars protected
  */
 export function escapeLiteralBraces(value: string): string {
   if (!value) {
     return value;
   }
 
-  // First, escape \$ to protect literal dollar signs
-  // This must be done before checking for template variables
-  let escaped = value.replace(/\\\$/g, DOLLAR_PLACEHOLDER);
+  // Process all escape sequences and detect template variables
+  const { processed, hasTemplateVars } = processEscapeSequences(value);
 
-  // Now check if the value (after removing escaped dollars) contains template variables
-  // If it does, we still escape the braces but not everything
-  const hasTemplateVars = containsTemplateVariable(value);
-
+  // If no template variables, also escape any remaining unescaped braces
   if (!hasTemplateVars) {
-    // No template variables - escape all braces
-    escaped = escaped
+    return processed
       .replace(/\{/g, LEFT_BRACE_PLACEHOLDER)
       .replace(/\}/g, RIGHT_BRACE_PLACEHOLDER);
   }
 
-  return escaped;
+  return processed;
 }
 
 /**
- * Restore literal characters (curly braces and dollar signs) after template interpolation
+ * Restore literal characters after template interpolation
  *
  * @param value The interpolated value
  * @returns The value with placeholders restored to original characters
@@ -83,7 +135,8 @@ export function unescapeLiteralBraces(value: string): string {
   return value
     .replace(new RegExp(LEFT_BRACE_PLACEHOLDER, 'g'), '{')
     .replace(new RegExp(RIGHT_BRACE_PLACEHOLDER, 'g'), '}')
-    .replace(new RegExp(DOLLAR_PLACEHOLDER, 'g'), '$');
+    .replace(new RegExp(DOLLAR_PLACEHOLDER, 'g'), '$')
+    .replace(new RegExp(BACKSLASH_PLACEHOLDER, 'g'), '\\');
 }
 
 /**
@@ -115,5 +168,6 @@ export function hasEscapedBraces(value: string): boolean {
   }
   return value.includes(LEFT_BRACE_PLACEHOLDER) ||
          value.includes(RIGHT_BRACE_PLACEHOLDER) ||
-         value.includes(DOLLAR_PLACEHOLDER);
+         value.includes(DOLLAR_PLACEHOLDER) ||
+         value.includes(BACKSLASH_PLACEHOLDER);
 }
