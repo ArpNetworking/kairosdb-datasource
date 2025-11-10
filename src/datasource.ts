@@ -29,7 +29,7 @@ import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtil
 import { SimpleCache, debounce, generateCacheKey, generateApiCacheKey, parseSearchQuery } from './utils/cacheUtils';
 import { AVAILABLE_AGGREGATORS } from './aggregators';
 import { MigrationUtils } from './utils/migrationUtils';
-import { escapeLiteralBraces, unescapeLiteralBraces, hasEscapedBraces } from './utils/tagValueEscaping';
+import { escapeLiteralBraces, unescapeLiteralBraces } from './utils/tagValueEscaping';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
@@ -937,6 +937,71 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     return interpolated;
   }
 
+  /**
+   * Process a single interpolated tag value, handling multi-value expansion and escaped literals.
+   *
+   * This method intelligently splits comma-separated values while respecting:
+   * - Template variable expansion: {val1,val2} -> ["val1", "val2"]
+   * - Composite values: "prefix-{val1,val2}" -> ["prefix-val1", "prefix-val2"]
+   * - Escaped literals with commas: "\{path1\},\{path2\}" -> ["{path1},{path2}"] (single literal)
+   * - Mixed values: "foo,\{bar\},baz" -> ["foo", "{bar}", "baz"] (multiple values)
+   * - Empty values are filtered out
+   *
+   * @param interpolated The interpolated value (after template variable replacement)
+   * @returns Array of processed values
+   */
+  private processInterpolatedValue(interpolated: string): string[] {
+    // Handle empty values
+    if (!interpolated || interpolated.trim() === '') {
+      return [];
+    }
+
+    // Check if this is a composite value with prefix/suffix and multi-value variable
+    // e.g., "foo-{value1,value2}" -> ["foo-value1", "foo-value2"]
+    // This pattern indicates template variable expansion (unescaped braces)
+    const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
+    if (prefixMatch) {
+      const prefix = prefixMatch[1] || '';
+      const values = prefixMatch[2];
+      const suffix = prefixMatch[3] || '';
+      // Split the values inside braces, add prefix/suffix, then unescape each part
+      return values
+        .split(',')
+        .map(v => unescapeLiteralBraces(prefix + v.trim() + suffix))
+        .filter(v => v !== '');
+    }
+
+    // Handle comma-separated values
+    if (interpolated.includes(',')) {
+      const parts = interpolated.split(',').map(p => p.trim());
+
+      // Heuristic to distinguish single literal value from multiple values:
+      // - Single literal: ALL parts contain placeholders (escaped braces/dollars)
+      //   Example: "{path1},{path2}" → all parts have placeholders
+      // - Multiple values: ANY part is pure plain text (no placeholders)
+      //   Example: "foo,{bar},baz" → "foo" and "baz" have no placeholders
+
+      const allPartsHavePlaceholders = parts.every(part =>
+        /__KAIROSDB_[A-Z_]+__/.test(part)
+      );
+
+      if (allPartsHavePlaceholders) {
+        // Single literal value with commas - don't split
+        // Example: "\{path1\},\{path2\}" → "{path1},{path2}"
+        return [unescapeLiteralBraces(interpolated)];
+      }
+
+      // At least one part is pure plain text - these are separate values
+      // Example: "foo,__PLACEHOLDER__bar__PLACEHOLDER__,baz" → ["foo", "{bar}", "baz"]
+      return parts
+        .map(v => unescapeLiteralBraces(v))
+        .filter(v => v !== '');
+    }
+
+    // Single value - restore any escaped braces
+    return [unescapeLiteralBraces(interpolated)];
+  }
+
   private interpolateTagsObject(
     tags: { [key: string]: string[] },
     scopedVars: ScopedVars
@@ -954,36 +1019,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             // Perform template variable interpolation
             const interpolated = this.interpolateVariable(escaped, scopedVars);
 
-            // Handle empty values
-            if (!interpolated || interpolated.trim() === '') {
-              return [];
-            }
-
-            // Check if this value had escaped braces (contains our placeholders)
-            // If so, it's a literal value and should NOT be split
-            if (hasEscapedBraces(interpolated)) {
-              // Restore the literal braces and return as single value
-              return [unescapeLiteralBraces(interpolated)];
-            }
-
-            // Check if this is a composite value with a prefix/suffix and a multi-value variable
-            // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
-            // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
-            const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
-            if (prefixMatch) {
-              const prefix = prefixMatch[1] || '';
-              const values = prefixMatch[2];
-              const suffix = prefixMatch[3] || '';
-              return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
-            }
-
-            // Handle regular multi-value variables (comma-separated)
-            if (interpolated.includes(',')) {
-              return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
-            }
-
-            // Single value - restore any escaped braces
-            return [unescapeLiteralBraces(interpolated)];
+            // Process the interpolated value (handles splitting and unescaping)
+            return this.processInterpolatedValue(interpolated);
           })
           .flat()
           .filter((v: string) => v !== ''); // Remove any empty strings
@@ -1117,37 +1154,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
             // Perform template variable interpolation
             const interpolated = templateSrv.replace(escaped, scopedVars);
 
-            // Handle empty values
-            if (!interpolated || interpolated.trim() === '') {
-              return [];
-            }
-
-            // Check if this value had escaped braces (contains our placeholders)
-            // If so, it's a literal value and should NOT be split
-            if (hasEscapedBraces(interpolated)) {
-              // Restore the literal braces and return as single value
-              return [unescapeLiteralBraces(interpolated)];
-            }
-
-            // Check if this is a composite value with a prefix/suffix and a multi-value variable
-            // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
-            // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
-            // This pattern only applies to actual template variable results, not literal braces
-            const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
-            if (prefixMatch) {
-              const prefix = prefixMatch[1] || '';
-              const values = prefixMatch[2];
-              const suffix = prefixMatch[3] || '';
-              return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
-            }
-
-            // Handle regular multi-value variables (comma-separated)
-            if (interpolated.includes(',') && !interpolated.includes('{')) {
-              return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
-            }
-
-            // Single value - restore any escaped braces
-            return [unescapeLiteralBraces(interpolated)];
+            // Process the interpolated value (handles splitting and unescaping)
+            return this.processInterpolatedValue(interpolated);
           })
           .flat()
           .filter((v: string) => v !== ''); // Remove any empty strings
