@@ -31,6 +31,16 @@ const DOLLAR_PLACEHOLDER = '__KAIROSDB_DOLLAR__';
 const BACKSLASH_PLACEHOLDER = '__KAIROSDB_BACKSLASH__';
 
 /**
+ * Mapping of escape sequences to their placeholder values
+ */
+const ESCAPE_MAP: Record<string, string> = {
+  '\\': BACKSLASH_PLACEHOLDER,
+  '$': DOLLAR_PLACEHOLDER,
+  '{': LEFT_BRACE_PLACEHOLDER,
+  '}': RIGHT_BRACE_PLACEHOLDER,
+};
+
+/**
  * Process escape sequences and check for template variables.
  * Returns the processed string with escape sequences replaced by placeholders,
  * and whether the string contains template variables.
@@ -42,28 +52,15 @@ function processEscapeSequences(value: string): { processed: string; hasTemplate
 
   while (i < value.length) {
     if (value[i] === '\\' && i + 1 < value.length) {
-      const next = value[i + 1];
-      if (next === '\\') {
-        // Escaped backslash
-        result += BACKSLASH_PLACEHOLDER;
-        i += 2;
-        continue;
-      } else if (next === '$') {
-        // Escaped dollar
-        result += DOLLAR_PLACEHOLDER;
-        i += 2;
-        continue;
-      } else if (next === '{') {
-        // Escaped left brace
-        result += LEFT_BRACE_PLACEHOLDER;
-        i += 2;
-        continue;
-      } else if (next === '}') {
-        // Escaped right brace
-        result += RIGHT_BRACE_PLACEHOLDER;
+      const nextChar = value[i + 1];
+
+      // Check if this is a recognized escape sequence
+      if (nextChar in ESCAPE_MAP) {
+        result += ESCAPE_MAP[nextChar];
         i += 2;
         continue;
       }
+
       // Not a recognized escape sequence, keep the backslash
       result += value[i];
       i += 1;
