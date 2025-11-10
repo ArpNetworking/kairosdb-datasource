@@ -38,6 +38,39 @@ describe('tagValueEscaping', () => {
       expect(containsTemplateVariable(null as any)).toBe(false);
       expect(containsTemplateVariable(undefined as any)).toBe(false);
     });
+
+    it('should detect variables with numbers in the name', () => {
+      // Variables can contain numbers after the first character
+      expect(containsTemplateVariable('$var1')).toBe(true);
+      expect(containsTemplateVariable('$my_var_2')).toBe(true);
+      expect(containsTemplateVariable('${var123}')).toBe(true);
+    });
+
+    it('should detect variables starting with underscore', () => {
+      expect(containsTemplateVariable('$_private')).toBe(true);
+      expect(containsTemplateVariable('$_var123')).toBe(true);
+      expect(containsTemplateVariable('${_internal}')).toBe(true);
+    });
+
+    it('should NOT detect dollar followed by number (invalid variable name)', () => {
+      // Variable names cannot START with a number (JavaScript identifier rules)
+      expect(containsTemplateVariable('price=$100')).toBe(false);
+      expect(containsTemplateVariable('$123')).toBe(false);
+      expect(containsTemplateVariable('cost=$99.99')).toBe(false);
+    });
+
+    it('should NOT detect dollar followed by special characters', () => {
+      expect(containsTemplateVariable('price=$')).toBe(false);
+      expect(containsTemplateVariable('$-value')).toBe(false);
+      expect(containsTemplateVariable('$.property')).toBe(false);
+      expect(containsTemplateVariable('$@user')).toBe(false);
+    });
+
+    it('should detect variables in complex strings', () => {
+      expect(containsTemplateVariable('api/v1/$service/endpoint')).toBe(true);
+      expect(containsTemplateVariable('metric_$env_$region')).toBe(true);
+      expect(containsTemplateVariable('value-${var_name_123}-suffix')).toBe(true);
+    });
   });
 
   describe('escapeLiteralBraces', () => {

@@ -69,6 +69,12 @@ function processEscapeSequences(value: string): { processed: string; hasTemplate
       i += 1;
     } else {
       // Check if this is start of a template variable
+      // Template variables follow JavaScript identifier rules:
+      // - Must start with letter, underscore, or opening brace (for ${var} syntax)
+      // - Can contain letters, digits, and underscores AFTER the first character
+      // Examples: $var, $var1, $my_var, $_private, ${var123}
+      // NOT valid: $123, $1var (cannot start with digit)
+      // This correctly excludes literals like "price=$100"
       if (value[i] === '$' && i + 1 < value.length && /[a-zA-Z_{]/.test(value[i + 1])) {
         hasTemplateVars = true;
       }
