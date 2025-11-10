@@ -29,6 +29,7 @@ import { VariableQueryParser, VariableQueryExecutor } from './utils/variableUtil
 import { SimpleCache, debounce, generateCacheKey, generateApiCacheKey, parseSearchQuery } from './utils/cacheUtils';
 import { AVAILABLE_AGGREGATORS } from './aggregators';
 import { MigrationUtils } from './utils/migrationUtils';
+import { escapeLiteralBraces, unescapeLiteralBraces, hasEscapedBraces } from './utils/tagValueEscaping';
 
 export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceOptions> {
   baseUrl: string;
@@ -947,13 +948,24 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       if (Array.isArray(tagValues)) {
         const processedValues = tagValues
           .map((value) => {
-            const interpolated = this.interpolateVariable(value, scopedVars);
-            
+            // Escape literal braces before template interpolation
+            const escaped = escapeLiteralBraces(value);
+
+            // Perform template variable interpolation
+            const interpolated = this.interpolateVariable(escaped, scopedVars);
+
             // Handle empty values
             if (!interpolated || interpolated.trim() === '') {
               return [];
             }
-            
+
+            // Check if this value had escaped braces (contains our placeholders)
+            // If so, it's a literal value and should NOT be split
+            if (hasEscapedBraces(interpolated)) {
+              // Restore the literal braces and return as single value
+              return [unescapeLiteralBraces(interpolated)];
+            }
+
             // Check if this is a composite value with a prefix/suffix and a multi-value variable
             // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
             // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
@@ -964,18 +976,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               const suffix = prefixMatch[3] || '';
               return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
             }
-            
+
             // Handle regular multi-value variables (comma-separated)
             if (interpolated.includes(',')) {
               return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
             }
-            
-            // Single value
-            return [interpolated];
+
+            // Single value - restore any escaped braces
+            return [unescapeLiteralBraces(interpolated)];
           })
           .flat()
           .filter((v: string) => v !== ''); // Remove any empty strings
-        
+
         // Only add the tag if it has non-empty values
         if (processedValues.length > 0) {
           interpolatedTags[tagName] = processedValues;
@@ -1068,6 +1080,23 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
     }
   }
 
+  /**
+   * Interpolate template variables in tag values while preserving literal curly braces.
+   *
+   * Integration with UI layer (TagsEditor):
+   * - Tag values are stored in their original form in query.tags (with literal braces)
+   * - The UI layer (TagsEditor.tsx) preserves these values when tags are refreshed
+   * - This method performs escaping at interpolation time to protect literal braces
+   *
+   * Flow:
+   * 1. UI stores: "some/path/{id}/something"
+   * 2. This method escapes: "some/path/__KAIROSDB_LEFT_BRACE__id__KAIROSDB_RIGHT_BRACE__/something"
+   * 3. Template service interpolates (no change to escaped braces)
+   * 4. This method unescapes: "some/path/{id}/something"
+   * 5. Correct value sent to KairosDB
+   *
+   * Template variables (e.g., $location, ${environment}) are NOT escaped and work normally.
+   */
   private interpolateTagsWithTemplateSrv(
     tags: { [key: string]: string[] },
     scopedVars?: ScopedVars
@@ -1080,16 +1109,30 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       if (Array.isArray(tagValues)) {
         const processedValues = tagValues
           .map((value) => {
-            const interpolated = templateSrv.replace(value, scopedVars);
-            
+            // Escape literal braces before template interpolation
+            // This protects values like "some/path/{id}/something" from being
+            // interpreted as template variables
+            const escaped = escapeLiteralBraces(value);
+
+            // Perform template variable interpolation
+            const interpolated = templateSrv.replace(escaped, scopedVars);
+
             // Handle empty values
             if (!interpolated || interpolated.trim() === '') {
               return [];
             }
-            
+
+            // Check if this value had escaped braces (contains our placeholders)
+            // If so, it's a literal value and should NOT be split
+            if (hasEscapedBraces(interpolated)) {
+              // Restore the literal braces and return as single value
+              return [unescapeLiteralBraces(interpolated)];
+            }
+
             // Check if this is a composite value with a prefix/suffix and a multi-value variable
             // e.g., "foo-{value1,value2}" should become ["foo-value1", "foo-value2"]
             // Also handles "{value1,value2}-bar" and "foo-{value1,value2}-bar"
+            // This pattern only applies to actual template variable results, not literal braces
             const prefixMatch = interpolated.match(/^(.*?)\{(.+)\}(.*)$/);
             if (prefixMatch) {
               const prefix = prefixMatch[1] || '';
@@ -1097,18 +1140,18 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
               const suffix = prefixMatch[3] || '';
               return values.split(',').map(v => prefix + v.trim() + suffix).filter(v => v !== '');
             }
-            
+
             // Handle regular multi-value variables (comma-separated)
             if (interpolated.includes(',') && !interpolated.includes('{')) {
               return interpolated.split(',').map(v => v.trim()).filter(v => v !== '');
             }
-            
-            // Single value
-            return [interpolated];
+
+            // Single value - restore any escaped braces
+            return [unescapeLiteralBraces(interpolated)];
           })
           .flat()
           .filter((v: string) => v !== ''); // Remove any empty strings
-        
+
         // Only add the tag if it has non-empty values
         if (processedValues.length > 0) {
           interpolatedTags[tagName] = processedValues;

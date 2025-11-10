@@ -3,6 +3,7 @@ import { FieldSet, Stack, LoadingPlaceholder, Button } from '@grafana/ui';
 import { TagsSelect } from './TagsSelect';
 import { ManualTagEntry } from './ManualTagEntry';
 import { DataSource } from '../datasource';
+import { containsTemplateVariable } from '../utils/tagValueEscaping';
 
 interface Props {
   metricName: string;
@@ -32,15 +33,28 @@ export function TagsEditor({ metricName, tags = {}, onChange, datasource }: Prop
       const tagData = await datasource.getMetricTags(metricName);
       setAvailableTags(tagData);
 
-      // Clean up selected tags that are no longer available
+      // Clean up selected tags that are no longer available from the server
+      // This filter determines which manually-entered or previously-selected values to preserve
+      // when the server returns fresh tag data.
+      //
+      // Integration with tag value escaping:
+      // - Tag values are stored in their ORIGINAL form (with literal braces)
+      // - Escaping only happens at query interpolation time (in datasource.ts)
+      // - This filter must preserve values with literal braces so they don't get removed
       const newTags: { [key: string]: string[] } = {};
       Object.keys(tagData).forEach((tagName) => {
         if (tags[tagName]) {
           newTags[tagName] = tags[tagName].filter(
             (value) =>
+              // Keep if value exists in server data
               tagData[tagName].includes(value) ||
-              value.startsWith('$') ||
-              (value.startsWith('[') && value.endsWith(']'))
+              // Keep if it's a template variable
+              containsTemplateVariable(value) ||
+              // Keep if it's in special bracket format (legacy)
+              (value.startsWith('[') && value.endsWith(']')) ||
+              // Keep if it contains literal curly braces (e.g., "some/path/{id}/something")
+              // These are valid literal values and should be preserved
+              (value.includes('{') || value.includes('}'))
           );
         } else {
           newTags[tagName] = [];
