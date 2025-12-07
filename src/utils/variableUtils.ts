@@ -175,21 +175,26 @@ export class VariableQueryExecutor {
   /**
    * Execute a parsed variable query
    */
-  async execute(query: VariableQuery, scopedVars?: ScopedVars): Promise<Array<{ text: string; value: string }>> {
+  async execute(
+    query: VariableQuery,
+    scopedVars?: ScopedVars,
+    timeRange?: { from: number; to: number }
+  ): Promise<Array<{ text: string; value: string }>> {
     try {
       switch (query.type) {
         case 'metrics':
           return await this.executeMetricsQuery(query.pattern || '', scopedVars);
 
         case 'tag_names':
-          return await this.executeTagNamesQuery(query.metric || '', scopedVars);
+          return await this.executeTagNamesQuery(query.metric || '', scopedVars, timeRange);
 
         case 'tag_values':
           return await this.executeTagValuesQuery(
             query.metric || '',
             query.tagName || '',
             query.filters || {},
-            scopedVars
+            scopedVars,
+            timeRange
           );
 
         default:
@@ -223,13 +228,14 @@ export class VariableQueryExecutor {
    */
   private async executeTagNamesQuery(
     metric: string,
-    scopedVars?: ScopedVars
+    scopedVars?: ScopedVars,
+    timeRange?: { from: number; to: number }
   ): Promise<Array<{ text: string; value: string }>> {
     // Interpolate variables in metric name
     const interpolatedMetric = this.interpolateVariables(metric, scopedVars);
 
-    // Get tags for the metric
-    const tags = await this.datasource.getMetricTags(interpolatedMetric);
+    // Get tags for the metric with time range
+    const tags = await this.datasource.getMetricTags(interpolatedMetric, timeRange);
 
     // Extract tag names (keys)
     const tagNames = Object.keys(tags);
@@ -244,7 +250,8 @@ export class VariableQueryExecutor {
     metric: string,
     tagName: string,
     filters: { [key: string]: string },
-    scopedVars?: ScopedVars
+    scopedVars?: ScopedVars,
+    timeRange?: { from: number; to: number }
   ): Promise<Array<{ text: string; value: string }>> {
     // Interpolate variables
     const interpolatedMetric = this.interpolateVariables(metric, scopedVars);
@@ -254,25 +261,25 @@ export class VariableQueryExecutor {
     const kairosFilters: { [key: string]: string[] } = {};
     Object.keys(filters).forEach((key) => {
       const interpolatedValue = this.interpolateVariables(filters[key], scopedVars);
-      
+
       // Skip filters with empty or undefined values, or values that are still variables (not interpolated)
-      if (interpolatedValue && 
-          interpolatedValue.trim() !== '' && 
+      if (interpolatedValue &&
+          interpolatedValue.trim() !== '' &&
           !interpolatedValue.startsWith('$')) {
-        
+
         // Handle multi-value variables (comma-separated)
         const values = interpolatedValue.includes(',')
           ? interpolatedValue.split(',').map(v => v.trim()).filter(v => v !== '')
           : [interpolatedValue];
-        
+
         if (values.length > 0) {
           kairosFilters[key] = values;
         }
       }
     });
 
-    // Use the new method with filters
-    const tags = await this.datasource.getMetricTagsWithFilters(interpolatedMetric, kairosFilters);
+    // Use the new method with filters and time range
+    const tags = await this.datasource.getMetricTagsWithFilters(interpolatedMetric, kairosFilters, timeRange);
 
     if (!tags[interpolatedTagName]) {
       console.warn('[VariableQueryExecutor] Tag not found:', interpolatedTagName);

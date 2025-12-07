@@ -774,16 +774,17 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
   /**
    * Get available tags for a metric
    */
-  async getMetricTags(metricName: string): Promise<{ [key: string]: string[] }> {
-    return this.getMetricTagsWithFilters(metricName, {});
+  async getMetricTags(metricName: string, timeRange?: { from: number; to: number }): Promise<{ [key: string]: string[] }> {
+    return this.getMetricTagsWithFilters(metricName, {}, timeRange);
   }
 
   /**
    * Get available tags for a metric with optional filters
    */
   async getMetricTagsWithFilters(
-    metricName: string, 
-    filters: { [key: string]: string[] } = {}
+    metricName: string,
+    filters: { [key: string]: string[] } = {},
+    timeRange?: { from: number; to: number }
   ): Promise<{ [key: string]: string[] }> {
     try {
       if (!metricName) {
@@ -798,11 +799,23 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       if (filters && Object.keys(filters).length > 0) {
         metricRequest.tags = filters;
       }
-      
-      const now = Date.now();
+
+      // Use provided time range or fall back to last 24 hours
+      let startTime: number;
+      let endTime: number;
+
+      if (timeRange) {
+        startTime = timeRange.from;
+        endTime = timeRange.to;
+      } else {
+        const now = Date.now();
+        startTime = now - 24 * 60 * 60 * 1000; // 24 hours ago
+        endTime = now;
+      }
+
       const requestBody: KairosDBMetricTagsRequest = {
-        start_absolute: now - 24 * 60 * 60 * 1000, // 24 hours ago
-        end_absolute: now,
+        start_absolute: startTime,
+        end_absolute: endTime,
         metrics: [metricRequest],
       };
 
@@ -841,8 +854,17 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
    * - tag_names(metric): Get tag names for a metric
    * - tag_values(metric, tag_name [, filter1=value1, ...]): Get tag values with optional filters
    */
-  async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars }): Promise<MetricFindValue[]> {
+  async metricFindQuery(query: string, options?: { scopedVars?: ScopedVars; range?: any }): Promise<MetricFindValue[]> {
     try {
+      // Extract time range from options if available
+      let timeRange: { from: number; to: number } | undefined;
+      if (options?.range) {
+        timeRange = {
+          from: options.range.from.valueOf(),
+          to: options.range.to.valueOf(),
+        };
+      }
+
       // Handle empty query - return all metrics
       if (!query || query.trim() === '') {
         const metrics = await this.getMetricNames();
@@ -856,8 +878,8 @@ export class DataSource extends DataSourceApi<KairosDBQuery, KairosDBDataSourceO
       const parsedQuery = VariableQueryParser.parse(query);
 
       if (parsedQuery) {
-        // Execute the parsed query
-        const result = await this.variableQueryExecutor.execute(parsedQuery, options?.scopedVars);
+        // Execute the parsed query with time range
+        const result = await this.variableQueryExecutor.execute(parsedQuery, options?.scopedVars, timeRange);
         return result;
       } else {
         // Fallback for backwards compatibility:

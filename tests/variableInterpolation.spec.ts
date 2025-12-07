@@ -273,7 +273,7 @@ describe('Template Variable Interpolation', () => {
 
       const result = await datasource.metricFindQuery('tag_names($metric)', { scopedVars });
 
-      expect(datasource.getMetricTags).toHaveBeenCalledWith('system.cpu.usage');
+      expect(datasource.getMetricTags).toHaveBeenCalledWith('system.cpu.usage', undefined);
       expect(result).toHaveLength(2);
       expect(result.map((r) => r.text).sort()).toEqual(['datacenter', 'host']);
     });
